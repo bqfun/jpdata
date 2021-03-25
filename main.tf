@@ -1,6 +1,7 @@
 resource "google_bigquery_dataset" "dataset" {
   for_each = toset([
     "accredited_foreign_manufacturers",
+    "local_governments",
     "national_holidays",
   ])
   dataset_id                      = each.key
