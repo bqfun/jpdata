@@ -4,6 +4,7 @@ resource "google_bigquery_dataset" "dataset" {
     "corporate_numbers",
     "local_governments",
     "national_holidays",
+    "number_of_births",
   ])
   dataset_id                      = each.key
   default_table_expiration_ms     = 5184000000
