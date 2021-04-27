@@ -1,5 +1,5 @@
 resource "google_bigquery_dataset" "dataset" {
-  for_each                        = toset(var.datasets)
+  for_each                        = "${toset(var.datasets)}"
   dataset_id                      = each.key
   default_table_expiration_ms     = 5184000000
   default_partition_expiration_ms = 5184000000
