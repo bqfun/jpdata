@@ -1,12 +1,8 @@
-variable "datasets" {
-  type    = list(string)
-}
-
-resource "google_bigquery_dataset" "dataset" {
-  for_each                        = toset(var.datasets)
-  dataset_id                      = each.key
+resource "google_bigquery_dataset" "gbizinfo" {
+  dataset_id                      = "gbizinfo"
   default_table_expiration_ms     = 5184000000
   default_partition_expiration_ms = 5184000000
+  location                        = "asia-northeast1"
   project                         = "jpdata"
 
   access {
@@ -19,6 +15,6 @@ resource "google_bigquery_dataset" "dataset" {
   }
   access {
     role          = "READER"
-    special_group = "allAuthenticatedUsers"
+    group_by_email = "jpdata_gbizinfo@googlegroups.com"
   }
 }
