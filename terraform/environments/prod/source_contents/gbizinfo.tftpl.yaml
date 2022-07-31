@@ -1,0 +1,809 @@
+- init:
+    assign:
+      - bucket: ${bucket}
+      - requests:
+          - object: basic.csv
+            body: downenc=UTF-8&downfile=7&downtype=csv
+            fields:
+              - name: corporate_number
+                type: STRING
+              - name: name
+                type: STRING
+              - name: kana
+                type: STRING
+              - name: name_en
+                type: STRING
+              - name: postal_code
+                type: STRING
+              - name: location
+                type: STRING
+              - name: status
+                type: STRING
+              - name: close_date
+                type: STRING
+              - name: close_cause
+                type: STRING
+              - name: representative_name
+                type: STRING
+              - name: representative_position
+                type: STRING
+              - name: capital_stock
+                type: STRING
+              - name: employee_number
+                type: STRING
+              - name: company_size_male
+                type: STRING
+              - name: company_size_female
+                type: STRING
+              - name: business_items
+                type: STRING
+              - name: business_summary
+                type: STRING
+              - name: company_url
+                type: STRING
+              - name: date_of_establishment
+                type: STRING
+              - name: founding_year
+                type: STRING
+              - name: update_date
+                type: STRING
+            query: |-
+              CREATE OR REPLACE TABLE basic (
+                corporate_number STRING OPTIONS (description = '法人番号'),
+                name STRING OPTIONS (description = '法人名'),
+                kana STRING OPTIONS (description = '法人名ふりがな'),
+                name_en STRING OPTIONS (description = '法人名英語'),
+                postal_code STRING OPTIONS (description = '郵便番号'),
+                location STRING OPTIONS (description = '本社所在地'),
+                status STRING OPTIONS (description = 'ステータス'),
+                close_date DATE OPTIONS (description = '登記記録の閉鎖等年月日'),
+                close_cause STRING OPTIONS (description = '登記記録の閉鎖等の事由'),
+                representative_name STRING OPTIONS (description = '法人代表者名'),
+                representative_position STRING OPTIONS (description = '法人代表者役職'),
+                capital_stock INT64 OPTIONS (description = '資本金'),
+                employee_number INT64 OPTIONS (description = '従業員数'),
+                company_size_male INT64 OPTIONS (description = '企業規模詳細(男性)'),
+                company_size_female INT64 OPTIONS (description = '企業規模詳細(女性)'),
+                business_items ARRAY<STRUCT<
+                  business_item_code STRING OPTIONS (description = '営業品目コード値'),
+                  business_item_name STRING OPTIONS (description = '営業品目コード値(日本語)')
+                >> OPTIONS (description = '営業品目リスト'),
+                business_summary STRING OPTIONS (description = '事業概要'),
+                company_url STRING OPTIONS (description = '企業ホームページ'),
+                date_of_establishment DATE OPTIONS (description = '設立年月日'),
+                founding_year INT64 OPTIONS (description = '創業年'),
+                update_date DATE OPTIONS (description = '最終更新日')
+              ) OPTIONS (description = '基本情報') AS
+              SELECT
+                    IF(corporate_number <> "", corporate_number, ERROR('(corporate_number <> "") IS NOT TRUE')) AS corporate_number,
+                    NULLIF(name, "") AS name,
+                    NULLIF(kana, "") AS kana,
+                    NULLIF(name_en, "") AS name_en,
+                    CASE
+                        WHEN postal_code = "" THEN NULL
+                        WHEN REGEXP_CONTAINS(postal_code, "^[0-9]{7}$") THEN postal_code
+                        ELSE ERROR('postal_code IS NULL OR NOT REGEXP_CONTAINS(postal_code, "^[0-9]{7}$")')
+                    END AS postal_code,
+                    NULLIF(location, "") AS location,
+                    NULLIF(status, "") AS status,
+                    PARSE_DATE("%Y-%m-%d", NULLIF(close_date, "")) AS close_date,
+                    CASE close_cause
+                        WHEN "" THEN NULL
+                        WHEN "01" THEN "清算の結了等"
+                        WHEN "11" THEN "合併による解散等"
+                        WHEN "21" THEN "登記官による閉鎖"
+                        WHEN "31" THEN "その他の清算の結了等"
+                        ELSE ERROR('close_cause NOT IN ("", "01", "21", "31")')
+                        END AS close_cause,
+                    NULLIF(representative_name, "") AS representative_name,
+                    NULLIF(representative_position, "") AS representative_position,
+                    CAST(NULLIF(capital_stock, "") AS INT64) AS capital_stock,
+                    CAST(NULLIF(employee_number, "") AS INT64) AS employee_number,
+                    CAST(NULLIF(company_size_male, "") AS INT64) AS company_size_male,
+                    CAST(NULLIF(company_size_female, "") AS INT64) AS company_size_female,
+                    ARRAY(
+                            SELECT AS STRUCT
+                            business_item_code,
+                            CASE business_item_code
+                                WHEN "101" THEN "衣服・その他繊維製品類"
+                                WHEN "102" THEN "ゴム・皮革・プラスチック製品類"
+                                WHEN "103" THEN "窯業・土石製品類"
+                                WHEN "104" THEN "非鉄金属・金属製品類"
+                                WHEN "105" THEN "フォーム印刷"
+                                WHEN "106" THEN "その他印刷類"
+                                WHEN "107" THEN "図書類"
+                                WHEN "108" THEN "電子出版物類"
+                                WHEN "109" THEN "紙・紙加工品類"
+                                WHEN "110" THEN "車両類"
+                                WHEN "111" THEN "その他輸送・搬送機械器具類"
+                                WHEN "112" THEN "船舶類"
+                                WHEN "113" THEN "燃料類"
+                                WHEN "114" THEN "家具・什器類"
+                                WHEN "115" THEN "一般・産業用機器類"
+                                WHEN "116" THEN "電気・通信用機器類"
+                                WHEN "117" THEN "電子計算機類"
+                                WHEN "118" THEN "精密機器類"
+                                WHEN "119" THEN "医療用機器類"
+                                WHEN "120" THEN "事務用機器類"
+                                WHEN "121" THEN "その他機器類"
+                                WHEN "122" THEN "医薬品・医療用品類"
+                                WHEN "123" THEN "事務用品類"
+                                WHEN "124" THEN "土木・建設・建築材料"
+                                WHEN "127" THEN "警察用装備品類"
+                                WHEN "128" THEN "防衛用装備品類"
+                                WHEN "129" THEN "その他"
+                                WHEN "201" THEN "衣服・その他繊維製品類"
+                                WHEN "202" THEN "ゴム・皮革・プラスチック製品類"
+                                WHEN "203" THEN "窯業・土石製品類"
+                                WHEN "204" THEN "非鉄金属・金属製品類"
+                                WHEN "205" THEN "フォーム印刷"
+                                WHEN "206" THEN "その他印刷類"
+                                WHEN "207" THEN "図書類"
+                                WHEN "208" THEN "電子出版物類"
+                                WHEN "209" THEN "紙・紙加工品類"
+                                WHEN "210" THEN "車両類"
+                                WHEN "211" THEN "その他輸送・搬送機械器具類"
+                                WHEN "212" THEN "船舶類"
+                                WHEN "213" THEN "燃料類"
+                                WHEN "214" THEN "家具・什器類"
+                                WHEN "215" THEN "一般・産業用機器類"
+                                WHEN "216" THEN "電気・通信用機器類"
+                                WHEN "217" THEN "電子計算機類"
+                                WHEN "218" THEN "精密機器類"
+                                WHEN "219" THEN "医療用機器類"
+                                WHEN "220" THEN "事務用機器類"
+                                WHEN "221" THEN "その他機器類"
+                                WHEN "222" THEN "医薬品・医療用品類"
+                                WHEN "223" THEN "事務用品類"
+                                WHEN "224" THEN "土木・建設・建築材料"
+                                WHEN "225" THEN "造幣・印刷事業用原材料類"
+                                WHEN "226" THEN "造幣事業用金属工芸品類"
+                                WHEN "227" THEN "警察用装備品類"
+                                WHEN "228" THEN "防衛用装備品類"
+                                WHEN "229" THEN "その他"
+                                WHEN "301" THEN "広告・宣伝"
+                                WHEN "302" THEN "写真・製図"
+                                WHEN "303" THEN "調査・研究"
+                                WHEN "304" THEN "情報処理"
+                                WHEN "305" THEN "翻訳・通訳・速記"
+                                WHEN "306" THEN "ソフトウェア開発"
+                                WHEN "307" THEN "会場等の借り上げ"
+                                WHEN "308" THEN "賃貸借"
+                                WHEN "309" THEN "建物管理等各種保守管理"
+                                WHEN "310" THEN "運送"
+                                WHEN "311" THEN "車両整備"
+                                WHEN "312" THEN "船舶整備"
+                                WHEN "313" THEN "電子出版"
+                                WHEN "314" THEN "防衛用装備品類の整備"
+                                WHEN "315" THEN "その他"
+                                WHEN "401" THEN "立木竹"
+                                WHEN "402" THEN "その他"
+                                ELSE ERROR("Unsupported business_item_code: " || business_item_code)
+                                END AS business_item_name
+                            FROM
+                            UNNEST(SPLIT(NULLIF(business_items, ""), "、")) AS business_item_code WITH OFFSET
+                            ORDER BY
+                            OFFSET) AS business_items,
+                    NULLIF(business_summary, "") AS business_summary,
+                    NULLIF(company_url, "") AS company_url,
+                    PARSE_DATE("%Y-%m-%d", NULLIF(date_of_establishment, "")) AS date_of_establishment,
+                    CAST(NULLIF(founding_year, "") AS INT64) AS founding_year,
+                    IF(update_date = "", NULL, IFNULL(SAFE.PARSE_DATE("%Y-%m-%dT00:00:00+09:00", update_date), PARSE_DATE("%Y-%m-%dT00:00:00Z", update_date))) AS update_date
+              FROM
+                from_item
+          - object: certification.csv
+            body: downenc=UTF-8&downfile=8&downtype=csv
+            fields:
+              - name: corporate_number
+                type: STRING
+              - name: name__corporate_number
+                type: STRING
+              - name: location__corporate_number
+                type: STRING
+              - name: name
+                type: STRING
+              - name: location
+                type: STRING
+              - name: date_of_approval
+                type: STRING
+              - name: title
+                type: STRING
+              - name: target
+                type: STRING
+              - name: category
+                type: STRING
+              - name: enterprise_scale
+                type: STRING
+              - name: expiration_date
+                type: STRING
+              - name: government_departments
+                type: STRING
+            query: |-
+              CREATE OR REPLACE TABLE certification (
+                corporate_number STRING NOT NULL OPTIONS (description = '法人番号'),
+                name STRING NOT NULL OPTIONS (description = '法人名'),
+                location STRING OPTIONS (description = '本社所在地'),
+                date_of_approval DATE OPTIONS (description = '認定日'),
+                title STRING NOT NULL OPTIONS (description = '届出認定等'),
+                target STRING OPTIONS (description = '対象'),
+                category STRING OPTIONS (description = '部門'),
+                enterprise_scale STRING OPTIONS (description = '企業規模'),
+                expiration_date DATE OPTIONS (description = '有効期限'),
+                government_departments STRING NOT NULL OPTIONS (description = '府省'),
+              ) OPTIONS (description = '届出認定情報') AS
+              SELECT
+                IF(corporate_number <> "", corporate_number, ERROR('(corporate_number <> "") IS NOT TRUE')) AS corporate_number,
+                IF(name <> "", name, ERROR('(name <> "") IS NOT TRUE')) AS name,
+                NULLIF(location, "") AS location,
+                PARSE_DATE("%Y-%m-%d", NULLIF(date_of_approval, "")) AS date_of_approval,
+                IF(title <> "", title, ERROR('(title <> "") IS NOT TRUE')) AS title,
+                NULLIF(target, "") AS target,
+                NULLIF(category, "") AS category,
+                CASE enterprise_scale
+                    WHEN "" THEN NULL
+                    WHEN "1" THEN "大企業"
+                    WHEN "2" THEN "中企業"
+                    WHEN "3" THEN "その他"
+                    WHEN "4" THEN "未定義"
+                    END AS enterprise_scale,
+                PARSE_DATE("%Y-%m-%d", NULLIF(expiration_date, "")) AS expiration_date,
+                IF(government_departments <> "", government_departments, ERROR('(government_departments <> "") IS NOT TRUE')) AS government_departments,
+              FROM
+                from_item
+          - object: commendation.csv
+            body: downenc=UTF-8&downfile=9&downtype=csv
+            fields:
+              - name: corporate_number
+                type: STRING
+              - name: name__corporate_number
+                type: STRING
+              - name: location__corporate_number
+                type: STRING
+              - name: name
+                type: STRING
+              - name: location
+                type: STRING
+              - name: date_of_commendation
+                type: STRING
+              - name: title
+                type: STRING
+              - name: target
+                type: STRING
+              - name: category
+                type: STRING
+              - name: government_departments
+                type: STRING
+            query: |-
+              CREATE OR REPLACE TABLE commendation (
+                corporate_number STRING NOT NULL OPTIONS (description = '法人番号'),
+                name STRING NOT NULL OPTIONS (description = '法人名'),
+                location STRING OPTIONS (description = '本社所在地'),
+                date_of_commendation DATE OPTIONS (description = '年月日'),
+                title STRING OPTIONS (description = '表彰名'),
+                target STRING OPTIONS (description = '受賞対象'),
+                category STRING OPTIONS (description = '部門'),
+                government_departments STRING NOT NULL OPTIONS (description = '府省'),
+              ) OPTIONS (description = '表彰情報') AS
+              SELECT
+                IF(corporate_number <> "", corporate_number, ERROR('(corporate_number <> "") IS NOT TRUE')) AS corporate_number,
+                IF(name <> "", name, ERROR('(name <> "") IS NOT TRUE')) AS name,
+                NULLIF(location, "") AS location,
+                PARSE_DATE("%Y-%m-%d", NULLIF(date_of_commendation, "")) AS date_of_commendation,
+                NULLIF(title, "") AS title,
+                NULLIF(target, "") AS target,
+                NULLIF(category, "") AS category,
+                IF(government_departments <> "", government_departments, ERROR('(government_departments <> "") IS NOT TRUE')) AS government_departments,
+              FROM
+                from_item
+
+          - object: subsidy.csv
+            body: downenc=UTF-8&downfile=10&downtype=csv
+            fields:
+              - name: corporate_number
+                type: STRING
+              - name: name__corporate_number
+                type: STRING
+              - name: location__corporate_number
+                type: STRING
+              - name: name
+                type: STRING
+              - name: location
+                type: STRING
+              - name: date_of_approval
+                type: STRING
+              - name: title
+                type: STRING
+              - name: amount
+                type: STRING
+              - name: target
+                type: STRING
+              - name: government_departments
+                type: STRING
+              - name: note
+                type: STRING
+              - name: joint_signatures
+                type: STRING
+              - name: subsidy_resource
+                type: STRING
+            query: |-
+              CREATE OR REPLACE TABLE subsidy (
+                corporate_number STRING NOT NULL OPTIONS (description = '法人番号'),
+                name STRING NOT NULL OPTIONS (description = '法人名'),
+                location STRING OPTIONS (description = '本社所在地'),
+                date_of_approval DATE OPTIONS (description = '認定日'),
+                title STRING OPTIONS (description = '補助金等'),
+                amount INT64 OPTIONS (description = '金額'),
+                target STRING OPTIONS (description = '対象'),
+                government_departments STRING NOT NULL OPTIONS (description = '府省'),
+                note STRING OPTIONS (description = '備考'),
+                joint_signatures ARRAY<STRING> OPTIONS (description = '連名リスト'),
+                subsidy_resource STRING OPTIONS (description = '補助金財源'),
+              ) OPTIONS (description = '補助金情報') AS
+              SELECT
+                IF(corporate_number <> "", corporate_number, ERROR('(corporate_number <> "") IS NOT TRUE')) AS corporate_number,
+                IF(name <> "", name, ERROR('(name <> "") IS NOT TRUE')) AS name,
+                NULLIF(location, "") AS location,
+                PARSE_DATE("%Y-%m-%d", NULLIF(date_of_approval, "")) AS date_of_approval,
+                NULLIF(title, "") AS title,
+                CAST(NULLIF(amount, "") AS INT64) AS amount,
+                NULLIF(target, "") AS target,
+                IF(government_departments <> "", government_departments, ERROR('(government_departments <> "") IS NOT TRUE')) AS government_departments,
+                NULLIF(note, "") AS note,
+                SPLIT(NULLIF(joint_signatures, ""), "、") AS joint_signatures,
+                NULLIF(subsidy_resource, "") AS subsidy_resource,
+              FROM
+                from_item
+
+          - object: procurement.csv
+            body: downenc=UTF-8&downfile=11&downtype=csv
+            fields:
+              - name: corporate_number
+                type: STRING
+              - name: name__corporate_number
+                type: STRING
+              - name: location__corporate_number
+                type: STRING
+              - name: name
+                type: STRING
+              - name: location
+                type: STRING
+              - name: date_of_order
+                type: STRING
+              - name: title
+                type: STRING
+              - name: amount
+                type: STRING
+              - name: government_departments
+                type: STRING
+              - name: joint_signatures
+                type: STRING
+            query: |-
+              CREATE OR REPLACE TABLE procurement (
+                corporate_number STRING NOT NULL OPTIONS (description = '法人番号'),
+                name STRING NOT NULL OPTIONS (description = '法人名'),
+                location STRING OPTIONS (description = '本社所在地'),
+                date_of_order DATE OPTIONS (description = '受注日'),
+                title STRING OPTIONS (description = '事業名'),
+                amount INT64 OPTIONS (description = '金額'),
+                government_departments STRING NOT NULL OPTIONS (description = '府省'),
+                joint_signatures ARRAY<STRING> OPTIONS (description = '連名リスト'),
+              ) OPTIONS (description = '調達情報') AS
+              SELECT
+                IF(corporate_number <> "", corporate_number, ERROR('(corporate_number <> "") IS NOT TRUE')) AS corporate_number,
+                IF(name <> "", name, ERROR('(name <> "") IS NOT TRUE')) AS name,
+                NULLIF(location, "") AS location,
+                PARSE_DATE("%Y-%m-%dT00:00:00+09:00", NULLIF(date_of_order, "")) AS date_of_order,
+                NULLIF(title, "") AS title,
+                CAST(NULLIF(amount, "") AS INT64) AS amount,
+                IF(government_departments <> "", government_departments, ERROR('(government_departments <> "") IS NOT TRUE')) AS government_departments,
+                SPLIT(NULLIF(joint_signatures, ""), "、") AS joint_signatures,
+              FROM
+                from_item
+
+          - object: patent.csv
+            body: downenc=UTF-8&downfile=12&downtype=csv
+            fields:
+              - name: corporate_number
+                type: STRING
+              - name: name__corporate_number
+                type: STRING
+              - name: location__corporate_number
+                type: STRING
+              - name: name
+                type: STRING
+              - name: location
+                type: STRING
+              - name: patent_type
+                type: STRING
+              - name: application_number
+                type: STRING
+              - name: application_date
+                type: STRING
+              - name: patent_classification_fi_code
+                type: STRING
+              - name: patent_classification_fi_name
+                type: STRING
+              - name: patent_classification_f_term_theme_code
+                type: STRING
+              - name: design_classification_code
+                type: STRING
+              - name: design_classification_name
+                type: STRING
+              - name: trademark_classification_code
+                type: STRING
+              - name: trademark_classification_name
+                type: STRING
+              - name: title
+                type: STRING
+            query: |-
+              CREATE OR REPLACE TABLE patent (
+                corporate_number STRING NOT NULL OPTIONS (description = '法人番号'),
+                name STRING NOT NULL OPTIONS (description = '法人名'),
+                location STRING NOT NULL OPTIONS (description = '本社所在地'),
+                patent_type STRING NOT NULL OPTIONS (description = '特許/意匠/商標'),
+                application_number STRING NOT NULL OPTIONS (description = '出願番号'),
+                application_date DATE OPTIONS (description = '出願年月日'),
+                patent_classification_fi_code STRING OPTIONS (description = '特許_FI分類_コード値'),
+                patent_classification_fi_name STRING OPTIONS (description = '特許_FI分類_コード値(日本語)'),
+                patent_classification_f_term_theme_code STRING OPTIONS (description = '特許_Fターム-テーマコード'),
+                design_classification_code STRING OPTIONS (description = '意匠_意匠新分類_コード値'),
+                design_classification_name STRING OPTIONS (description = '意匠_意匠新分類_コード値(日本語)'),
+                trademark_classification_code STRING OPTIONS (description = '商標_類_コード値'),
+                trademark_classification_name STRING OPTIONS (description = '商標_類_コード値(日本語)'),
+                title STRING NOT NULL OPTIONS (description = '発明の名称(等)/意匠に係る物品/表示用商標'),
+              ) OPTIONS (description = '特許情報') AS
+              SELECT
+                IF(corporate_number <> "", corporate_number, ERROR('(corporate_number <> "") IS NOT TRUE')) AS corporate_number,
+                IF(name <> "", name, ERROR('(name <> "") IS NOT TRUE')) AS name,
+                IF(location <> "", location, ERROR('(location <> "") IS NOT TRUE')) AS location,
+                IF(patent_type <> "", patent_type, ERROR('(patent_type <> "") IS NOT TRUE')) AS patent_type,
+                IF(application_number <> "", application_number, ERROR('(application_number <> "") IS NOT TRUE')) AS application_number,
+                PARSE_DATE("%Y-%m-%d", application_date) AS application_date,
+                NULLIF(patent_classification_fi_code, "") AS patent_classification_fi_code,
+                NULLIF(patent_classification_fi_name, "") AS patent_classification_fi_name,
+                NULLIF(patent_classification_f_term_theme_code, "") AS patent_classification_f_term_theme_code,
+                NULLIF(design_classification_code, "") AS design_classification_code,
+                NULLIF(design_classification_name, "") AS design_classification_name,
+                NULLIF(trademark_classification_code, "") AS trademark_classification_code,
+                NULLIF(trademark_classification_name, "") AS trademark_classification_name,
+                IF(title <> "", title, ERROR('(title <> "") IS NOT TRUE')) AS title,
+              FROM
+                from_item
+
+          - object: finance.csv
+            body: downenc=UTF-8&downfile=13&downtype=csv
+            fields:
+              - name: corporate_number
+                type: STRING
+              - name: name__corporate_number
+                type: STRING
+              - name: location__corporate_number
+                type: STRING
+              - name: name
+                type: STRING
+              - name: location
+                type: STRING
+              - name: accounting_standards
+                type: STRING
+              - name: fiscal_year_cover_page
+                type: STRING
+              - name: period
+                type: STRING
+              - name: net_sales_summary_of_business_results
+                type: STRING
+              - name: net_sales_summary_of_business_results_unit_ref
+                type: STRING
+              - name: operating_revenue1_summary_of_business_results
+                type: STRING
+              - name: operating_revenue1_summary_of_business_results_unit_ref
+                type: STRING
+              - name: operating_revenue2_summary_of_business_results
+                type: STRING
+              - name: operating_revenue2_summary_of_business_results_unit_ref
+                type: STRING
+              - name: gross_operating_revenue_summary_of_business_results
+                type: STRING
+              - name: gross_operating_revenue_summary_of_business_results_unit_ref
+                type: STRING
+              - name: ordinary_income_summary_of_business_results
+                type: STRING
+              - name: ordinary_income_summary_of_business_results_unit_ref
+                type: STRING
+              - name: net_premiums_written_summary_of_business_results_ins
+                type: STRING
+              - name: net_premiums_written_summary_of_business_results_ins_unit_ref
+                type: STRING
+              - name: ordinary_income_loss_summary_of_business_results
+                type: STRING
+              - name: ordinary_income_loss_summary_of_business_results_unit_ref
+                type: STRING
+              - name: net_income_loss_summary_of_business_results
+                type: STRING
+              - name: net_income_loss_summary_of_business_results_unit_ref
+                type: STRING
+              - name: capital_stock_summary_of_business_results
+                type: STRING
+              - name: capital_stock_summary_of_business_results_unit_ref
+                type: STRING
+              - name: net_assets_summary_of_business_results
+                type: STRING
+              - name: net_assets_summary_of_business_results_unit_ref
+                type: STRING
+              - name: total_assets_summary_of_business_results
+                type: STRING
+              - name: total_assets_summary_of_business_results_unit_ref
+                type: STRING
+              - name: number_of_employees
+                type: STRING
+              - name: number_of_employees_unit_ref
+                type: STRING
+              - name: name_major_shareholders1
+                type: STRING
+              - name: shareholding_ratio1
+                type: STRING
+              - name: name_major_shareholders2
+                type: STRING
+              - name: shareholding_ratio2
+                type: STRING
+              - name: name_major_shareholders3
+                type: STRING
+              - name: shareholding_ratio3
+                type: STRING
+              - name: name_major_shareholders4
+                type: STRING
+              - name: shareholding_ratio4
+                type: STRING
+              - name: name_major_shareholders5
+                type: STRING
+              - name: shareholding_ratio5
+                type: STRING
+            query: |-
+              CREATE OR REPLACE TABLE finance (
+                corporate_number STRING NOT NULL OPTIONS (description = '法人番号'),
+                name STRING NOT NULL OPTIONS (description = '法人名'),
+                location STRING NOT NULL OPTIONS (description = '本社所在地'),
+                accounting_standards STRING OPTIONS (description = '会計基準'),
+                fiscal_year_cover_page STRING NOT NULL OPTIONS (description = '事業年度'),
+                period INT64 OPTIONS (description = '回次'),
+                net_sales_summary_of_business_results INT64 OPTIONS (description = '売上高（円）'),
+                operating_revenue1_summary_of_business_results INT64 OPTIONS (description = '営業収益（円）'),
+                operating_revenue2_summary_of_business_results INT64 OPTIONS (description = '営業収入（円）'),
+                gross_operating_revenue_summary_of_business_results INT64 OPTIONS (description = '営業総収入（円）'),
+                ordinary_income_summary_of_business_results INT64 OPTIONS (description = '経常収益（円）'),
+                net_premiums_written_summary_of_business_results_ins INT64 OPTIONS (description = '正味収入保険料（円）'),
+                ordinary_income_loss_summary_of_business_results INT64 OPTIONS (description = '経常利益又は経常損失（△）（円）'),
+                net_income_loss_summary_of_business_results INT64 OPTIONS (description = '当期純利益又は当期純損失（△）（円）'),
+                capital_stock_summary_of_business_results INT64 OPTIONS (description = '資本金（円）'),
+                net_assets_summary_of_business_results INT64 OPTIONS (description = '純資産額（円）'),
+                total_assets_summary_of_business_results INT64 OPTIONS (description = '総資産額（円）'),
+                number_of_employees INT64 OPTIONS (description = '従業員数（人）'),
+                major_shareholders ARRAY<STRUCT<
+                    name_major_shareholders STRING OPTIONS (description = '氏名又は名称'),
+                    shareholding_ratio NUMERIC OPTIONS (description = '発行済株式総数に対する所有株式数の割合')
+                >> OPTIONS (description = '大株主'),
+              ) OPTIONS (description = '財務情報') AS
+              SELECT
+                IF(corporate_number <> "", corporate_number, ERROR('(corporate_number <> "") IS NOT TRUE')) AS corporate_number,
+                IF(name <> "",  name, ERROR('(name <> "") IS NOT TRUE')) AS name,
+                IF(location <> "",  location, ERROR('(location <> "") IS NOT TRUE')) AS location,
+                NULLIF(accounting_standards, "") AS accounting_standards,
+                IF(fiscal_year_cover_page <> "",  fiscal_year_cover_page, ERROR('(fiscal_year_cover_page <> "") IS NOT TRUE')) AS fiscal_year_cover_page,
+                CASE period
+                    WHEN "0" THEN 0
+                    WHEN "1" THEN 1
+                    WHEN "2" THEN 2
+                    WHEN "3" THEN 3
+                    WHEN "4" THEN 4
+                    ELSE ERROR("Unsupported period: " || period)
+                    END AS period,
+                CASE
+                    WHEN net_sales_summary_of_business_results = "" THEN NULL
+                    WHEN net_sales_summary_of_business_results_unit_ref = "JPY" THEN CAST(net_sales_summary_of_business_results AS INT64)
+                    ELSE ERROR("net_sales_summary_of_business_results")
+                    END net_sales_summary_of_business_results,
+                CASE
+                    WHEN operating_revenue1_summary_of_business_results = "" THEN NULL
+                    WHEN operating_revenue1_summary_of_business_results_unit_ref = "JPY" THEN CAST(operating_revenue1_summary_of_business_results AS INT64)
+                    ELSE ERROR("operating_revenue1_summary_of_business_results")
+                    END operating_revenue1_summary_of_business_results,
+                CASE
+                    WHEN operating_revenue2_summary_of_business_results = "" THEN NULL
+                    WHEN operating_revenue2_summary_of_business_results_unit_ref = "JPY" THEN CAST(operating_revenue2_summary_of_business_results AS INT64)
+                    ELSE ERROR("operating_revenue2_summary_of_business_results")
+                    END operating_revenue2_summary_of_business_results,
+                CASE
+                    WHEN gross_operating_revenue_summary_of_business_results = "" THEN NULL
+                    WHEN gross_operating_revenue_summary_of_business_results_unit_ref = "JPY" THEN CAST(gross_operating_revenue_summary_of_business_results AS INT64)
+                    ELSE ERROR("gross_operating_revenue_summary_of_business_results")
+                    END gross_operating_revenue_summary_of_business_results,
+                CASE
+                    WHEN ordinary_income_summary_of_business_results = "" THEN NULL
+                    WHEN ordinary_income_summary_of_business_results_unit_ref = "JPY" THEN CAST(ordinary_income_summary_of_business_results AS INT64)
+                    ELSE ERROR("ordinary_income_summary_of_business_results")
+                    END ordinary_income_summary_of_business_results,
+                CASE
+                    WHEN net_premiums_written_summary_of_business_results_ins = "" THEN NULL
+                    WHEN net_premiums_written_summary_of_business_results_ins_unit_ref = "JPY" THEN CAST(net_premiums_written_summary_of_business_results_ins AS INT64)
+                    ELSE ERROR("net_premiums_written_summary_of_business_results_ins")
+                    END net_premiums_written_summary_of_business_results_ins,
+                CASE
+                    WHEN ordinary_income_loss_summary_of_business_results = "" THEN NULL
+                    WHEN ordinary_income_loss_summary_of_business_results_unit_ref = "JPY" THEN CAST(ordinary_income_loss_summary_of_business_results AS INT64)
+                    ELSE ERROR("ordinary_income_loss_summary_of_business_results")
+                    END ordinary_income_loss_summary_of_business_results,
+                CASE
+                    WHEN net_income_loss_summary_of_business_results = "" THEN NULL
+                    WHEN net_income_loss_summary_of_business_results_unit_ref = "JPY" THEN CAST(net_income_loss_summary_of_business_results AS INT64)
+                    ELSE ERROR("net_income_loss_summary_of_business_results")
+                    END net_income_loss_summary_of_business_results,
+                CASE
+                    WHEN capital_stock_summary_of_business_results = "" THEN NULL
+                    WHEN capital_stock_summary_of_business_results_unit_ref = "JPY" THEN CAST(capital_stock_summary_of_business_results AS INT64)
+                    ELSE ERROR("capital_stock_summary_of_business_results")
+                    END capital_stock_summary_of_business_results,
+                CASE
+                    WHEN net_assets_summary_of_business_results = "" THEN NULL
+                    WHEN net_assets_summary_of_business_results_unit_ref = "JPY" THEN CAST(net_assets_summary_of_business_results AS INT64)
+                    ELSE ERROR("net_assets_summary_of_business_results")
+                    END net_assets_summary_of_business_results,
+                CASE
+                    WHEN total_assets_summary_of_business_results = "" THEN NULL
+                    WHEN total_assets_summary_of_business_results_unit_ref = "JPY" THEN CAST(total_assets_summary_of_business_results AS INT64)
+                    ELSE ERROR("total_assets_summary_of_business_results")
+                    END total_assets_summary_of_business_results,
+                CASE
+                    WHEN number_of_employees = "" THEN NULL
+                    WHEN number_of_employees_unit_ref = "pure" THEN CAST(number_of_employees AS INT64)
+                    ELSE ERROR("number_of_employees")
+                    END number_of_employees,
+                ARRAY(
+                    SELECT AS STRUCT
+                  name_major_shareholders,
+                        CAST(shareholding_ratio AS NUMERIC) AS shareholding_ratio
+                FROM
+                  UNNEST(ARRAY<STRUCT<id INT64, name_major_shareholders STRING, shareholding_ratio STRING>>[
+                    (1, name_major_shareholders1, shareholding_ratio1),
+                    (2, name_major_shareholders2, shareholding_ratio2),
+                    (3, name_major_shareholders3, shareholding_ratio3),
+                    (4, name_major_shareholders4, shareholding_ratio4),
+                    (5, name_major_shareholders5, shareholding_ratio5)
+                  ])
+                WHERE
+                  name_major_shareholders <> "" OR shareholding_ratio <> ""
+                ORDER BY
+                  id
+                    ) AS major_shareholders
+              FROM
+                from_item
+
+          - object: workplace.csv
+            body: downenc=UTF-8&downfile=14&downtype=csv
+            fields:
+              - name: corporate_number
+                type: STRING
+              - name: name__corporate_number
+                type: STRING
+              - name: location__corporate_number
+                type: STRING
+              - name: name
+                type: STRING
+              - name: location
+                type: STRING
+              - name: average_continuous_service_years_type
+                type: STRING
+              - name: average_continuous_service_years_male
+                type: STRING
+              - name: average_continuous_service_years_female
+                type: STRING
+              - name: average_continuous_service_years
+                type: STRING
+              - name: average_age
+                type: STRING
+              - name: month_average_predetermined_overtime_hours
+                type: STRING
+              - name: female_workers_proportion_type
+                type: STRING
+              - name: female_workers_proportion
+                type: STRING
+              - name: female_share_of_manager
+                type: STRING
+              - name: gender_total_of_manager
+                type: STRING
+              - name: female_share_of_officers
+                type: STRING
+              - name: gender_total_of_officers
+                type: STRING
+              - name: number_of_paternity_leave
+                type: STRING
+              - name: number_of_maternity_leave
+                type: STRING
+              - name: paternity_leave_acquisition_num
+                type: STRING
+              - name: maternity_leave_acquisition_num
+                type: STRING
+            query: |-
+              CREATE OR REPLACE TABLE workplace (
+                corporate_number STRING NOT NULL OPTIONS (description = "法人番号"),
+                name STRING NOT NULL OPTIONS (description = "法人名"),
+                location STRING NOT NULL OPTIONS (description = "本社所在地"),
+                average_continuous_service_years_type STRING OPTIONS (description = "平均継続勤務年数-範囲"),
+                average_continuous_service_years_male NUMERIC OPTIONS (description = "平均継続勤務年数-男性"),
+                average_continuous_service_years_female NUMERIC OPTIONS (description = "平均継続勤務年数-女性"),
+                average_continuous_service_years NUMERIC OPTIONS (description = "正社員の平均継続勤務年数"),
+                average_age NUMERIC OPTIONS (description = "従業員の平均年齢"),
+                month_average_predetermined_overtime_hours NUMERIC OPTIONS (description = "月平均所定外労働時間"),
+                female_workers_proportion_type STRING OPTIONS (description = "労働者に占める女性労働者の割合-範囲"),
+                female_workers_proportion NUMERIC OPTIONS (description = "労働者に占める女性労働者の割合"),
+                female_share_of_manager INT64 OPTIONS (description = "女性管理職人数"),
+                gender_total_of_manager INT64 OPTIONS (description = "管理職全体人数（男女計）"),
+                female_share_of_officers INT64 OPTIONS (description = "女性役員人数"),
+                gender_total_of_officers INT64 OPTIONS (description = "役員全体人数（男女計）"),
+                number_of_paternity_leave INT64 OPTIONS (description = "育児休業対象者数（男性）"),
+                number_of_maternity_leave INT64 OPTIONS (description = "育児休業対象者数（女性）"),
+                paternity_leave_acquisition_num INT64 OPTIONS (description = "育児休業取得者数（男性）"),
+                maternity_leave_acquisition_num INT64 OPTIONS (description = "育児休業取得者数（女性）"),
+              ) OPTIONS (description = "職場情報") AS
+              SELECT
+                  IF(corporate_number <> "", corporate_number, ERROR('(corporate_number <> "") IS NOT TRUE')) AS corporate_number,
+                  IF(name <> "",  name, ERROR('(name <> "") IS NOT TRUE')) AS name,
+                  IF(location <> "", location, ERROR('(location <> "") IS NOT TRUE')) AS location,
+                  NULLIF(average_continuous_service_years_type, "") AS average_continuous_service_years_type,
+                  CAST(NULLIF(average_continuous_service_years_male, "") AS NUMERIC) AS average_continuous_service_years_male,
+                  CAST(NULLIF(average_continuous_service_years_female, "") AS NUMERIC) AS average_continuous_service_years_female,
+                  CAST(NULLIF(average_continuous_service_years, "") AS NUMERIC) AS average_continuous_service_years,
+                  CAST(NULLIF(average_age, "") AS NUMERIC) AS average_age,
+                  CAST(NULLIF(month_average_predetermined_overtime_hours, "") AS NUMERIC) AS month_average_predetermined_overtime_hours,
+                  NULLIF(female_workers_proportion_type, "") AS female_workers_proportion_type,
+                  CAST(NULLIF(female_workers_proportion, "") AS NUMERIC) AS female_workers_proportion,
+                  CAST(NULLIF(female_share_of_manager, "") AS INT64) AS female_share_of_manager,
+                  CAST(NULLIF(gender_total_of_manager, "") AS INT64) AS gender_total_of_manager,
+                  CAST(NULLIF(female_share_of_officers, "") AS INT64) AS female_share_of_officers,
+                  CAST(NULLIF(gender_total_of_officers, "") AS INT64) AS gender_total_of_officers,
+                  CAST(NULLIF(number_of_paternity_leave, "") AS INT64) AS number_of_paternity_leave,
+                  CAST(NULLIF(number_of_maternity_leave, "") AS INT64) AS number_of_maternity_leave,
+                  CAST(NULLIF(paternity_leave_acquisition_num, "") AS INT64) AS paternity_leave_acquisition_num,
+                  CAST(NULLIF(maternity_leave_acquisition_num, "") AS INT64) AS maternity_leave_acquisition_num,
+              FROM
+                  from_item
+- downloadFiles:
+    parallel:
+      for:
+        value: r
+        in: $${requests}
+        steps:
+          - download_file:
+              call: http.post
+              args:
+                url: ${url}
+                timeout: 600
+                body:
+                  method: POST
+                  url: https://info.gbiz.go.jp/hojin/Download
+                  body: $${r.body}
+                  headers:
+                    Content-Type: application/x-www-form-urlencoded
+                  bucket: $${bucket}
+                  object: $${r.object}
+                auth:
+                  type: OIDC
+          - create_table:
+              call: googleapis.bigquery.v2.jobs.insert
+              args:
+                projectId: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+                body:
+                  configuration:
+                    query:
+                      query: $${r.query}
+                      tableDefinitions:
+                        from_item:
+                          sourceUris:
+                            - '$${"gs://" + bucket + "/" + r.object}'
+                          schema:
+                            fields: $${r.fields}
+                          sourceFormat: CSV
+                          csvOptions:
+                            skipLeadingRows: 1
+                            allowQuotedNewlines: true
+                      defaultDataset:
+                        datasetId: ${dataset_id}
+                      useLegacySql: false

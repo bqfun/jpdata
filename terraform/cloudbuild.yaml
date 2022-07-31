@@ -1,0 +1,12 @@
+steps:
+  - name: 'hashicorp/terraform:1.2.6'
+    args: ['init']
+    dir: 'terraform/environments/prod'
+  - name: 'hashicorp/terraform:1.2.6'
+    args: ['plan']
+    dir: 'terraform/environments/prod'
+  - name: 'hashicorp/terraform:1.2.6'
+    args: ['apply', '-auto-approve']
+    dir: 'terraform/environments/prod'
+options:
+  logging: CLOUD_LOGGING_ONLY

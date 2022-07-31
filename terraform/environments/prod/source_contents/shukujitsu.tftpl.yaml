@@ -1,0 +1,50 @@
+- init:
+    assign:
+      - bucket: ${bucket}
+      - object: syukujitsu.csv
+- download_file:
+    call: http.post
+    args:
+      url: ${url}
+      body:
+        method: GET
+        url: https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv
+        is_shiftjis: true
+        bucket: $${bucket}
+        object: $${object}
+      auth:
+        type: OIDC
+- create_table:
+    call: googleapis.bigquery.v2.jobs.insert
+    args:
+      projectId: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+      body:
+        configuration:
+          query:
+            query: |-
+              CREATE OR REPLACE TABLE holidays (
+                date DATE NOT NULL OPTIONS(description="国民の祝日・休日月日"),
+                name STRING NOT NULL OPTIONS(description="国民の祝日・休日名称"),
+              ) OPTIONS (description = "国民の祝日・休日") AS
+              SELECT
+                PARSE_DATE("%Y/%m/%d", date) AS date,
+                name,
+              FROM
+                from_item
+            tableDefinitions:
+              from_item:
+                sourceUris:
+                  - '$${"gs://" + bucket + "/" + object}'
+                schema:
+                  fields:
+                    - name: date
+                      type: STRING
+                    - name: name
+                      type: STRING
+                sourceFormat: CSV
+                csvOptions:
+                  skipLeadingRows: 1
+                  allowQuotedNewlines: true
+            defaultDataset:
+              datasetId: ${dataset_id}
+            useLegacySql: false
