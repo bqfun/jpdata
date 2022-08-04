@@ -1,11 +1,11 @@
 resource "google_storage_bucket" "httpgcs" {
-  name     = "${var.project}-httpgcs"
-  location = "asia-northeast1"
+  name     = "${var.project}-httpgcs-${var.region}"
+  location = var.region
 }
 
 data "archive_file" "httpgcs" {
   type        = "zip"
-  source_dir  = "httpgcs"
+  source_dir  = "../../modules/httpgcs/src"
   output_path = "httpgcs.zip"
 }
 
@@ -28,7 +28,7 @@ resource "google_project_iam_member" "httpgcs" {
 resource "google_cloudfunctions_function" "httpgcs" {
   name        = "httpgcs"
   runtime     = "go116"
-  region      = "asia-northeast1"
+  region      = var.region
 
   available_memory_mb          = 256
   source_archive_bucket        = google_storage_bucket_object.httpgcs.bucket
