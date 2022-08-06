@@ -558,12 +558,33 @@
               - name: shareholding_ratio5
                 type: STRING
             query: |-
+              CREATE TEMP FUNCTION TO_YEAR(year STRING)AS(
+                IF(year = "元", 1, CAST(year AS INT64))
+              );
+              
+              CREATE TEMP FUNCTION TO_DATE(s STRING)AS(
+                DATE(
+                  CASE REGEXP_EXTRACT(s, r"^(令和|平成|)(?:元|\d+)年\d{1,2}月\d{1,2}日$")
+                    WHEN "令和" THEN 2018
+                    WHEN "平成" THEN 1988
+                    WHEN "" THEN 0
+                    ELSE ERROR(s)
+                  END
+                  + TO_YEAR(REGEXP_EXTRACT(s, r"^(?:令和|平成|)(元|\d+)年\d{1,2}月\d{1,2}日$")),
+                  CAST(REGEXP_EXTRACT(s, r"^(?:令和|平成|)(?:元|\d+)年(\d{1,2})月\d{1,2}日$") AS INT64),
+                  CAST(REGEXP_EXTRACT(s, r"^(?:令和|平成|)(?:元|\d+)年\d{1,2}月(\d{1,2})日$") AS INT64)
+                )
+              );
+              
               CREATE OR REPLACE TABLE finance (
                 corporate_number STRING NOT NULL OPTIONS (description = '法人番号'),
                 name STRING NOT NULL OPTIONS (description = '法人名'),
                 location STRING NOT NULL OPTIONS (description = '本社所在地'),
                 accounting_standards STRING OPTIONS (description = '会計基準'),
-                fiscal_year_cover_page STRING NOT NULL OPTIONS (description = '事業年度'),
+                fiscal_year_cover_page STRUCT<
+                    start_date DATE NOT NULL OPTIONS (description = '期初日'),
+                    end_date DATE NOT NULL OPTIONS (description = '期末日')
+                > NOT NULL OPTIONS (description = '事業年度'),
                 period INT64 OPTIONS (description = '回次'),
                 net_sales_summary_of_business_results INT64 OPTIONS (description = '売上高（円）'),
                 operating_revenue1_summary_of_business_results INT64 OPTIONS (description = '営業収益（円）'),
@@ -587,7 +608,17 @@
                 IF(name <> "",  name, ERROR('(name <> "") IS NOT TRUE')) AS name,
                 IF(location <> "",  location, ERROR('(location <> "") IS NOT TRUE')) AS location,
                 NULLIF(accounting_standards, "") AS accounting_standards,
-                IF(fiscal_year_cover_page <> "",  fiscal_year_cover_page, ERROR('(fiscal_year_cover_page <> "") IS NOT TRUE')) AS fiscal_year_cover_page,
+                CASE
+                  WHEN REGEXP_CONTAINS(fiscal_year_cover_page, r"^自.+至.+$") THEN STRUCT(
+                    TO_DATE(REGEXP_EXTRACT(fiscal_year_cover_page, r"^自(.+)至.+$")),
+                    TO_DATE(REGEXP_EXTRACT(fiscal_year_cover_page, r"^自.+至(.+)$"))
+                  )
+                  WHEN REGEXP_CONTAINS(fiscal_year_cover_page, r"^.+から.+まで$") THEN STRUCT(
+                    TO_DATE(REGEXP_EXTRACT(fiscal_year_cover_page, r"^(.+)から.+まで$")),
+                    TO_DATE(REGEXP_EXTRACT(fiscal_year_cover_page, r"^.+から(.+)まで$"))
+                  )
+                  ELSE ERROR("Unsupported fiscal_year_cover_page: " || IFNULL(fiscal_year_cover_page, "null"))
+                END AS fiscal_year_cover_page,
                 CASE period
                     WHEN "0" THEN 0
                     WHEN "1" THEN 1
@@ -673,8 +704,17 @@
                 ORDER BY
                   id
                     ) AS major_shareholders
-              FROM
-                from_item
+              FROM (
+                SELECT
+                  *REPLACE(
+                    REGEXP_EXTRACT(
+                      REGEXP_REPLACE(NORMALIZE(fiscal_year_cover_page, NFKC), "\\p{Space}", ""),
+                      r"^(?:\d{4}年\d{1,2}月期\(第\d+期\)|\d{4}年\d{1,2}月期|\d{4}年度?|第\d+期\(\d{4}年\d{1,2}月期\)|第\d+期|\(第\d+期\))\((.+)\)$"
+                    ) AS fiscal_year_cover_page
+                  )
+                FROM
+                  from_item
+              )
 
           - object: workplace.csv
             body: downenc=UTF-8&downfile=14&downtype=csv
