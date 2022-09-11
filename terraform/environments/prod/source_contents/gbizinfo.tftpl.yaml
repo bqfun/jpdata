@@ -47,6 +47,8 @@
                 type: STRING
               - name: update_date
                 type: STRING
+              - name: unified_qualification
+                type: STRING
             query: |-
               CREATE OR REPLACE TABLE basic (
                 corporate_number STRING OPTIONS (description = '法人番号'),
@@ -72,7 +74,13 @@
                 company_url STRING OPTIONS (description = '企業ホームページ'),
                 date_of_establishment DATE OPTIONS (description = '設立年月日'),
                 founding_year INT64 OPTIONS (description = '創業年'),
-                update_date DATE OPTIONS (description = '最終更新日')
+                update_date DATE OPTIONS (description = '最終更新日'),
+                unified_qualification STRUCT<
+                    sub01 STRING OPTIONS (description = '物品の製造'),
+                    sub02 STRING OPTIONS (description = '物品の販売'),
+                    sub03 STRING OPTIONS (description = '役務の提供等'),
+                    sub04 STRING OPTIONS (description = '物品の買受け')
+                > OPTIONS (description = '全省庁統一資格の資格等級')
               ) OPTIONS (description = '基本情報') AS
               SELECT
                     IF(corporate_number <> "", corporate_number, ERROR('(corporate_number <> "") IS NOT TRUE')) AS corporate_number,
@@ -188,7 +196,17 @@
                     NULLIF(company_url, "") AS company_url,
                     PARSE_DATE("%Y-%m-%d", NULLIF(date_of_establishment, "")) AS date_of_establishment,
                     CAST(NULLIF(founding_year, "") AS INT64) AS founding_year,
-                    IF(update_date = "", NULL, IFNULL(SAFE.PARSE_DATE("%Y-%m-%dT00:00:00+09:00", update_date), PARSE_DATE("%Y-%m-%dT00:00:00Z", update_date))) AS update_date
+                    IF(update_date = "", NULL, IFNULL(SAFE.PARSE_DATE("%Y-%m-%dT00:00:00+09:00", update_date), PARSE_DATE("%Y-%m-%dT00:00:00Z", update_date))) AS update_date,
+                    CASE
+                      WHEN unified_qualification = "" THEN NULL
+                      WHEN REGEXP_CONTAINS(unified_qualification, "^[ABCD]?、[ABCD]?、[ABCD]?、[ABCD]?$") THEN STRUCT(
+                        REGEXP_EXTRACT(unified_qualification, "^([ABCD])、[ABCD]?、[ABCD]?、[ABCD]?$") AS sub01,
+                        REGEXP_EXTRACT(unified_qualification, "^[ABCD]?、([ABCD])、[ABCD]?、[ABCD]?$") AS sub02,
+                        REGEXP_EXTRACT(unified_qualification, "^[ABCD]?、[ABCD]?、([ABCD])、[ABCD]?$") AS sub03,
+                        REGEXP_EXTRACT(unified_qualification, "^[ABCD]?、[ABCD]?、[ABCD]?、([ABCD])$") AS sub04
+                      )
+                      ELSE ERROR("Unsupported unified_qualification: " || unified_qualification)
+                    END AS unified_qualification,
               FROM
                 from_item
           - object: certification.csv
