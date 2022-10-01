@@ -708,7 +708,7 @@
                 ARRAY(
                     SELECT AS STRUCT
                   name_major_shareholders,
-                        CAST(shareholding_ratio AS NUMERIC) AS shareholding_ratio
+                        CAST(NULLIF(shareholding_ratio, "") AS NUMERIC) AS shareholding_ratio
                 FROM
                   UNNEST(ARRAY<STRUCT<id INT64, name_major_shareholders STRING, shareholding_ratio STRING>>[
                     (1, name_major_shareholders1, shareholding_ratio1),
