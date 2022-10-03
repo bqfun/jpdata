@@ -1,50 +1,61 @@
 - init:
     assign:
       - bucket: ${bucket}
-      - object: syukujitsu.csv
-- download_file:
-    call: http.post
-    args:
-      url: ${url}
-      body:
-        method: GET
-        url: https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv
-        is_shiftjis: true
-        bucket: $${bucket}
-        object: $${object}
-      auth:
-        type: OIDC
-- create_table:
-    call: googleapis.bigquery.v2.jobs.insert
-    args:
-      projectId: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
-      body:
-        configuration:
-          query:
-            query: |-
-              CREATE OR REPLACE TABLE holidays (
-                date DATE NOT NULL OPTIONS(description="国民の祝日・休日月日"),
-                name STRING NOT NULL OPTIONS(description="国民の祝日・休日名称"),
-              ) OPTIONS (description = "国民の祝日・休日") AS
-              SELECT
-                PARSE_DATE("%Y/%m/%d", date) AS date,
-                name,
-              FROM
-                from_item
-            tableDefinitions:
-              from_item:
-                sourceUris:
-                  - '$${"gs://" + bucket + "/" + object}'
-                schema:
-                  fields:
-                    - name: date
-                      type: STRING
-                    - name: name
-                      type: STRING
-                sourceFormat: CSV
-                csvOptions:
-                  skipLeadingRows: 1
-                  allowQuotedNewlines: true
-            defaultDataset:
-              datasetId: ${dataset_id}
-            useLegacySql: false
+      - repository: ${repository}
+      - url: ${url}
+- loadFile:
+    try:
+      steps:
+        - downloadFile:
+            call: http.post
+            args:
+              url: $${url}
+              body:
+                method: GET
+                url: https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv
+                is_shiftjis: true
+                bucket: $${bucket}
+                object: syukujitsu.csv
+              auth:
+                type: OIDC
+        - createCompilationResult:
+            call: http.post
+            args:
+              url: $${"https://dataform.googleapis.com/v1beta1/" + repository + "/compilationResults"}
+              auth:
+                type: OAuth2
+              body:
+                git_commitish: main
+            result: compilationResult
+        - createWorkflowInvocation:
+            call: http.post
+            args:
+              url: $${"https://dataform.googleapis.com/v1beta1/" + repository + "/workflowInvocations"}
+              auth:
+                type: OAuth2
+              body:
+                compilationResult: $${compilationResult.body.name}
+                invocationConfig:
+                  includedTargets:
+                    database: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+                    schema: shukujitsu_staging
+                    name: holidays_raw
+                  transitiveDependentsIncluded: true
+
+    except:
+      as: e
+      steps:
+        - access_secret:
+            call: googleapis.secretmanager.v1.projects.secrets.versions.access
+            args:
+              name: ${slack_webhook_url_secret_id}/versions/latest
+            result: base64_encoded_secret
+        - notify:
+            call: http.post
+            args:
+              url: $${text.decode(base64.decode(base64_encoded_secret.payload.data))}
+              body:
+                text: $${e.message}
+        - raise_error:
+            raise: $${e}
+
