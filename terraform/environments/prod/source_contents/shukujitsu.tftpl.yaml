@@ -41,7 +41,32 @@
                     schema: shukujitsu_staging
                     name: holidays_raw
                   transitiveDependentsIncluded: true
-
+            result: workflowInvocation
+        - checkIfDone:
+            switch:
+              - condition: $${workflowInvocation.body.state == "SUCCEEDED"}
+                return: $${workflowInvocation}
+              - condition: $${workflowInvocation.body.state == "CANCELLED"}
+                raise:
+                  message: "Dataform run was canceled."
+              - condition: $${workflowInvocation.body.state == "FAILED"}
+                raise:
+                  message: "Dataform run failed."
+              - condition: $${not(workflowInvocation.body.state in ["RUNNING", "CANCELING"])}
+                raise:
+                  message: "Dataform run has an unexpected status."
+        - wait:
+            call: sys.sleep
+            args:
+              seconds: 60
+        - checkWorkflowInvocation:
+            call: http.get
+            args:
+              url: $${"https://dataform.googleapis.com/v1beta1/" + workflowInvocation.body.name}
+              auth:
+                type: OAuth2
+            result: workflowInvocation
+            next: checkIfDone
     except:
       as: e
       steps:
@@ -58,4 +83,3 @@
                 text: $${e.message}
         - raise_error:
             raise: $${e}
-
