@@ -59,6 +59,5 @@ resource "google_project_iam_member" "dataform" {
 module "dataform" {
   source = "../../modules/dataform"
   project = var.google.project
-  name = "dataform"
   slack_webhook_url_secret_id = google_secret_manager_secret.slack-webhook-url.id
 }
