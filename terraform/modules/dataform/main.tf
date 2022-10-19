@@ -15,7 +15,6 @@ resource "google_workflows_workflow" "dataform" {
   service_account = google_service_account.dataform.id
   source_contents = templatefile("${path.module}/dataform.tftpl.yaml", {
     repository = "projects/jpdata/locations/us-central1/repositories/jpdata-dataform",
-    slack_webhook_url_secret_id = var.slack_webhook_url_secret_id,
     bucket_gbizinfo = var.bucket_gbizinfo,
     bucket_shukujitsu = var.bucket_shukujitsu,
   })
@@ -34,11 +33,4 @@ resource "google_cloud_scheduler_job" "dataform" {
       service_account_email = google_service_account.dataform.email
     }
   }
-}
-
-resource "google_secret_manager_secret_iam_member" "workflow" {
-  project   = var.project
-  secret_id = var.slack_webhook_url_secret_id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.dataform.email}"
 }

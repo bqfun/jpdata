@@ -5,7 +5,6 @@ resource "google_service_account" "httpbq" {
 resource "google_project_iam_member" "httpbq" {
   for_each = toset([
     "roles/workflows.invoker",
-    "roles/cloudfunctions.invoker",
     "roles/batch.jobsEditor",
     "roles/iam.serviceAccountUser",
   ])
@@ -56,11 +55,3 @@ resource "google_bigquery_dataset" "httpbq-staging" {
   default_partition_expiration_ms = 5184000000
   location                        = "asia-northeast1"
 }
-
-resource "google_secret_manager_secret_iam_member" "member" {
-  project   = var.project
-  secret_id = var.slack_webhook_url_secret_id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.httpbq.email}"
-}
-

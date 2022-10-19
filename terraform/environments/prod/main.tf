@@ -1,17 +1,3 @@
-module "httpgcs" {
-  source = "../../modules/httpgcs"
-  project = var.google.project
-  region = var.google.region
-}
-
-resource "google_secret_manager_secret" "slack-webhook-url" {
-  secret_id = "slack-webhook-url"
-
-  replication {
-    automatic = true
-  }
-}
-
 module "gbizinfo" {
   source = "../../modules/httpbq"
   project = var.google.project
@@ -21,10 +7,7 @@ module "gbizinfo" {
   schedule = "0 9 * * *"
   source_contents = templatefile("source_contents/gbizinfo.tftpl.yaml", {
     bucket = module.gbizinfo.bucket_name,
-    url = module.httpgcs.https_trigger_url,
-    slack_webhook_url_secret_id = google_secret_manager_secret.slack-webhook-url.id,
   })
-  slack_webhook_url_secret_id = google_secret_manager_secret.slack-webhook-url.id
 }
 
 module "shukujitsu" {
@@ -37,7 +20,6 @@ module "shukujitsu" {
   source_contents = templatefile("source_contents/shukujitsu.tftpl.yaml", {
     bucket = module.shukujitsu.bucket_name,
   })
-  slack_webhook_url_secret_id = google_secret_manager_secret.slack-webhook-url.id
 }
 
 resource "google_project_iam_member" "dataform" {
@@ -55,7 +37,6 @@ resource "google_project_iam_member" "dataform" {
 module "dataform" {
   source = "../../modules/dataform"
   project = var.google.project
-  slack_webhook_url_secret_id = google_secret_manager_secret.slack-webhook-url.id
   bucket_gbizinfo = module.gbizinfo.bucket_name
   bucket_shukujitsu = module.shukujitsu.bucket_name
 }
