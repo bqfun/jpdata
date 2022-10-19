@@ -56,4 +56,6 @@ module "dataform" {
   source = "../../modules/dataform"
   project = var.google.project
   slack_webhook_url_secret_id = google_secret_manager_secret.slack-webhook-url.id
+  bucket_gbizinfo = module.gbizinfo.bucket_name
+  bucket_shukujitsu = module.shukujitsu.bucket_name
 }

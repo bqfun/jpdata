@@ -16,6 +16,8 @@ resource "google_workflows_workflow" "dataform" {
   source_contents = templatefile("${path.module}/dataform.tftpl.yaml", {
     repository = "projects/jpdata/locations/us-central1/repositories/jpdata-dataform",
     slack_webhook_url_secret_id = var.slack_webhook_url_secret_id,
+    bucket_gbizinfo = var.bucket_gbizinfo,
+    bucket_shukujitsu = var.bucket_shukujitsu,
   })
 }
 
