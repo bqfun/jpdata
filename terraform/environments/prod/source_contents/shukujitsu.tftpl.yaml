@@ -1,35 +1,38 @@
 - init:
     assign:
+      - projectId: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+      - batchApiUrl: $${"https://batch.googleapis.com/v1/projects/" + projectId + "/locations/us-central1/jobs"}
+      - jobId: $${"job-shukujitsu-" + string(int(sys.now()))}
       - bucket: ${bucket}
-      - url: ${url}
-- loadFile:
-    try:
-      steps:
-        - downloadFile:
-            call: http.post
-            args:
-              url: $${url}
-              body:
-                method: GET
-                url: https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv
-                is_shiftjis: true
-                bucket: $${bucket}
-                object: syukujitsu.csv
-              auth:
-                type: OIDC
-    except:
-      as: e
-      steps:
-        - access_secret:
-            call: googleapis.secretmanager.v1.projects.secrets.versions.access
-            args:
-              name: ${slack_webhook_url_secret_id}/versions/latest
-            result: base64_encoded_secret
-        - notify:
-            call: http.post
-            args:
-              url: $${text.decode(base64.decode(base64_encoded_secret.payload.data))}
-              body:
-                text: $${e.message}
-        - raise_error:
-            raise: $${e}
+- createAndRunBatchJob:
+    call: http.post
+    args:
+      url: $${batchApiUrl}
+      query:
+        job_id: $${jobId}
+      headers:
+        Content-Type: application/json
+      auth:
+        type: OAuth2
+      body:
+        taskGroups:
+          taskSpec:
+            runnables:
+              - script:
+                  text: $${"curl https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv | iconv -f sjis -t utf-8 > /mnt/disks/$${BUCKET}/syukujitsu.csv"}
+                environment:
+                  variables:
+                    BUCKET: $${bucket}
+            volumes:
+              - gcs:
+                  remotePath: $${bucket}
+                mountPath: $${"/mnt/disks/" + bucket}
+
+        allocationPolicy:
+          instances:
+            - policy:
+                machineType: e2-micro
+                provisioningModel: SPOT
+
+        logsPolicy:
+          destination: CLOUD_LOGGING
