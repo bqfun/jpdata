@@ -3,7 +3,7 @@ resource "google_service_account" "httpbq" {
 }
 
 resource "google_project_iam_member" "httpbq" {
-  for_each = toset(["roles/workflows.invoker", "roles/cloudfunctions.invoker"])
+  for_each = toset(["roles/workflows.invoker", "roles/cloudfunctions.invoker", "roles/batch.jobsEditor"])
   project  = var.project
   role     = each.key
   member   = "serviceAccount:${google_service_account.httpbq.email}"
