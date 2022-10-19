@@ -13,7 +13,7 @@ resource "google_workflows_workflow" "dataform" {
   name            = "dataform"
   region          = "asia-northeast1"
   service_account = google_service_account.dataform.id
-  source_contents = templatefile("dataform.tftpl.yaml", {
+  source_contents = templatefile("${path.module}/dataform.tftpl.yaml", {
     repository = "projects/jpdata/locations/us-central1/repositories/jpdata-dataform",
     slack_webhook_url_secret_id = var.slack_webhook_url_secret_id,
   })
