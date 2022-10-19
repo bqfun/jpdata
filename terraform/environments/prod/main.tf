@@ -36,8 +36,6 @@ module "shukujitsu" {
   schedule = "0 6 * * *"
   source_contents = templatefile("source_contents/shukujitsu.tftpl.yaml", {
     bucket = module.shukujitsu.bucket_name,
-    url = module.httpgcs.https_trigger_url,
-    slack_webhook_url_secret_id = google_secret_manager_secret.slack-webhook-url.id,
   })
   slack_webhook_url_secret_id = google_secret_manager_secret.slack-webhook-url.id
 }
