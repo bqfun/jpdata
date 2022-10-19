@@ -1,9 +1,7 @@
 - init:
     assign:
       - bucket: ${bucket}
-      - repository: ${repository}
       - url: ${url}
-      - includedTargets: []
       - requests:
           - object: basic
             body: downenc=UTF-8&downfile=7&downtype=csv
@@ -45,64 +43,6 @@
                           object: $${r.object + ".csv"}
                         auth:
                           type: OIDC
-        - createCompilationResult:
-            call: http.post
-            args:
-              url: $${"https://dataform.googleapis.com/v1beta1/" + repository + "/compilationResults"}
-              auth:
-                type: OAuth2
-              body:
-                git_commitish: main
-            result: compilationResult
-        - makeIncludedTargets:
-            for:
-              value: r
-              in: $${requests}
-              steps:
-                - addIncludedTargets:
-                    assign:
-                      - target:
-                          database: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
-                          schema: gbizinfo_staging
-                          name: $${r.object + "_raw"}
-                      - includedTargets: $${list.concat(includedTargets, target)}
-        - createWorkflowInvocation:
-            call: http.post
-            args:
-              url: $${"https://dataform.googleapis.com/v1beta1/" + repository + "/workflowInvocations"}
-              auth:
-                type: OAuth2
-              body:
-                compilationResult: $${compilationResult.body.name}
-                invocationConfig:
-                  includedTargets: $${includedTargets}
-                  transitiveDependentsIncluded: true
-            result: workflowInvocation
-        - checkIfDone:
-            switch:
-              - condition: $${workflowInvocation.body.state == "SUCCEEDED"}
-                return: $${workflowInvocation}
-              - condition: $${workflowInvocation.body.state == "CANCELLED"}
-                raise:
-                  message: "Dataform run was canceled."
-              - condition: $${workflowInvocation.body.state == "FAILED"}
-                raise:
-                  message: "Dataform run failed."
-              - condition: $${not(workflowInvocation.body.state in ["RUNNING", "CANCELING"])}
-                raise:
-                  message: "Dataform run has an unexpected status."
-        - wait:
-            call: sys.sleep
-            args:
-              seconds: 60
-        - checkWorkflowInvocation:
-            call: http.get
-            args:
-              url: $${"https://dataform.googleapis.com/v1beta1/" + workflowInvocation.body.name}
-              auth:
-                type: OAuth2
-            result: workflowInvocation
-            next: checkIfDone
     except:
       as: e
       steps:

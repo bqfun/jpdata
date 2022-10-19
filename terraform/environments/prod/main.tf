@@ -21,7 +21,6 @@ module "gbizinfo" {
   schedule = "0 9 * * *"
   source_contents = templatefile("source_contents/gbizinfo.tftpl.yaml", {
     bucket = module.gbizinfo.bucket_name,
-    repository = "projects/jpdata/locations/us-central1/repositories/jpdata-dataform",
     url = module.httpgcs.https_trigger_url,
     slack_webhook_url_secret_id = google_secret_manager_secret.slack-webhook-url.id,
   })
@@ -37,7 +36,6 @@ module "shukujitsu" {
   schedule = "0 6 * * *"
   source_contents = templatefile("source_contents/shukujitsu.tftpl.yaml", {
     bucket = module.shukujitsu.bucket_name,
-    repository = "projects/jpdata/locations/us-central1/repositories/jpdata-dataform",
     url = module.httpgcs.https_trigger_url,
     slack_webhook_url_secret_id = google_secret_manager_secret.slack-webhook-url.id,
   })
