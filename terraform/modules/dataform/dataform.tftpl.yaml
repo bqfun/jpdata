@@ -1,69 +1,56 @@
 - init:
     assign:
       - repository: ${repository}
-- loadFile:
-    try:
-      steps:
-        - createCompilationResult:
-            call: http.post
-            args:
-              url: $${"https://dataform.googleapis.com/v1beta1/" + repository + "/compilationResults"}
-              auth:
-                type: OAuth2
-              body:
-                git_commitish: main
-            result: compilationResult
-        - createWorkflowInvocation:
-            call: http.post
-            args:
-              url: $${"https://dataform.googleapis.com/v1beta1/" + repository + "/workflowInvocations"}
-              auth:
-                type: OAuth2
-              body:
-                compilationResult: $${compilationResult.body.name}
-                invocationConfig:
-                  includedTags:
-                    - daily
-                  transitiveDependenciesIncluded: true
-            result: workflowInvocation
-        - checkIfDone:
-            switch:
-              - condition: $${workflowInvocation.body.state == "SUCCEEDED"}
-                return: $${workflowInvocation}
-              - condition: $${workflowInvocation.body.state == "CANCELLED"}
-                raise:
-                  message: "The workflow invocation was cancelled."
-              - condition: $${workflowInvocation.body.state == "FAILED"}
-                raise:
-                  message: "The workflow invocation failed."
-              - condition: $${not(workflowInvocation.body.state in ["RUNNING", "CANCELING"])}
-                raise:
-                  message: "The workflow invocation was in an unexpected state."
-        - wait:
-            call: sys.sleep
-            args:
-              seconds: 60
-        - checkWorkflowInvocation:
-            call: http.get
-            args:
-              url: $${"https://dataform.googleapis.com/v1beta1/" + workflowInvocation.body.name}
-              auth:
-                type: OAuth2
-            result: workflowInvocation
-            next: checkIfDone
-    except:
-      as: e
-      steps:
-        - access_secret:
-            call: googleapis.secretmanager.v1.projects.secrets.versions.access
-            args:
-              name: ${slack_webhook_url_secret_id}/versions/latest
-            result: base64_encoded_secret
-        - notify:
-            call: http.post
-            args:
-              url: $${text.decode(base64.decode(base64_encoded_secret.payload.data))}
-              body:
-                text: $${e.message}
-        - raise_error:
-            raise: $${e}
+      - bucketShukujitsu: ${bucket_shukujitsu}
+      - bucketGbizinfo: ${bucket_gbizinfo}
+- createCompilationResult:
+    call: http.post
+    args:
+      url: $${"https://dataform.googleapis.com/v1beta1/" + repository + "/compilationResults"}
+      auth:
+        type: OAuth2
+      body:
+        git_commitish: main
+        codeCompilationConfig:
+          vars:
+            bucketShukujitsu: $${bucketShukujitsu}
+            bucketGbizinfo: $${bucketGbizinfo}
+    result: compilationResult
+- createWorkflowInvocation:
+    call: http.post
+    args:
+      url: $${"https://dataform.googleapis.com/v1beta1/" + repository + "/workflowInvocations"}
+      auth:
+        type: OAuth2
+      body:
+        compilationResult: $${compilationResult.body.name}
+        invocationConfig:
+          includedTags:
+            - daily
+          transitiveDependenciesIncluded: true
+    result: workflowInvocation
+- checkIfDone:
+    switch:
+      - condition: $${workflowInvocation.body.state == "SUCCEEDED"}
+        return: $${workflowInvocation}
+      - condition: $${workflowInvocation.body.state == "CANCELLED"}
+        raise:
+          message: "The workflow invocation was cancelled."
+      - condition: $${workflowInvocation.body.state == "FAILED"}
+        raise:
+          message: "The workflow invocation failed."
+      - condition: $${not(workflowInvocation.body.state in ["RUNNING", "CANCELING"])}
+        raise:
+          message: "The workflow invocation was in an unexpected state."
+- wait:
+    call: sys.sleep
+    args:
+      seconds: 120
+- checkWorkflowInvocation:
+    call: http.get
+    args:
+      url: $${"https://dataform.googleapis.com/v1beta1/" + workflowInvocation.body.name}
+      auth:
+        type: OAuth2
+    result: workflowInvocation
+    next: checkIfDone
