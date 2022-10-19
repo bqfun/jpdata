@@ -55,3 +55,9 @@ resource "google_project_iam_member" "dataform" {
   role    = each.key
   member  = "serviceAccount:service-${var.google.number}@gcp-sa-dataform.iam.gserviceaccount.com"
 }
+
+module "dataform" {
+  source = "../../modules/dataform"
+  project = var.google.project
+  slack_webhook_url_secret_id = google_secret_manager_secret.slack-webhook-url.id
+}
