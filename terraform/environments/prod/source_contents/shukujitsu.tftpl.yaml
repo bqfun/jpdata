@@ -19,7 +19,7 @@
           taskSpec:
             runnables:
               - script:
-                  text: $${"curl https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv | iconv -f sjis -t utf-8 > /mnt/disks/$${BUCKET}/syukujitsu.csv"}
+                  text: curl https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv | iconv -f sjis -t utf-8 > /mnt/disks/$${BUCKET}/syukujitsu.csv
                 environment:
                   variables:
                     BUCKET: $${bucket}

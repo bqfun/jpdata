@@ -1,61 +1,63 @@
 - init:
     assign:
+      - projectId: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+      - batchApiUrl: $${"https://batch.googleapis.com/v1/projects/" + projectId + "/locations/us-central1/jobs"}
+      - jobId: $${"job-gbizinfo-" + string(int(sys.now()))}
       - bucket: ${bucket}
-      - url: ${url}
-      - requests:
-          - object: basic
-            body: downenc=UTF-8&downfile=7&downtype=csv
-          - object: certification
-            body: downenc=UTF-8&downfile=8&downtype=csv
-          - object: commendation
-            body: downenc=UTF-8&downfile=9&downtype=csv
-          - object: subsidy
-            body: downenc=UTF-8&downfile=10&downtype=csv
-          - object: procurement
-            body: downenc=UTF-8&downfile=11&downtype=csv
-          - object: patent
-            body: downenc=UTF-8&downfile=12&downtype=csv
-          - object: finance
-            body: downenc=UTF-8&downfile=13&downtype=csv
-          - object: workplace
-            body: downenc=UTF-8&downfile=14&downtype=csv
-- loadFile:
-    try:
-      steps:
-        - parallelStep:
-            parallel:
-              for:
-                value: r
-                in: $${requests}
-                steps:
-                  - downloadFile:
-                      call: http.post
-                      args:
-                        url: $${url}
-                        timeout: 600
-                        body:
-                          method: POST
-                          url: https://info.gbiz.go.jp/hojin/Download
-                          body: $${r.body}
-                          headers:
-                            Content-Type: application/x-www-form-urlencoded
-                          bucket: $${bucket}
-                          object: $${r.object + ".csv"}
-                        auth:
-                          type: OIDC
-    except:
-      as: e
-      steps:
-        - access_secret:
-            call: googleapis.secretmanager.v1.projects.secrets.versions.access
-            args:
-              name: ${slack_webhook_url_secret_id}/versions/latest
-            result: base64_encoded_secret
-        - notify:
-            call: http.post
-            args:
-              url: $${text.decode(base64.decode(base64_encoded_secret.payload.data))}
-              body:
-                text: $${e.message}
-        - raise_error:
-            raise: $${e}
+- createAndRunBatchJob:
+    call: http.post
+    args:
+      url: $${batchApiUrl}
+      query:
+        job_id: $${jobId}
+      headers:
+        Content-Type: application/json
+      auth:
+        type: OAuth2
+      body:
+        taskGroups:
+          taskSpec:
+            runnables:
+              - script:
+                  text: curl https://info.gbiz.go.jp/hojin/Download -d downenc=UTF-8 -d downfile=$${DOWNFILE} -d downtype=csv > /mnt/disks/$${BUCKET}/$${OBJECT}.csv
+                environment:
+                  variables:
+                    BUCKET: $${bucket}
+            volumes:
+              - gcs:
+                  remotePath: $${bucket}
+                mountPath: $${"/mnt/disks/" + bucket}
+          taskEnvironments:
+            - variables:
+                OBJECT: basic
+                DOWNFILE: "7"
+            - variables:
+                OBJECT: certification
+                DOWNFILE: "8"
+            - variables:
+                OBJECT: commendation
+                DOWNFILE: "9"
+            - variables:
+                OBJECT: subsidy
+                DOWNFILE: "10"
+            - variables:
+                OBJECT: procurement
+                DOWNFILE: "11"
+            - variables:
+                OBJECT: patent
+                DOWNFILE: "12"
+            - variables:
+                OBJECT: finance
+                DOWNFILE: "13"
+            - variables:
+                OBJECT: workplace
+                DOWNFILE: "14"
+
+        allocationPolicy:
+          instances:
+            - policy:
+                machineType: e2-micro
+                provisioningModel: SPOT
+
+        logsPolicy:
+          destination: CLOUD_LOGGING

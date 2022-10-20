@@ -6,4 +6,5 @@
     - Cloud Buildトリガーterraform
     - Terraform用サービスアカウント
     - Terraform用Cloud Storage bucket
-- freshness assertionの通知先Slack webhookのSecret Manager
+- LoggingのSlackアラート設定
+- Dataformのリポジトリ接続用のSecret作成
