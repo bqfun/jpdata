@@ -65,3 +65,9 @@ resource "google_bigquery_connection" "main" {
   location = var.google.region
   cloud_resource {}
 }
+
+resource "google_project_iam_member" "mainConnectionPermissionGrant" {
+  project = var.google.project
+  role = "roles/storage.objectViewer"
+  member = format("serviceAccount:%s", google_bigquery_connection.main.cloud_resource[0].service_account_id)
+}
