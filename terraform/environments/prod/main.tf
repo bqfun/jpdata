@@ -26,8 +26,7 @@ resource "google_project_iam_member" "dataform" {
   for_each = toset([
     "roles/dataform.serviceAgent",
     "roles/bigquery.jobUser",
-    "roles/bigquery.dataEditor",
-    "roles/storage.objectViewer"
+    "roles/bigquery.dataEditor"
   ])
   project = var.google.project
   role    = each.key
@@ -39,4 +38,17 @@ module "dataform" {
   project = var.google.project
   bucket_gbizinfo = module.gbizinfo.bucket_name
   bucket_shukujitsu = module.shukujitsu.bucket_name
+}
+
+resource "google_bigquery_connection" "main" {
+  connection_id = "main"
+  project = var.google.project
+  location = var.google.region
+  cloud_resource {}
+}
+
+resource "google_project_iam_member" "mainConnectionPermissionGrant" {
+  project = var.google.project
+  role = "roles/storage.objectViewer"
+  member = format("serviceAccount:%s", google_bigquery_connection.main.cloud_resource[0].service_account_id)
 }
