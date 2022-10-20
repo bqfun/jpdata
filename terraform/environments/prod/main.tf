@@ -44,8 +44,7 @@ resource "google_project_iam_member" "dataform" {
   for_each = toset([
     "roles/dataform.serviceAgent",
     "roles/bigquery.jobUser",
-    "roles/bigquery.dataEditor",
-    "roles/storage.objectViewer"
+    "roles/bigquery.dataEditor"
   ])
   project = var.google.project
   role    = each.key
@@ -58,4 +57,11 @@ module "dataform" {
   slack_webhook_url_secret_id = google_secret_manager_secret.slack-webhook-url.id
   bucket_gbizinfo = module.gbizinfo.bucket_name
   bucket_shukujitsu = module.shukujitsu.bucket_name
+}
+
+resource "google_bigquery_connection" "main" {
+  connection_id = "main"
+  project = var.google.project
+  location = var.google.region
+  cloud_resource {}
 }
