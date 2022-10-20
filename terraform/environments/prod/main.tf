@@ -26,7 +26,8 @@ resource "google_project_iam_member" "dataform" {
   for_each = toset([
     "roles/dataform.serviceAgent",
     "roles/bigquery.jobUser",
-    "roles/bigquery.dataEditor"
+    "roles/bigquery.dataEditor",
+    "roles/bigquery.connectionAdmin",
   ])
   project = var.google.project
   role    = each.key
