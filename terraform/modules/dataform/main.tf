@@ -15,6 +15,7 @@ resource "google_workflows_workflow" "dataform" {
   service_account = google_service_account.dataform.id
   source_contents = templatefile("${path.module}/dataform.tftpl.yaml", {
     repository = "projects/jpdata/locations/us-central1/repositories/jpdata-dataform",
+    connectionID = var.connectionID,
     bucket_gbizinfo = var.bucket_gbizinfo,
     bucket_shukujitsu = var.bucket_shukujitsu,
   })
