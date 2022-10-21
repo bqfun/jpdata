@@ -1,6 +1,7 @@
 - init:
     assign:
       - repository: ${repository}
+      - connectionID: ${connection_id}
       - bucketShukujitsu: ${bucket_shukujitsu}
       - bucketGbizinfo: ${bucket_gbizinfo}
 - createCompilationResult:
@@ -13,6 +14,7 @@
         git_commitish: main
         codeCompilationConfig:
           vars:
+            connectionID: $${connectionID}
             bucketShukujitsu: $${bucketShukujitsu}
             bucketGbizinfo: $${bucketGbizinfo}
     result: compilationResult
