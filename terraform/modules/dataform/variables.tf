@@ -1,4 +1,4 @@
 variable "project" {}
-variable "connectionID" {}
+variable "connection_id" {}
 variable "bucket_gbizinfo" {}
 variable "bucket_shukujitsu" {}

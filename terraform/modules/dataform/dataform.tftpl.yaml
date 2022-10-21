@@ -1,6 +1,7 @@
 - init:
     assign:
       - repository: ${repository}
+      - connectionID: ${connection_id}
       - bucketShukujitsu: ${bucket_shukujitsu}
       - bucketGbizinfo: ${bucket_gbizinfo}
 - createCompilationResult:
