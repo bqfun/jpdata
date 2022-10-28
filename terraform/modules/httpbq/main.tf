@@ -16,6 +16,7 @@ resource "google_project_iam_member" "httpbq" {
 resource "google_storage_bucket" "httpbq" {
   name     = "${var.project}-${var.dataset_id}"
   location = "asia-northeast1"
+  uniform_bucket_level_access = true
 }
 
 resource "google_workflows_workflow" "httpbq" {
