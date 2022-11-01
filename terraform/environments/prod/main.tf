@@ -46,6 +46,7 @@ module "dataform" {
   connection_id = "${google_bigquery_connection.main.project}.${google_bigquery_connection.main.location}.${google_bigquery_connection.main.connection_id}"
   bucket_gbizinfo = module.gbizinfo.bucket_name
   bucket_shukujitsu = module.shukujitsu.bucket_name
+  bucket_source = google_storage_bucket.source.name
 }
 
 resource "google_bigquery_connection" "main" {
