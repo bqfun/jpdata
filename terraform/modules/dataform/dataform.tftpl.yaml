@@ -2,8 +2,7 @@
     assign:
       - repository: ${repository}
       - connectionID: ${connection_id}
-      - bucketShukujitsu: ${bucket_shukujitsu}
-      - bucketGbizinfo: ${bucket_gbizinfo}
+      - bucketSource: ${bucket_source}
 - createCompilationResult:
     call: http.post
     args:
@@ -15,8 +14,7 @@
         codeCompilationConfig:
           vars:
             connectionID: $${connectionID}
-            bucketShukujitsu: $${bucketShukujitsu}
-            bucketGbizinfo: $${bucketGbizinfo}
+            bucketSource: $${bucketSource}
     result: compilationResult
 - createWorkflowInvocation:
     call: http.post
