@@ -74,34 +74,13 @@ resource "google_artifact_registry_repository" "source" {
 
 resource "google_cloudbuild_trigger" "dockerfiles_houjinbangou_latest" {
   name     = "dockerfiles-houjinbangou-latest"
+  filename = "dockerfiles/houjinbangou_latest/cloudbuild.yaml"
 
   github {
     owner = "bqfun"
     name  = "jpdata"
     push {
       branch = "^main$"
-    }
-  }
-
-  build {
-    step {
-      name = "gcr.io/cloud-builders/docker"
-      args = [
-        "build",
-        "-t",
-        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/houjinbangou-latest:$COMMIT_SHA",
-        "-t",
-        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/houjinbangou-latest:latest",
-        ".",
-      ]
-      dir = "dockerfiles/houjinbangou_latest"
-    }
-
-    artifacts {
-      images = [
-        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/houjinbangou-latest:$COMMIT_SHA",
-        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/houjinbangou-latest:latest",
-      ]
     }
   }
 }
