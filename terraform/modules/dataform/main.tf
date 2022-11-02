@@ -51,3 +51,17 @@ resource "google_cloud_scheduler_job" "dataform_monthly" {
     }
   }
 }
+
+resource "google_cloudbuild_trigger" "dataform" {
+  name     = "dataform"
+  filename = "cloudbuild.yaml"
+  service_account = google_service_account.dataform.id
+
+  github {
+    owner = "bqfun"
+    name  = "jpdata-dataform"
+    push {
+      branch = "^main$"
+    }
+  }
+}
