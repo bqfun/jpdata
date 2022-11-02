@@ -3,7 +3,7 @@ resource "google_service_account" "dataform" {
 }
 
 resource "google_project_iam_member" "dataform" {
-  for_each = toset(["roles/workflows.invoker", "roles/dataform.editor"])
+  for_each = toset(["roles/workflows.invoker", "roles/dataform.editor", "roles/logging.logWriter"])
   project  = var.project
   role     = each.key
   member   = "serviceAccount:${google_service_account.dataform.email}"

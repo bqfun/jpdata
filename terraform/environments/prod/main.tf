@@ -65,3 +65,43 @@ resource "google_project_iam_member" "cloud_batch_upload_objects_to_cloud_storag
   role = "roles/storage.objectAdmin"
   member = "serviceAccount:${var.google.number}-compute@developer.gserviceaccount.com"
 }
+
+resource "google_artifact_registry_repository" "source" {
+  location      = "asia-northeast1"
+  repository_id = "source"
+  format        = "DOCKER"
+}
+
+resource "google_cloudbuild_trigger" "dockerfiles_houjinbangou_latest" {
+  name     = "dockerfiles-houjinbangou-latest"
+
+  github {
+    owner = "bqfun"
+    name  = "jpdata"
+    push {
+      branch = "^main$"
+    }
+  }
+
+  build {
+    step {
+      name = "gcr.io/cloud-builders/docker"
+      args = [
+        "build",
+        "-t",
+        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/houjinbangou-latest:$COMMIT_SHA",
+        "-t",
+        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/houjinbangou-latest:latest",
+        ".",
+      ]
+      dir = "dockerfiles/houjinbangou_latest"
+    }
+
+    artifacts {
+      images = [
+        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/houjinbangou-latest:$COMMIT_SHA",
+        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/houjinbangou-latest:latest",
+      ]
+    }
+  }
+}
