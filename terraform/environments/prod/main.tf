@@ -65,3 +65,22 @@ resource "google_project_iam_member" "cloud_batch_upload_objects_to_cloud_storag
   role = "roles/storage.objectAdmin"
   member = "serviceAccount:${var.google.number}-compute@developer.gserviceaccount.com"
 }
+
+resource "google_artifact_registry_repository" "source" {
+  location      = "asia-northeast1"
+  repository_id = "source"
+  format        = "DOCKER"
+}
+
+resource "google_cloudbuild_trigger" "dockerfiles_houjinbangou_latest" {
+  name     = "dockerfiles-houjinbangou-latest"
+  filename = "dockerfiles/houjinbangou_latest/cloudbuild.yaml"
+
+  github {
+    owner = "bqfun"
+    name  = "jpdata"
+    push {
+      branch = "^main$"
+    }
+  }
+}

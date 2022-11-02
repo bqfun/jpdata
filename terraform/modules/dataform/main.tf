@@ -3,7 +3,7 @@ resource "google_service_account" "dataform" {
 }
 
 resource "google_project_iam_member" "dataform" {
-  for_each = toset(["roles/workflows.invoker", "roles/dataform.editor"])
+  for_each = toset(["roles/workflows.invoker", "roles/dataform.editor", "roles/logging.logWriter"])
   project  = var.project
   role     = each.key
   member   = "serviceAccount:${google_service_account.dataform.email}"
@@ -48,6 +48,20 @@ resource "google_cloud_scheduler_job" "dataform_monthly" {
     body        = base64encode("{\"argument\": \"{\\\"includedTags\\\": [\\\"monthly\\\"]}\"}")
     oauth_token {
       service_account_email = google_service_account.dataform.email
+    }
+  }
+}
+
+resource "google_cloudbuild_trigger" "dataform" {
+  name     = "dataform"
+  filename = "cloudbuild.yaml"
+  service_account = google_service_account.dataform.id
+
+  github {
+    owner = "bqfun"
+    name  = "jpdata-dataform"
+    push {
+      branch = "^main$"
     }
   }
 }
