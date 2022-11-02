@@ -45,7 +45,7 @@ resource "google_cloud_scheduler_job" "dataform_monthly" {
   http_target {
     uri = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.dataform.id}/executions"
     http_method = "POST"
-    body        = base64encode("{\"includedTags\":[\"monthly\"]}")
+    body        = base64encode("{\"argument\": \"{\\\"includedTags\\\": [\\\"monthly\\\"]}\"}")
     oauth_token {
       service_account_email = google_service_account.dataform.email
     }
