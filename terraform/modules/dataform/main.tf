@@ -20,7 +20,7 @@ resource "google_workflows_workflow" "dataform" {
   })
 }
 
-resource "google_cloud_scheduler_job" "dataform" {
+resource "google_cloud_scheduler_job" "dataform_daily" {
   name        = "dataform-daily"
   schedule    = "0 0 * * *"
   time_zone   = "Asia/Tokyo"
@@ -29,6 +29,23 @@ resource "google_cloud_scheduler_job" "dataform" {
   http_target {
     uri = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.dataform.id}/executions"
     http_method = "POST"
+    body        = base64encode("{\"includedTags\":[\"daily\"]}")
+    oauth_token {
+      service_account_email = google_service_account.dataform.email
+    }
+  }
+}
+
+resource "google_cloud_scheduler_job" "dataform_monthly" {
+  name        = "dataform-monthly"
+  schedule    = "0 0 1 * *"
+  time_zone   = "Asia/Tokyo"
+  region      = "asia-northeast1"
+
+  http_target {
+    uri = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.dataform.id}/executions"
+    http_method = "POST"
+    body        = base64encode("{\"includedTags\":[\"monthly\"]}")
     oauth_token {
       service_account_email = google_service_account.dataform.email
     }
