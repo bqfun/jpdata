@@ -110,8 +110,14 @@ func upload(bucket string, name string, srcName string) {
 }
 
 func main() {
-	bucket := "jpdata-source"
-	object := "houjinbangou.csv"
+	bucket := os.Getenv("BUCKET")
+	object := os.Getenv("OBJECT")
+	if bucket == "" {
+		log.Fatalf("environment variable 'BUCKET' isn't set")
+	}
+	if object == "" {
+		log.Fatalf("environment variable 'OBJECT' isn't set")
+	}
 
 	name := downloadZip()
 	csv := unzipCsv(name)
