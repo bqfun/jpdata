@@ -4,6 +4,21 @@ resource "google_storage_bucket" "source" {
   uniform_bucket_level_access = true
 }
 
+resource "google_service_account" "httpgcs" {
+  account_id   = "httpgcs"
+}
+
+resource "google_project_iam_member" "httpgcs" {
+  for_each = toset([
+    "roles/workflows.invoker",
+    "roles/batch.jobsEditor",
+    "roles/iam.serviceAccountUser",
+  ])
+  project  = var.google.project
+  role     = each.key
+  member   = "serviceAccount:${google_service_account.httpgcs.email}"
+}
+
 module "gbizinfo" {
   source = "../../modules/httpbq"
   project = var.google.project
@@ -28,11 +43,23 @@ module "shukujitsu" {
   })
 }
 
+module "houjinbangou" {
+  source = "../../modules/httpgcs"
+  name = "houjinbangou"
+  service_account_id = google_service_account.httpgcs.id
+  service_account_email = google_service_account.httpgcs.email
+  schedule = "0 0 1 * *"
+  source_contents = templatefile("source_contents/houjinbangou.tftpl.yaml", {
+    bucket = google_storage_bucket.source.name,
+    object = "houjinbangou.csv",
+  })
+}
+
 resource "google_project_iam_member" "dataform" {
   for_each = toset([
     "roles/dataform.serviceAgent",
     "roles/bigquery.jobUser",
-    "roles/bigquery.dataEditor",
+    "roles/bigquery.dataOwner",
     "roles/bigquery.connectionAdmin",
   ])
   project = var.google.project
