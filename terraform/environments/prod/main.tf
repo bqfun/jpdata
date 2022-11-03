@@ -52,6 +52,8 @@ module "houjinbangou" {
   source_contents = templatefile("source_contents/houjinbangou.tftpl.yaml", {
     bucket = google_storage_bucket.source.name,
     object = "houjinbangou.csv",
+    repositoryId = google_artifact_registry_repository.source.repository_id
+    location = google_artifact_registry_repository.source.location
   })
 }
 

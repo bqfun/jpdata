@@ -5,6 +5,8 @@
       - jobId: $${"job-houjinbangou-" + string(int(sys.now()))}
       - bucket: ${bucket}
       - object: ${object}
+      - repositoryId: ${repositoryId}
+      - location: ${location}
 - createAndRunBatchJob:
     call: http.post
     args:
@@ -20,7 +22,7 @@
           taskSpec:
             runnables:
               - container:
-                  imageUri: asia-northeast1-docker.pkg.dev/jpdata/source/houjinbangou-latest:latest
+                  imageUri: $${location + "-docker.pkg.dev/" + projectId + "/" + repositoryId + "/houjinbangou-latest:latest"}
                 environment:
                   variables:
                     BUCKET: $${bucket}
