@@ -34,19 +34,3 @@ resource "google_cloud_scheduler_job" "httpbq" {
     }
   }
 }
-
-resource "google_bigquery_dataset" "httpbq" {
-  dataset_id                      = var.dataset_id
-  description                     = var.description
-  default_table_expiration_ms     = 5184000000
-  default_partition_expiration_ms = 5184000000
-  location                        = "asia-northeast1"
-}
-
-resource "google_bigquery_dataset" "httpbq-staging" {
-  dataset_id                      = "${var.dataset_id}_staging"
-  description                     = var.description
-  default_table_expiration_ms     = 5184000000
-  default_partition_expiration_ms = 5184000000
-  location                        = "asia-northeast1"
-}
