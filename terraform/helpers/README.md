@@ -141,3 +141,27 @@ BQ FUNは、利用者が本コンテンツを用いて行う一切の責任を�
 BQ FUNは、利用者が本コンテンツを用いて行う一切の責任を負いません。
 また、予告なく変更、削除される場合があります。
 ```
+
+#### Corporate Number preprocessed by BQ FUN
+
+表示名：Corporate Number preprocessed by BQ FUN
+メインの連絡先：https://bqfun.jp/
+カテゴリ：公共部門
+
+共有データセット：houjinbangou
+
+ドキュメント
+```
+# 日本の法人情報 Corporate Number preprocessed by BQ FUN
+法人番号を持っている組織の情報をまとめたものです。
+
+「法人番号公表サイト」（国税庁）（https://www.houjin-bangou.nta.go.jp/ ）をもとにBigQueryユーザコミュニティBQ FUNが加工して作成しています。
+
+出典：「法人番号公表サイト」（国税庁）（https://www.houjin-bangou.nta.go.jp/ ）
+
+このサービスは、国税庁法人番号システムWeb-API機能を利用して取得した情報をもとに作成しておりますが、サービスの内容は国税庁によって保証されたものではありません。
+https://www.houjin-bangou.nta.go.jp/shitsumon/shosai.html?selQaId=00122
+
+BQ FUNは、利用者が本コンテンツを用いて行う一切の責任を負いません。
+また、予告なく変更、削除される場合があります。
+```
