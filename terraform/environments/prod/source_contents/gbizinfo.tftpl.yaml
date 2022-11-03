@@ -20,7 +20,7 @@
           taskSpec:
             runnables:
               - script:
-                  text: curl https://info.gbiz.go.jp/hojin/Download -d downenc=UTF-8 -d downfile=$${DOWNFILE} -d downtype=csv | gsutil cp - gs://$${bucket}/$${objectPrefix}$${OBJECT}.csv
+                  text: $${"curl https://info.gbiz.go.jp/hojin/Download -d downenc=UTF-8 -d downfile=$${DOWNFILE} -d downtype=csv | gsutil cp - gs://" + bucket + "/" + objectPrefix + "$${OBJECT}.csv"}
           taskEnvironments:
             - variables:
                 OBJECT: basic

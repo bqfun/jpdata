@@ -20,7 +20,7 @@
           taskSpec:
             runnables:
               - script:
-                  text: curl https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv | iconv -f sjis -t utf-8 | gsutil cp - gs://$${bucket}/$${object}
+                  text: $${"curl https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv | iconv -f sjis -t utf-8 | gsutil cp - gs://" + bucket + "/" + object}
 
         allocationPolicy:
           instances:
