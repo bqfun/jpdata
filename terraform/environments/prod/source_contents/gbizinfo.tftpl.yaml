@@ -19,14 +19,10 @@
           taskSpec:
             runnables:
               - script:
-                  text: curl https://info.gbiz.go.jp/hojin/Download -d downenc=UTF-8 -d downfile=$${DOWNFILE} -d downtype=csv > /mnt/disks/$${BUCKET}/gbizinfo/$${OBJECT}.csv
+                  text: curl https://info.gbiz.go.jp/hojin/Download -d downenc=UTF-8 -d downfile=$${DOWNFILE} -d downtype=csv | gsutil cp - gs://$${BUCKET}/gbizinfo/$${OBJECT}.csv
                 environment:
                   variables:
                     BUCKET: $${bucket}
-            volumes:
-              - gcs:
-                  remotePath: $${bucket}
-                mountPath: $${"/mnt/disks/" + bucket}
           taskEnvironments:
             - variables:
                 OBJECT: basic

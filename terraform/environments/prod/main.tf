@@ -112,4 +112,5 @@ resource "google_cloudbuild_trigger" "dockerfiles_houjinbangou_latest" {
       branch = "^main$"
     }
   }
+  included_files = ["dockerfiles/houjinbangou_latest/**"]
 }
