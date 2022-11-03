@@ -4,6 +4,7 @@
       - batchApiUrl: $${"https://batch.googleapis.com/v1/projects/" + projectId + "/locations/us-central1/jobs"}
       - jobId: $${"job-gbizinfo-" + string(int(sys.now()))}
       - bucket: ${bucket}
+      - objectPrefix: ${objectPrefix}
 - createAndRunBatchJob:
     call: http.post
     args:
@@ -19,10 +20,7 @@
           taskSpec:
             runnables:
               - script:
-                  text: curl https://info.gbiz.go.jp/hojin/Download -d downenc=UTF-8 -d downfile=$${DOWNFILE} -d downtype=csv | gsutil cp - gs://$${BUCKET}/gbizinfo/$${OBJECT}.csv
-                environment:
-                  variables:
-                    BUCKET: $${bucket}
+                  text: curl https://info.gbiz.go.jp/hojin/Download -d downenc=UTF-8 -d downfile=$${DOWNFILE} -d downtype=csv | gsutil cp - gs://$${bucket}/$${objectPrefix}$${OBJECT}.csv
           taskEnvironments:
             - variables:
                 OBJECT: basic

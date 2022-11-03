@@ -4,6 +4,7 @@
       - batchApiUrl: $${"https://batch.googleapis.com/v1/projects/" + projectId + "/locations/us-central1/jobs"}
       - jobId: $${"job-shukujitsu-" + string(int(sys.now()))}
       - bucket: ${bucket}
+      - object: ${object}
 - createAndRunBatchJob:
     call: http.post
     args:
@@ -19,10 +20,7 @@
           taskSpec:
             runnables:
               - script:
-                  text: curl https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv | iconv -f sjis -t utf-8 | gsutil cp - gs://$${BUCKET}/syukujitsu.csv
-                environment:
-                  variables:
-                    BUCKET: $${bucket}
+                  text: curl https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv | iconv -f sjis -t utf-8 | gsutil cp - gs://$${bucket}/$${object}
 
         allocationPolicy:
           instances:
