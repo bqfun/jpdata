@@ -11,7 +11,7 @@ resource "google_project_iam_member" "dataform" {
 
 resource "google_workflows_workflow" "dataform" {
   name            = "dataform"
-  region          = "asia-northeast1"
+  region          = var.region
   service_account = google_service_account.dataform.id
   source_contents = templatefile("${path.module}/dataform.tftpl.yaml", {
     repository = "projects/jpdata/locations/us-central1/repositories/jpdata-dataform",
@@ -24,7 +24,7 @@ resource "google_cloud_scheduler_job" "dataform_daily" {
   name        = "dataform-daily"
   schedule    = "0 0 * * *"
   time_zone   = "Asia/Tokyo"
-  region      = "asia-northeast1"
+  region      = var.region
 
   http_target {
     uri = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.dataform.id}/executions"
@@ -40,7 +40,7 @@ resource "google_cloud_scheduler_job" "dataform_monthly" {
   name        = "dataform-monthly"
   schedule    = "0 0 1 * *"
   time_zone   = "Asia/Tokyo"
-  region      = "asia-northeast1"
+  region      = var.region
 
   http_target {
     uri = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.dataform.id}/executions"

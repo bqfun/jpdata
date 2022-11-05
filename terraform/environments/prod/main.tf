@@ -1,6 +1,6 @@
 resource "google_storage_bucket" "source" {
   name     = "${var.google.project}-source"
-  location = "asia-northeast1"
+  location = var.google.region
   uniform_bucket_level_access = true
 }
 
@@ -25,9 +25,11 @@ module "gbizinfo" {
   service_account_id = google_service_account.httpgcs.id
   service_account_email = google_service_account.httpgcs.email
   schedule = "0 9 * * *"
+  region = var.google.region
   source_contents = templatefile("source_contents/gbizinfo.tftpl.yaml", {
-    bucket = google_storage_bucket.source.name,
-    objectPrefix = "gbizinfo/",
+    bucket = google_storage_bucket.source.name
+    objectPrefix = "gbizinfo/"
+    workflowId = module.dataform.workflow_id
   })
 }
 
@@ -37,9 +39,11 @@ module "shukujitsu" {
   service_account_id = google_service_account.httpgcs.id
   service_account_email = google_service_account.httpgcs.email
   schedule = "0 6 * * *"
+  region = var.google.region
   source_contents = templatefile("source_contents/shukujitsu.tftpl.yaml", {
-    bucket = google_storage_bucket.source.name,
-    object = "syukujitsu.csv",
+    bucket = google_storage_bucket.source.name
+    object = "syukujitsu.csv"
+    workflowId = module.dataform.workflow_id
   })
 }
 
@@ -49,11 +53,13 @@ module "houjinbangou" {
   service_account_id = google_service_account.httpgcs.id
   service_account_email = google_service_account.httpgcs.email
   schedule = "0 0 1 * *"
+  region = var.google.region
   source_contents = templatefile("source_contents/houjinbangou.tftpl.yaml", {
-    bucket = google_storage_bucket.source.name,
-    object = "houjinbangou.csv",
+    bucket = google_storage_bucket.source.name
+    object = "houjinbangou.csv"
     repositoryId = google_artifact_registry_repository.source.repository_id
     location = google_artifact_registry_repository.source.location
+    workflowId = module.dataform.workflow_id
   })
 }
 
@@ -72,6 +78,7 @@ resource "google_project_iam_member" "dataform" {
 module "dataform" {
   source = "../../modules/dataform"
   project = var.google.project
+  region = var.google.region
   connection_id = "${google_bigquery_connection.main.project}.${google_bigquery_connection.main.location}.${google_bigquery_connection.main.connection_id}"
   bucket_source = google_storage_bucket.source.name
 }
@@ -96,7 +103,7 @@ resource "google_project_iam_member" "cloud_batch_upload_objects_to_cloud_storag
 }
 
 resource "google_artifact_registry_repository" "source" {
-  location      = "asia-northeast1"
+  location      = var.google.region
   repository_id = "source"
   format        = "DOCKER"
 }
