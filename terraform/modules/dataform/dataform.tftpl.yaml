@@ -29,6 +29,7 @@ main:
             compilationResult: $${compilationResult.body.name}
             invocationConfig:
               includedTags: $${args.includedTags}
+              transitiveDependentsIncluded: true
         result: workflowInvocation
     - checkIfDone:
         switch:
