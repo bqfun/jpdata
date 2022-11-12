@@ -121,3 +121,38 @@ resource "google_cloudbuild_trigger" "dockerfiles_houjinbangou_latest" {
   }
   included_files = ["dockerfiles/houjinbangou_latest/**"]
 }
+
+resource "google_eventarc_trigger" "httpgcs" {
+  name     = "httpgcs"
+  location = var.google.region
+  matching_criteria {
+    attribute = "type"
+    value     = "google.cloud.storage.object.v1.finalized"
+  }
+  matching_criteria {
+    attribute = "bucket"
+    value     = google_storage_bucket.source.name
+  }
+  destination {
+    workflow = module.dataform.workflow_id
+  }
+  service_account = google_service_account.httpgcs.email
+}
+
+// このトリガーでは、Cloud Storage 経由でイベントを受け取るために、
+// サービス アカウント service-120299025068@gs-project-accounts.iam.gserviceaccount.com に
+// ロール roles/pubsub.publisher が付与されている必要があります。
+resource "google_project_iam_member" "httpgcs_eventarc_gs" {
+  project  = var.google.project
+  role     = "roles/pubsub.publisher"
+  member   = "serviceAccount:service-${var.google.number}@gs-project-accounts.iam.gserviceaccount.com"
+}
+
+// Cloud Pub/Sub で ID トークンを作成するには、
+// このプロジェクトのサービス アカウント service-120299025068@gcp-sa-pubsub.iam.gserviceaccount.com に
+// ロール roles/iam.serviceAccountTokenCreator が付与されている必要があります。
+resource "google_project_iam_member" "httpgcs_eventarc_pubsub" {
+  project  = var.google.project
+  role     = "roles/iam.serviceAccountTokenCreator"
+  member   = "serviceAccount:service-${var.google.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
+}
