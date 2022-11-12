@@ -139,6 +139,7 @@ resource "google_eventarc_trigger" "httpgcs" {
   }
   service_account = google_service_account.httpgcs.email
   depends_on = [
+    google_project_iam_member.httpgcs,
     google_project_iam_member.httpgcs_eventarc_gs,
     google_project_iam_member.httpgcs_eventarc_pubsub,
   ]
