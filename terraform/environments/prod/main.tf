@@ -10,9 +10,10 @@ resource "google_service_account" "httpgcs" {
 
 resource "google_project_iam_member" "httpgcs" {
   for_each = toset([
-    "roles/workflows.invoker",
     "roles/batch.jobsEditor",
+    "roles/eventarc.eventReceiver",
     "roles/iam.serviceAccountUser",
+    "roles/workflows.invoker",
   ])
   project  = var.google.project
   role     = each.key
