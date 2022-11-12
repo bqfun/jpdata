@@ -10,9 +10,10 @@ resource "google_service_account" "httpgcs" {
 
 resource "google_project_iam_member" "httpgcs" {
   for_each = toset([
-    "roles/workflows.invoker",
     "roles/batch.jobsEditor",
+    "roles/eventarc.eventReceiver",
     "roles/iam.serviceAccountUser",
+    "roles/workflows.invoker",
   ])
   project  = var.google.project
   role     = each.key
@@ -28,8 +29,6 @@ module "gbizinfo" {
   region = var.google.region
   source_contents = templatefile("source_contents/gbizinfo.tftpl.yaml", {
     bucket = google_storage_bucket.source.name
-    objectPrefix = "gbizinfo/"
-    workflowId = module.dataform.workflow_id
   })
 }
 
@@ -42,8 +41,6 @@ module "shukujitsu" {
   region = var.google.region
   source_contents = templatefile("source_contents/shukujitsu.tftpl.yaml", {
     bucket = google_storage_bucket.source.name
-    object = "syukujitsu.csv"
-    workflowId = module.dataform.workflow_id
   })
 }
 
@@ -56,10 +53,8 @@ module "houjinbangou" {
   region = var.google.region
   source_contents = templatefile("source_contents/houjinbangou.tftpl.yaml", {
     bucket = google_storage_bucket.source.name
-    object = "houjinbangou.csv"
     repositoryId = google_artifact_registry_repository.source.repository_id
     location = google_artifact_registry_repository.source.location
-    workflowId = module.dataform.workflow_id
   })
 }
 
@@ -120,4 +115,44 @@ resource "google_cloudbuild_trigger" "dockerfiles_houjinbangou_latest" {
     }
   }
   included_files = ["dockerfiles/houjinbangou_latest/**"]
+}
+
+resource "google_eventarc_trigger" "httpgcs" {
+  name     = "httpgcs"
+  location = var.google.region
+  matching_criteria {
+    attribute = "type"
+    value     = "google.cloud.storage.object.v1.finalized"
+  }
+  matching_criteria {
+    attribute = "bucket"
+    value     = google_storage_bucket.source.name
+  }
+  destination {
+    workflow = module.dataform.workflow_id
+  }
+  service_account = google_service_account.httpgcs.email
+  depends_on = [
+    google_project_iam_member.httpgcs,
+    google_project_iam_member.httpgcs_eventarc_gs,
+    google_project_iam_member.httpgcs_eventarc_pubsub,
+  ]
+}
+
+// このトリガーでは、Cloud Storage 経由でイベントを受け取るために、
+// サービス アカウント service-120299025068@gs-project-accounts.iam.gserviceaccount.com に
+// ロール roles/pubsub.publisher が付与されている必要があります。
+resource "google_project_iam_member" "httpgcs_eventarc_gs" {
+  project  = var.google.project
+  role     = "roles/pubsub.publisher"
+  member   = "serviceAccount:service-${var.google.number}@gs-project-accounts.iam.gserviceaccount.com"
+}
+
+// Cloud Pub/Sub で ID トークンを作成するには、
+// このプロジェクトのサービス アカウント service-120299025068@gcp-sa-pubsub.iam.gserviceaccount.com に
+// ロール roles/iam.serviceAccountTokenCreator が付与されている必要があります。
+resource "google_project_iam_member" "httpgcs_eventarc_pubsub" {
+  project  = var.google.project
+  role     = "roles/iam.serviceAccountTokenCreator"
+  member   = "serviceAccount:service-${var.google.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
 }
