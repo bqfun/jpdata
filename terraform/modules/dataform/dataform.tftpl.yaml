@@ -28,7 +28,7 @@ main:
           body:
             compilationResult: $${compilationResult.body.name}
             invocationConfig:
-              includedTags: ${default(map.get(event, "includedTags"), [event.data.name])}
+              includedTags: $${default(map.get(event, "includedTags"), [event.data.name])}
               transitiveDependentsIncluded: true
         result: workflowInvocation
     - checkIfDone:
