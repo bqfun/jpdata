@@ -1,5 +1,5 @@
 main:
-  params: [args]
+  params: [event]
   steps:
     - init:
         assign:
@@ -28,7 +28,7 @@ main:
           body:
             compilationResult: $${compilationResult.body.name}
             invocationConfig:
-              includedTags: $${args.includedTags}
+              includedTags: ${default(map.get(event, "includedTags"), [event.data.name])}
               transitiveDependentsIncluded: true
         result: workflowInvocation
     - checkIfDone:
