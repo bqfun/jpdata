@@ -4,11 +4,6 @@
       - batchApiUrl: $${"https://batch.googleapis.com/v1/projects/" + projectId + "/locations/us-central1/jobs"}
       - jobId: $${"job-shukujitsu-" + string(int(sys.now()))}
       - bucket: ${bucket}
-      - object: ${object}
-      - workflowId: ${workflowId}
-      - arguments:
-          includedTags:
-            - https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html
 - createAndRunBatchJob:
     call: http.post
     args:
@@ -24,7 +19,7 @@
           taskSpec:
             runnables:
               - script:
-                  text: $${"curl https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv | iconv -f sjis -t utf-8 | gsutil cp - gs://" + bucket + "/" + object}
+                  text: $${"curl https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv | iconv -f sjis -t utf-8 | gsutil cp - gs://" + bucket + "/syukujitsu.csv"}
 
         allocationPolicy:
           instances:
@@ -34,30 +29,3 @@
 
         logsPolicy:
           destination: CLOUD_LOGGING
-
-- sleep:
-    call: sys.sleep
-    args:
-      seconds: 300
-- getJob:
-    call: http.get
-    args:
-      url: $${batchApiUrl + "/" + jobId}
-      auth:
-        type: OAuth2
-    result: getJobResult
-- checkState:
-    switch:
-      - condition: $${getJobResult.body.status.state == "SUCCEEDED"}
-        next: createExecution
-      - condition: $${getJobResult.body.status.state == "FAILED"}
-        raise:
-          message: $${"The underlying batch job " + jobId + " failed"}
-    next: sleep
-
-- createExecution:
-    call: googleapis.workflowexecutions.v1.projects.locations.workflows.executions.create
-    args:
-      parent: $${workflowId}
-      body:
-        argument: $${json.encode_to_string(arguments)}

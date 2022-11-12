@@ -4,11 +4,6 @@
       - batchApiUrl: $${"https://batch.googleapis.com/v1/projects/" + projectId + "/locations/us-central1/jobs"}
       - jobId: $${"job-gbizinfo-" + string(int(sys.now()))}
       - bucket: ${bucket}
-      - objectPrefix: ${objectPrefix}
-      - workflowId: ${workflowId}
-      - arguments:
-          includedTags:
-            - https://info.gbiz.go.jp/hojin/DownloadTop
 - createAndRunBatchJob:
     call: http.post
     args:
@@ -24,7 +19,7 @@
           taskSpec:
             runnables:
               - script:
-                  text: $${"curl https://info.gbiz.go.jp/hojin/Download -d downenc=UTF-8 -d downfile=$${DOWNFILE} -d downtype=csv | gsutil cp - gs://" + bucket + "/" + objectPrefix + "$${OBJECT}.csv"}
+                  text: $${"curl https://info.gbiz.go.jp/hojin/Download -d downenc=UTF-8 -d downfile=$${DOWNFILE} -d downtype=csv | gsutil cp - gs://" + bucket + "/gbizinfo/$${OBJECT}.csv"}
           taskEnvironments:
             - variables:
                 OBJECT: basic
@@ -59,30 +54,3 @@
 
         logsPolicy:
           destination: CLOUD_LOGGING
-
-- sleep:
-    call: sys.sleep
-    args:
-      seconds: 300
-- getJob:
-    call: http.get
-    args:
-      url: $${batchApiUrl + "/" + jobId}
-      auth:
-        type: OAuth2
-    result: getJobResult
-- checkState:
-    switch:
-      - condition: $${getJobResult.body.status.state == "SUCCEEDED"}
-        next: createExecution
-      - condition: $${getJobResult.body.status.state == "FAILED"}
-        raise:
-          message: $${"The underlying batch job " + jobId + " failed"}
-    next: sleep
-
-- createExecution:
-    call: googleapis.workflowexecutions.v1.projects.locations.workflows.executions.create
-    args:
-      parent: $${workflowId}
-      body:
-        argument: $${json.encode_to_string(arguments)}

@@ -29,8 +29,6 @@ module "gbizinfo" {
   region = var.google.region
   source_contents = templatefile("source_contents/gbizinfo.tftpl.yaml", {
     bucket = google_storage_bucket.source.name
-    objectPrefix = "gbizinfo/"
-    workflowId = module.dataform.workflow_id
   })
 }
 
@@ -43,8 +41,6 @@ module "shukujitsu" {
   region = var.google.region
   source_contents = templatefile("source_contents/shukujitsu.tftpl.yaml", {
     bucket = google_storage_bucket.source.name
-    object = "syukujitsu.csv"
-    workflowId = module.dataform.workflow_id
   })
 }
 
@@ -57,10 +53,8 @@ module "houjinbangou" {
   region = var.google.region
   source_contents = templatefile("source_contents/houjinbangou.tftpl.yaml", {
     bucket = google_storage_bucket.source.name
-    object = "houjinbangou.csv"
     repositoryId = google_artifact_registry_repository.source.repository_id
     location = google_artifact_registry_repository.source.location
-    workflowId = module.dataform.workflow_id
   })
 }
 
