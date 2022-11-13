@@ -5,6 +5,12 @@ resource "google_secret_manager_secret" "github_personal_access_token" {
     automatic = true
   }
 }
+resource "google_secret_manager_secret_iam_member" "github_personal_access_token" {
+  project = google_secret_manager_secret.github_personal_access_token.project
+  secret_id = google_secret_manager_secret.github_personal_access_token.secret_id
+  role = "roles/secretmanager.secretAccessor"
+  member = "serviceAccount:service-${var.google.number}@gcp-sa-dataform.iam.gserviceaccount.com"
+}
 
 resource "google_secret_manager_secret" "houjinbangou_webapi_id" {
   secret_id = "houjinbangou-webapi-id"
