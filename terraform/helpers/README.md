@@ -116,10 +116,15 @@ allAuthenticatedUsers にロール「Analytics Hub サブスクライバー」�
 
 「gBizINFO」（経済産業省）（https://info.gbiz.go.jp/hojin/DownloadTop ）をもとにBigQueryユーザコミュニティBQ FUNが加工して作成しています。
 
-出典：gBizINFO （METI）経済産業省（https://info.gbiz.go.jp/ ）
-
 BQ FUNは、利用者が本コンテンツを用いて行う一切の責任を負いません。
 また、予告なく変更、削除される場合があります。
+
+このデータセットはCC BY 4.0で提供されています。
+https://creativecommons.org/licenses/by/4.0/legalcode.ja
+
+データセットの作成過程と、用いられている権利物はこちらのURLから確認できます。
+https://github.com/bqfun/jpdata
+https://github.com/bqfun/jpdata-dataform
 ```
 
 #### JP Holidays preprocessed by BQ FUN
@@ -137,10 +142,15 @@ BQ FUNは、利用者が本コンテンツを用いて行う一切の責任を�
 
 「国民の祝日について」（内閣府）（https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html ）をもとにBigQueryユーザコミュニティBQ FUNが加工して作成しています。
 
-出典：「国民の祝日について」（内閣府）（https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html ）
-
 BQ FUNは、利用者が本コンテンツを用いて行う一切の責任を負いません。
 また、予告なく変更、削除される場合があります。
+
+このデータセットはCC BY 4.0で提供されています。
+https://creativecommons.org/licenses/by/4.0/legalcode.ja
+
+データセットの作成過程と、用いられている権利物はこちらのURLから確認できます。
+https://github.com/bqfun/jpdata
+https://github.com/bqfun/jpdata-dataform
 ```
 
 #### Corporate Number preprocessed by BQ FUN
@@ -157,12 +167,15 @@ BQ FUNは、利用者が本コンテンツを用いて行う一切の責任を�
 法人番号を持っている組織の情報をまとめたものです。
 
 「法人番号公表サイト」（国税庁）（https://www.houjin-bangou.nta.go.jp/ ）をもとにBigQueryユーザコミュニティBQ FUNが加工して作成しています。
-
-出典：「法人番号公表サイト」（国税庁）（https://www.houjin-bangou.nta.go.jp/ ）
-
-このサービスは、国税庁法人番号システムWeb-API機能を利用して取得した情報をもとに作成しておりますが、サービスの内容は国税庁によって保証されたものではありません。
-https://www.houjin-bangou.nta.go.jp/shitsumon/shosai.html?selQaId=00122
+「このサービスは、国税庁法人番号システムWeb-API 機能を利用して取得した情報をもとに作成しているが、サービスの内容は国税庁によって保証されたものではない
 
 BQ FUNは、利用者が本コンテンツを用いて行う一切の責任を負いません。
 また、予告なく変更、削除される場合があります。
+
+このデータセットはCC BY 4.0で提供されています。
+https://creativecommons.org/licenses/by/4.0/legalcode.ja
+
+データセットの作成過程と、用いられている権利物はこちらのURLから確認できます。
+https://github.com/bqfun/jpdata
+https://github.com/bqfun/jpdata-dataform
 ```
