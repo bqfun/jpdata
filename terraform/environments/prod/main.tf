@@ -79,10 +79,25 @@ module "houjinbangou" {
   service_account_email = google_service_account.httpgcs.email
   schedule = "0 0 1 * *"
   region = var.google.region
-  source_contents = templatefile("source_contents/houjinbangou.tftpl.yaml", {
+  source_contents = templatefile("source_contents/houjinbangou_latest.tftpl.yaml", {
     bucket = google_storage_bucket.source.name
     repositoryId = google_artifact_registry_repository.source.repository_id
     location = google_artifact_registry_repository.source.location
+  })
+}
+
+module "houjinbangou_change_history" {
+  source = "../../modules/httpgcs"
+  name = "houjinbangou_change_history"
+  service_account_id = google_service_account.httpgcs.id
+  service_account_email = google_service_account.httpgcs.email
+  schedule = "0 0 * * *"
+  region = var.google.region
+  source_contents = templatefile("source_contents/houjinbangou_change_history.tftpl.yaml", {
+    bucket = google_storage_bucket.source_houjinbangou_change_history.name
+    repositoryId = google_artifact_registry_repository.source.repository_id
+    location = google_artifact_registry_repository.source.location
+    secretName = "${google_secret_manager_secret.houjinbangou_webapi_id.name}/versions/latest"
   })
 }
 

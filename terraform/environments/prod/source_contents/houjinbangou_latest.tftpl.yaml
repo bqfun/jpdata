@@ -2,7 +2,7 @@
     assign:
       - projectId: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
       - batchApiUrl: $${"https://batch.googleapis.com/v1/projects/" + projectId + "/locations/us-central1/jobs"}
-      - jobId: $${"job-houjinbangou-" + string(int(sys.now()))}
+      - jobId: $${"job-houjinbangou-latest-" + string(int(sys.now()))}
       - bucket: ${bucket}
       - repositoryId: ${repositoryId}
       - location: ${location}
