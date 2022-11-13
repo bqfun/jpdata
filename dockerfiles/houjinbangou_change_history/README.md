@@ -3,3 +3,6 @@
 全ての法人データをダウンロードする。
 
 https://www.houjin-bangou.nta.go.jp/webapi/
+
+事前に Google Cloud プロジェクト jpdata の Secret Manager から houjinbangou-webapi-id に、
+国税庁適格請求書発行事業者公表サイトから発行手続を行った、アプリケーションIDを指定する。

@@ -1,5 +1,33 @@
+resource "google_secret_manager_secret" "github_personal_access_token" {
+  secret_id = "github-personal-access-token"
+
+  replication {
+    automatic = true
+  }
+}
+resource "google_secret_manager_secret_iam_member" "github_personal_access_token" {
+  project = google_secret_manager_secret.github_personal_access_token.project
+  secret_id = google_secret_manager_secret.github_personal_access_token.secret_id
+  role = "roles/secretmanager.secretAccessor"
+  member = "serviceAccount:service-${var.google.number}@gcp-sa-dataform.iam.gserviceaccount.com"
+}
+
+resource "google_secret_manager_secret" "houjinbangou_webapi_id" {
+  secret_id = "houjinbangou-webapi-id"
+
+  replication {
+    automatic = true
+  }
+}
+
 resource "google_storage_bucket" "source" {
   name     = "${var.google.project}-source"
+  location = var.google.region
+  uniform_bucket_level_access = true
+}
+
+resource "google_storage_bucket" "source_houjinbangou_change_history" {
+  name     = "${var.google.project}-source-houjinbangou-change-history"
   location = var.google.region
   uniform_bucket_level_access = true
 }
@@ -51,10 +79,25 @@ module "houjinbangou" {
   service_account_email = google_service_account.httpgcs.email
   schedule = "0 0 1 * *"
   region = var.google.region
-  source_contents = templatefile("source_contents/houjinbangou.tftpl.yaml", {
+  source_contents = templatefile("source_contents/houjinbangou_latest.tftpl.yaml", {
     bucket = google_storage_bucket.source.name
     repositoryId = google_artifact_registry_repository.source.repository_id
     location = google_artifact_registry_repository.source.location
+  })
+}
+
+module "houjinbangou_change_history" {
+  source = "../../modules/httpgcs"
+  name = "houjinbangou_change_history"
+  service_account_id = google_service_account.httpgcs.id
+  service_account_email = google_service_account.httpgcs.email
+  schedule = "0 0 * * *"
+  region = var.google.region
+  source_contents = templatefile("source_contents/houjinbangou_change_history.tftpl.yaml", {
+    bucket = google_storage_bucket.source_houjinbangou_change_history.name
+    repositoryId = google_artifact_registry_repository.source.repository_id
+    location = google_artifact_registry_repository.source.location
+    secretName = "${google_secret_manager_secret.houjinbangou_webapi_id.name}/versions/latest"
   })
 }
 
@@ -115,6 +158,20 @@ resource "google_cloudbuild_trigger" "dockerfiles_houjinbangou_latest" {
     }
   }
   included_files = ["dockerfiles/houjinbangou_latest/**"]
+}
+
+resource "google_cloudbuild_trigger" "dockerfiles_houjinbangou_change_history" {
+  name     = "dockerfiles-houjinbangou-change-history"
+  filename = "dockerfiles/houjinbangou_change_history/cloudbuild.yaml"
+
+  github {
+    owner = "bqfun"
+    name  = "jpdata"
+    push {
+      branch = "^main$"
+    }
+  }
+  included_files = ["dockerfiles/houjinbangou_change_history/**"]
 }
 
 resource "google_eventarc_trigger" "httpgcs" {
