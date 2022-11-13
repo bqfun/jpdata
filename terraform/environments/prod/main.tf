@@ -1,5 +1,27 @@
+resource "google_secret_manager_secret" "github_personal_access_token" {
+  secret_id = "github-personal-access-token"
+
+  replication {
+    automatic = true
+  }
+}
+
+resource "google_secret_manager_secret" "houjinbangou_webapi_id" {
+  secret_id = "houjinbangou-webapi-id"
+
+  replication {
+    automatic = true
+  }
+}
+
 resource "google_storage_bucket" "source" {
   name     = "${var.google.project}-source"
+  location = var.google.region
+  uniform_bucket_level_access = true
+}
+
+resource "google_storage_bucket" "source_houjinbangou_change_history" {
+  name     = "${var.google.project}-source-houjinbangou-change-history"
   location = var.google.region
   uniform_bucket_level_access = true
 }
@@ -115,6 +137,20 @@ resource "google_cloudbuild_trigger" "dockerfiles_houjinbangou_latest" {
     }
   }
   included_files = ["dockerfiles/houjinbangou_latest/**"]
+}
+
+resource "google_cloudbuild_trigger" "dockerfiles_houjinbangou_change_history" {
+  name     = "dockerfiles-houjinbangou-change-history"
+  filename = "dockerfiles/houjinbangou_change_history/cloudbuild.yaml"
+
+  github {
+    owner = "bqfun"
+    name  = "jpdata"
+    push {
+      branch = "^main$"
+    }
+  }
+  included_files = ["dockerfiles/houjinbangou_change_history/**"]
 }
 
 resource "google_eventarc_trigger" "httpgcs" {

@@ -78,9 +78,10 @@ severity=ERROR log_name="projects/jpdata/logs/batch_agent_logs"
 ```
 
 ## Dataform環境を用意する
-- Cloud BuildのGitHubリポジトリbqfun/jpdata-dataform接続
-- リポジトリ作成
-- ソース接続用のSecret作成
+- Cloud BuildのGitHubリポジトリbqfun/jpdata-dataformを接続
+- Cloud BuildのDataformトリガーを設定する
+- Dataformリポジトリ jpdata-dataform を作成する
+- ソース接続用のSecret（github-personal-access-token）に値を設定
 - ソースGitHubリポジトリ接続
 
 ## Analytics Hub環境を用意する
