@@ -109,23 +109,7 @@ allAuthenticatedUsers にロール「Analytics Hub サブスクライバー」�
 
 共有データセット：gbizinfo
 
-ドキュメント
-```
-# 日本の法人情報 gBizINFO preprocessed by BQ FUN
-法人番号を持っている組織の情報をまとめたものです。
-
-「gBizINFO」（経済産業省）（https://info.gbiz.go.jp/hojin/DownloadTop ）をもとにBigQueryユーザコミュニティBQ FUNが加工して作成しています。
-
-BQ FUNは、利用者が本コンテンツを用いて行う一切の責任を負いません。
-また、予告なく変更、削除される場合があります。
-
-このデータセットはCC BY 4.0で提供されています。
-https://creativecommons.org/licenses/by/4.0/legalcode.ja
-
-データセットの作成過程と、用いられている権利物はこちらのURLから確認できます。
-https://github.com/bqfun/jpdata
-https://github.com/bqfun/jpdata-dataform
-```
+ドキュメント：データセットのDescriptionと同一
 
 #### JP Holidays preprocessed by BQ FUN
 
@@ -135,23 +119,7 @@ https://github.com/bqfun/jpdata-dataform
 
 共有データセット：gbizinfo
 
-ドキュメント
-```
-# 日本の祝日 JP Holidays preprocessed by BQ FUN
-国民の祝日情報です。
-
-「国民の祝日について」（内閣府）（https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html ）をもとにBigQueryユーザコミュニティBQ FUNが加工して作成しています。
-
-BQ FUNは、利用者が本コンテンツを用いて行う一切の責任を負いません。
-また、予告なく変更、削除される場合があります。
-
-このデータセットはCC BY 4.0で提供されています。
-https://creativecommons.org/licenses/by/4.0/legalcode.ja
-
-データセットの作成過程と、用いられている権利物はこちらのURLから確認できます。
-https://github.com/bqfun/jpdata
-https://github.com/bqfun/jpdata-dataform
-```
+ドキュメント：データセットのDescriptionと同一
 
 #### Corporate Number preprocessed by BQ FUN
 
@@ -161,21 +129,4 @@ https://github.com/bqfun/jpdata-dataform
 
 共有データセット：houjinbangou
 
-ドキュメント
-```
-# 日本の法人情報 Corporate Number preprocessed by BQ FUN
-法人番号を持っている組織の情報をまとめたものです。
-
-「法人番号公表サイト」（国税庁）（https://www.houjin-bangou.nta.go.jp/ ）をもとにBigQueryユーザコミュニティBQ FUNが加工して作成しています。
-このサービスは、国税庁法人番号システムWeb-API 機能を利用して取得した情報をもとに作成しているが、サービスの内容は国税庁によって保証されたものではない
-
-BQ FUNは、利用者が本コンテンツを用いて行う一切の責任を負いません。
-また、予告なく変更、削除される場合があります。
-
-このデータセットはCC BY 4.0で提供されています。
-https://creativecommons.org/licenses/by/4.0/legalcode.ja
-
-データセットの作成過程と、用いられている権利物はこちらのURLから確認できます。
-https://github.com/bqfun/jpdata
-https://github.com/bqfun/jpdata-dataform
-```
+ドキュメント：データセットのDescriptionと同一
