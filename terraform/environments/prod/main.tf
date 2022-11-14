@@ -19,6 +19,12 @@ resource "google_secret_manager_secret" "houjinbangou_webapi_id" {
     automatic = true
   }
 }
+resource "google_secret_manager_secret_iam_member" "houjinbangou_webapi_id" {
+  project = google_secret_manager_secret.houjinbangou_webapi_id.project
+  secret_id = google_secret_manager_secret.houjinbangou_webapi_id.secret_id
+  role = "roles/secretmanager.secretAccessor"
+  member = "serviceAccount:${var.google.number}-compute@developer.gserviceaccount.com"
+}
 
 resource "google_storage_bucket" "source" {
   name     = "${var.google.project}-source"
@@ -98,6 +104,7 @@ module "houjinbangou_change_history" {
     repositoryId = google_artifact_registry_repository.source.repository_id
     location = google_artifact_registry_repository.source.location
     secretName = "${google_secret_manager_secret.houjinbangou_webapi_id.name}/versions/latest"
+    workflowId = module.dataform.workflow_id
   })
 }
 
