@@ -32,6 +32,12 @@ resource "google_storage_bucket" "source" {
   uniform_bucket_level_access = true
 }
 
+resource "google_storage_bucket" "source_eventarc" {
+  name     = "${var.google.project}-source-eventarc"
+  location = var.google.region
+  uniform_bucket_level_access = true
+}
+
 resource "google_storage_bucket" "source_houjinbangou_change_history" {
   name     = "${var.google.project}-source-houjinbangou-change-history"
   location = var.google.region
@@ -62,7 +68,7 @@ module "gbizinfo" {
   schedule = "0 9 * * *"
   region = var.google.region
   source_contents = templatefile("source_contents/gbizinfo.tftpl.yaml", {
-    bucket = google_storage_bucket.source.name
+    bucket = google_storage_bucket.source_eventarc.name
   })
 }
 
@@ -74,7 +80,7 @@ module "shukujitsu" {
   schedule = "0 6 * * *"
   region = var.google.region
   source_contents = templatefile("source_contents/shukujitsu.tftpl.yaml", {
-    bucket = google_storage_bucket.source.name
+    bucket = google_storage_bucket.source_eventarc.name
   })
 }
 
@@ -86,7 +92,7 @@ module "houjinbangou" {
   schedule = "0 0 1 * *"
   region = var.google.region
   source_contents = templatefile("source_contents/houjinbangou_latest.tftpl.yaml", {
-    bucket = google_storage_bucket.source.name
+    bucket = google_storage_bucket.source_eventarc.name
     repositoryId = google_artifact_registry_repository.source.repository_id
     location = google_artifact_registry_repository.source.location
   })
@@ -125,7 +131,7 @@ module "dataform" {
   project = var.google.project
   region = var.google.region
   connection_id = "${google_bigquery_connection.main.project}.${google_bigquery_connection.main.location}.${google_bigquery_connection.main.connection_id}"
-  bucket_source = google_storage_bucket.source.name
+  bucket_source = google_storage_bucket.source_eventarc.name
 }
 
 resource "google_bigquery_connection" "main" {
@@ -190,7 +196,7 @@ resource "google_eventarc_trigger" "httpgcs" {
   }
   matching_criteria {
     attribute = "bucket"
-    value     = google_storage_bucket.source.name
+    value     = google_storage_bucket.source_eventarc.name
   }
   destination {
     workflow = module.dataform.workflow_id
