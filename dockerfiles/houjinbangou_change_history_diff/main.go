@@ -68,11 +68,11 @@ func upload(ctx context.Context, bucket *storage.BucketHandle, name string, src 
 	}
 }
 
-func downloadThenUpload(ctx context.Context, bucket *storage.BucketHandle, id string, from time.Time, divide int) (time.Time, int) {
+func downloadThenUpload(ctx context.Context, bucket *storage.BucketHandle, objectPrefix string, id string, from time.Time, divide int) (time.Time, int) {
 	to := from.AddDate(0, 0, 49)
 
 	b := download(id, from, to, divide)
-	name := fmt.Sprintf("%s-%s-%05d.csv", from.Format("20060102"), to.Format("20060102"), divide)
+	name := fmt.Sprintf("%s%s-%s-%05d.csv", objectPrefix, from.Format("20060102"), to.Format("20060102"), divide)
 	upload(ctx, bucket, name, bytes.NewReader(b))
 
 	divisionNumber := getDivisionNumber(b)
@@ -83,7 +83,7 @@ func downloadThenUpload(ctx context.Context, bucket *storage.BucketHandle, id st
 	return from.AddDate(0, 0, 50), 1
 }
 
-func downloadThenUploadAll(name string, from time.Time, to time.Time, secretName string) {
+func downloadThenUploadAll(name string, objectPrefix string, from time.Time, to time.Time, secretName string) {
 	ctx := context.Background()
 	clientStorage, err := storage.NewClient(ctx)
 	if err != nil {
@@ -109,7 +109,7 @@ func downloadThenUploadAll(name string, from time.Time, to time.Time, secretName
 	divide := 1
 	for {
 		log.Printf("uploading: %s-%05d\n", from.Format("2006-01-02"), divide)
-		from, divide = downloadThenUpload(ctx, bucket, id, from, divide)
+		from, divide = downloadThenUpload(ctx, bucket, objectPrefix, id, from, divide)
 		if from.After(to) {
 			break
 		}
@@ -120,6 +120,10 @@ func main() {
 	bucket := os.Getenv("BUCKET")
 	if bucket == "" {
 		log.Fatalf("environment variable 'BUCKET' isn't set")
+	}
+	objectPrefix := os.Getenv("OBJECT_PREFIX")
+	if objectPrefix == "" {
+		log.Fatalf("environment variable 'OBJECT_PREFIX' isn't set")
 	}
 	secretName := os.Getenv("SECRET_NAME")
 	if secretName == "" {
@@ -134,6 +138,7 @@ func main() {
 
 	downloadThenUploadAll(
 		bucket,
+		objectPrefix,
 		startDateIn50DayIncrementsIncluding30DaysAgo,
 		today,
 		secretName,

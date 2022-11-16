@@ -5,7 +5,8 @@ main:
         assign:
           - repository: ${repository}
           - connectionID: ${connection_id}
-          - bucketSource: ${bucket_source}
+          - bucket: ${bucket}
+          - bucketEventarc: ${bucket_eventarc}
     - createCompilationResult:
         call: http.post
         args:
@@ -17,7 +18,8 @@ main:
             codeCompilationConfig:
               vars:
                 connectionID: $${connectionID}
-                bucketSource: $${bucketSource}
+                bucketEventarc: $${bucketEventarc}
+                bucket: $${bucket}
         result: compilationResult
     - createWorkflowInvocation:
         call: http.post

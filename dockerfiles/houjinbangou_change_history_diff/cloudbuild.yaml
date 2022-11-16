@@ -1,0 +1,13 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - '-t'
+      - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/houjinbangou-change-history-diff:$COMMIT_SHA
+      - '-t'
+      - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/houjinbangou-change-history-diff:latest
+      - .
+    dir: dockerfiles/houjinbangou_change_history_diff
+images:
+  - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/houjinbangou-change-history-diff:$COMMIT_SHA
+  - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/houjinbangou-change-history-diff:latest
