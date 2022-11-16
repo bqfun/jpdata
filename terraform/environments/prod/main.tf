@@ -77,6 +77,7 @@ resource "google_project_iam_member" "httpgcs" {
 
 module "gbizinfo" {
   source = "../../modules/httpgcs"
+  project_id = var.google.project
   name = "gbizinfo"
   service_account_id = google_service_account.httpgcs.id
   service_account_email = google_service_account.httpgcs.email
@@ -89,6 +90,7 @@ module "gbizinfo" {
 
 module "shukujitsu" {
   source = "../../modules/httpgcs"
+  project_id = var.google.project
   name = "shukujitsu"
   service_account_id = google_service_account.httpgcs.id
   service_account_email = google_service_account.httpgcs.email
@@ -101,6 +103,7 @@ module "shukujitsu" {
 
 module "houjinbangou" {
   source = "../../modules/httpgcs"
+  project_id = var.google.project
   name = "houjinbangou"
   service_account_id = google_service_account.httpgcs.id
   service_account_email = google_service_account.httpgcs.email
@@ -115,6 +118,7 @@ module "houjinbangou" {
 
 module "houjinbangou_change_history" {
   source = "../../modules/httpgcs"
+  project_id = var.google.project
   name = "houjinbangou_change_history"
   service_account_id = google_service_account.httpgcs.id
   service_account_email = google_service_account.httpgcs.email
