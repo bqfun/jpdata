@@ -1,0 +1,25 @@
+- createAndRunBatchJob:
+    call: http.post
+    args:
+      url: $${"https://batch.googleapis.com/v1/projects/" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + "/locations/us-central1/jobs"}
+      query:
+        job_id: $${"job-shukujitsu-" + string(int(sys.now()))}
+      headers:
+        Content-Type: application/json
+      auth:
+        type: OAuth2
+      body:
+        taskGroups:
+          taskSpec:
+            runnables:
+              - script:
+                  text: $${"curl https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv | iconv -f sjis -t utf-8 | gsutil cp - gs://${bucket}/syukujitsu.csv"}
+
+        allocationPolicy:
+          instances:
+            - policy:
+                machineType: e2-micro
+                provisioningModel: SPOT
+
+        logsPolicy:
+          destination: CLOUD_LOGGING

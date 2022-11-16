@@ -4,6 +4,9 @@ resource "google_secret_manager_secret" "github_personal_access_token" {
   replication {
     automatic = true
   }
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 resource "google_secret_manager_secret_iam_member" "github_personal_access_token" {
   project = google_secret_manager_secret.github_personal_access_token.project
@@ -18,6 +21,9 @@ resource "google_secret_manager_secret" "houjinbangou_webapi_id" {
   replication {
     automatic = true
   }
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 resource "google_secret_manager_secret_iam_member" "houjinbangou_webapi_id" {
   project = google_secret_manager_secret.houjinbangou_webapi_id.project
@@ -30,18 +36,27 @@ resource "google_storage_bucket" "source" {
   name     = "${var.google.project}-source"
   location = var.google.region
   uniform_bucket_level_access = true
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "google_storage_bucket" "source_eventarc" {
   name     = "${var.google.project}-source-eventarc"
   location = var.google.region
   uniform_bucket_level_access = true
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "google_storage_bucket" "source_houjinbangou_change_history" {
   name     = "${var.google.project}-source-houjinbangou-change-history"
   location = var.google.region
   uniform_bucket_level_access = true
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "google_service_account" "httpgcs" {
@@ -67,7 +82,7 @@ module "gbizinfo" {
   service_account_email = google_service_account.httpgcs.email
   schedule = "0 9 * * *"
   region = var.google.region
-  source_contents = templatefile("source_contents/gbizinfo.tftpl.yaml", {
+  source_contents = templatefile("templates/gbizinfo.tftpl.yaml", {
     bucket = google_storage_bucket.source_eventarc.name
   })
 }
@@ -79,7 +94,7 @@ module "shukujitsu" {
   service_account_email = google_service_account.httpgcs.email
   schedule = "0 6 * * *"
   region = var.google.region
-  source_contents = templatefile("source_contents/shukujitsu.tftpl.yaml", {
+  source_contents = templatefile("templates/shukujitsu.tftpl.yaml", {
     bucket = google_storage_bucket.source_eventarc.name
   })
 }
@@ -91,7 +106,7 @@ module "houjinbangou" {
   service_account_email = google_service_account.httpgcs.email
   schedule = "0 0 1 * *"
   region = var.google.region
-  source_contents = templatefile("source_contents/houjinbangou_latest.tftpl.yaml", {
+  source_contents = templatefile("templates/houjinbangou_latest.tftpl.yaml", {
     bucket = google_storage_bucket.source_eventarc.name
     repositoryId = google_artifact_registry_repository.source.repository_id
     location = google_artifact_registry_repository.source.location
@@ -105,7 +120,7 @@ module "houjinbangou_change_history" {
   service_account_email = google_service_account.httpgcs.email
   schedule = "0 0 * * *"
   region = var.google.region
-  source_contents = templatefile("source_contents/houjinbangou_change_history.tftpl.yaml", {
+  source_contents = templatefile("templates/houjinbangou_change_history.tftpl.yaml", {
     bucket = google_storage_bucket.source_houjinbangou_change_history.name
     repositoryId = google_artifact_registry_repository.source.repository_id
     location = google_artifact_registry_repository.source.location
@@ -128,7 +143,7 @@ resource "google_project_iam_member" "dataform" {
 
 module "dataform" {
   source = "../../modules/dataform"
-  project = var.google.project
+  project_id = var.google.project
   region = var.google.region
   connection_id = "${google_bigquery_connection.main.project}.${google_bigquery_connection.main.location}.${google_bigquery_connection.main.connection_id}"
   bucket_source = google_storage_bucket.source_eventarc.name
@@ -141,7 +156,7 @@ resource "google_bigquery_connection" "main" {
   cloud_resource {}
 }
 
-resource "google_project_iam_member" "mainConnectionPermissionGrant" {
+resource "google_project_iam_member" "main_connection_permission_grant" {
   project = var.google.project
   role = "roles/storage.objectViewer"
   member = format("serviceAccount:%s", google_bigquery_connection.main.cloud_resource[0].service_account_id)
@@ -157,6 +172,9 @@ resource "google_artifact_registry_repository" "source" {
   location      = var.google.region
   repository_id = "source"
   format        = "DOCKER"
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "google_cloudbuild_trigger" "dockerfiles_houjinbangou_latest" {

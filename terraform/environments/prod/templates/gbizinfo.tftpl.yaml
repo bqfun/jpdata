@@ -1,15 +1,9 @@
-- init:
-    assign:
-      - projectId: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
-      - batchApiUrl: $${"https://batch.googleapis.com/v1/projects/" + projectId + "/locations/us-central1/jobs"}
-      - jobId: $${"job-gbizinfo-" + string(int(sys.now()))}
-      - bucket: ${bucket}
 - createAndRunBatchJob:
     call: http.post
     args:
-      url: $${batchApiUrl}
+      url: $${"https://batch.googleapis.com/v1/projects/" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + "/locations/us-central1/jobs"}
       query:
-        job_id: $${jobId}
+        job_id: $${"job-gbizinfo-" + string(int(sys.now()))}
       headers:
         Content-Type: application/json
       auth:
@@ -19,7 +13,7 @@
           taskSpec:
             runnables:
               - script:
-                  text: $${"curl https://info.gbiz.go.jp/hojin/Download -d downenc=UTF-8 -d downfile=$${DOWNFILE} -d downtype=csv | gsutil cp - gs://" + bucket + "/gbizinfo/$${OBJECT}.csv"}
+                  text: $${"curl https://info.gbiz.go.jp/hojin/Download -d downenc=UTF-8 -d downfile=$${DOWNFILE} -d downtype=csv | gsutil cp - gs://${bucket}/gbizinfo/$${OBJECT}.csv"}
           taskEnvironments:
             - variables:
                 OBJECT: basic
