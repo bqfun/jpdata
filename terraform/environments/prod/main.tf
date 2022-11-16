@@ -129,7 +129,6 @@ module "houjinbangou" {
 module "houjinbangou_change_history_diff" {
   source = "../../modules/houjinbangou_change_history_diff"
   project_id = var.google.project
-  name = "houjinbangou_change_history_diff"
   service_account_id = google_service_account.httpgcs.id
   service_account_email = google_service_account.httpgcs.email
   schedule = "0 0 * * *"
