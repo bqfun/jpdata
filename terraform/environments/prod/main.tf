@@ -169,22 +169,8 @@ module "dataform" {
   project_id = var.google.project
   project_number = var.google.number
   region = var.google.region
-  connection_id = "${google_bigquery_connection.main.project}.${google_bigquery_connection.main.location}.${google_bigquery_connection.main.connection_id}"
   bucket_name = google_storage_bucket.source.name
   bucket_eventarc_name = google_storage_bucket.source_eventarc.name
-}
-
-resource "google_bigquery_connection" "main" {
-  connection_id = "main"
-  project = var.google.project
-  location = var.google.region
-  cloud_resource {}
-}
-
-resource "google_project_iam_member" "main_connection_permission_grant" {
-  project = var.google.project
-  role = "roles/storage.objectViewer"
-  member = format("serviceAccount:%s", google_bigquery_connection.main.cloud_resource[0].service_account_id)
 }
 
 resource "google_project_iam_member" "cloud_batch_upload_objects_to_cloud_storage" {
