@@ -1,10 +1,25 @@
+resource "google_project_service" "project" {
+  for_each = toset([
+    "cloudbuild.googleapis.com",
+    "cloudscheduler.googleapis.com",
+    "dataform.googleapis.com",
+    "iam.googleapis.com",
+    "workflowexecutions.googleapis.com",
+    "workflows.googleapis.com",
+  ])
+
+  project = var.project_id
+  service = each.key
+  disable_on_destroy = false
+}
+
 resource "google_service_account" "dataform" {
   account_id   = "dataform"
 }
 
 resource "google_project_iam_member" "dataform" {
   for_each = toset(["roles/workflows.invoker", "roles/dataform.editor", "roles/logging.logWriter"])
-  project  = var.project
+  project  = var.project_id
   role     = each.key
   member   = "serviceAccount:${google_service_account.dataform.email}"
 }
@@ -13,7 +28,7 @@ resource "google_workflows_workflow" "dataform" {
   name            = "dataform"
   region          = var.region
   service_account = google_service_account.dataform.id
-  source_contents = templatefile("${path.module}/dataform.tftpl.yaml", {
+  source_contents = templatefile("${path.module}/templates/dataform.tftpl.yaml", {
     repository = "projects/jpdata/locations/us-central1/repositories/jpdata-dataform",
     connection_id = var.connection_id,
     bucket_source = var.bucket_source,

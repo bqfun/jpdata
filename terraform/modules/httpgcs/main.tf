@@ -1,3 +1,15 @@
+resource "google_project_service" "project" {
+  for_each = toset([
+    "cloudscheduler.googleapis.com",
+    "workflowexecutions.googleapis.com",
+    "workflows.googleapis.com",
+  ])
+
+  project = var.project_id
+  service = each.key
+  disable_on_destroy = false
+}
+
 resource "google_workflows_workflow" "httpgcs" {
   name            = var.name
   region          = var.region
