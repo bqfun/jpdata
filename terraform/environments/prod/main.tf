@@ -127,20 +127,19 @@ module "houjinbangou" {
 }
 
 module "houjinbangou_change_history_diff" {
-  source = "../../modules/httpgcs"
+  source = "../../modules/houjinbangou_change_history_diff"
   project_id = var.google.project
   name = "houjinbangou_change_history_diff"
   service_account_id = google_service_account.httpgcs.id
   service_account_email = google_service_account.httpgcs.email
   schedule = "0 0 * * *"
   region = var.google.region
-  source_contents = templatefile("templates/houjinbangou_change_history_diff.tftpl.yaml", {
-    bucket = google_storage_bucket.source.name
-    repositoryId = google_artifact_registry_repository.source.repository_id
-    location = google_artifact_registry_repository.source.location
-    secretName = "${google_secret_manager_secret.houjinbangou_webapi_id.name}/versions/latest"
-    workflowId = module.dataform.workflow_id
-  })
+
+  bucket_name = google_storage_bucket.source.name
+  repository_repository_id = google_artifact_registry_repository.source.repository_id
+  repository_location = google_artifact_registry_repository.source.location
+  secret_name = google_secret_manager_secret.houjinbangou_webapi_id.name
+  dataform_workflow_id = module.dataform.workflow_id
 }
 
 resource "google_project_iam_member" "dataform" {
@@ -191,18 +190,4 @@ resource "google_cloudbuild_trigger" "dockerfiles_houjinbangou_latest" {
     }
   }
   included_files = ["dockerfiles/houjinbangou_latest/**"]
-}
-
-resource "google_cloudbuild_trigger" "dockerfiles_houjinbangou_change_history" {
-  name     = "dockerfiles-houjinbangou-change-history"
-  filename = "dockerfiles/houjinbangou_change_history/cloudbuild.yaml"
-
-  github {
-    owner = "bqfun"
-    name  = "jpdata"
-    push {
-      branch = "^main$"
-    }
-  }
-  included_files = ["dockerfiles/houjinbangou_change_history/**"]
 }

@@ -28,7 +28,7 @@ resource "google_workflows_workflow" "dataform" {
   name            = "dataform"
   region          = var.region
   service_account = google_service_account.dataform_workflow_invoker.id
-  source_contents = templatefile("${path.module}/templates/dataform.tftpl.yaml", {
+  source_contents = templatefile("${path.module}/templates/source_contents.tftpl.yaml", {
     repository = "projects/jpdata/locations/us-central1/repositories/jpdata-dataform",
     connection_id = "${google_bigquery_connection.main.project}.${google_bigquery_connection.main.location}.${google_bigquery_connection.main.connection_id}",
     bucket = var.bucket_name,

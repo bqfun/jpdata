@@ -1,0 +1,10 @@
+variable "project_id" {}
+variable "region" {}
+variable "service_account_id" {}
+variable "service_account_email" {}
+variable "schedule" {}
+variable "bucket_name" {}
+variable "repository_repository_id" {}
+variable "repository_location" {}
+variable "secret_name" {}
+variable "dataform_workflow_id" {}
