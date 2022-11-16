@@ -167,6 +167,7 @@ resource "google_project_iam_member" "dataform" {
 module "dataform" {
   source = "../../modules/dataform"
   project_id = var.google.project
+  project_number = var.google.number
   region = var.google.region
   connection_id = "${google_bigquery_connection.main.project}.${google_bigquery_connection.main.location}.${google_bigquery_connection.main.connection_id}"
   bucket_name = google_storage_bucket.source.name
