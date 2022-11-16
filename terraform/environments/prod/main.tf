@@ -1,3 +1,22 @@
+resource "google_project_service" "project" {
+  for_each = toset([
+    "analyticshub.googleapis.com",
+    "artifactregistry.googleapis.com",
+    "batch.googleapis.com",
+    "bigqueryconnection.googleapis.com",
+    "cloudbuild.googleapis.com",
+    "cloudresourcemanager.googleapis.com",
+    "compute.googleapis.com",
+    "iam.googleapis.com",
+    "pubsub.googleapis.com",
+    "secretmanager.googleapis.com",
+  ])
+
+  project = var.google.project
+  service = each.key
+  disable_on_destroy = false
+}
+
 resource "google_secret_manager_secret" "github_personal_access_token" {
   secret_id = "github-personal-access-token"
 
@@ -150,7 +169,8 @@ module "dataform" {
   project_id = var.google.project
   region = var.google.region
   connection_id = "${google_bigquery_connection.main.project}.${google_bigquery_connection.main.location}.${google_bigquery_connection.main.connection_id}"
-  bucket_source = google_storage_bucket.source_eventarc.name
+  bucket_name = google_storage_bucket.source.name
+  bucket_eventarc_name = google_storage_bucket.source_eventarc.name
 }
 
 resource "google_bigquery_connection" "main" {
@@ -207,44 +227,4 @@ resource "google_cloudbuild_trigger" "dockerfiles_houjinbangou_change_history" {
     }
   }
   included_files = ["dockerfiles/houjinbangou_change_history/**"]
-}
-
-resource "google_eventarc_trigger" "httpgcs" {
-  name     = "httpgcs"
-  location = var.google.region
-  matching_criteria {
-    attribute = "type"
-    value     = "google.cloud.storage.object.v1.finalized"
-  }
-  matching_criteria {
-    attribute = "bucket"
-    value     = google_storage_bucket.source_eventarc.name
-  }
-  destination {
-    workflow = module.dataform.workflow_id
-  }
-  service_account = google_service_account.httpgcs.email
-  depends_on = [
-    google_project_iam_member.httpgcs,
-    google_project_iam_member.httpgcs_eventarc_gs,
-    google_project_iam_member.httpgcs_eventarc_pubsub,
-  ]
-}
-
-// このトリガーでは、Cloud Storage 経由でイベントを受け取るために、
-// サービス アカウント service-120299025068@gs-project-accounts.iam.gserviceaccount.com に
-// ロール roles/pubsub.publisher が付与されている必要があります。
-resource "google_project_iam_member" "httpgcs_eventarc_gs" {
-  project  = var.google.project
-  role     = "roles/pubsub.publisher"
-  member   = "serviceAccount:service-${var.google.number}@gs-project-accounts.iam.gserviceaccount.com"
-}
-
-// Cloud Pub/Sub で ID トークンを作成するには、
-// このプロジェクトのサービス アカウント service-120299025068@gcp-sa-pubsub.iam.gserviceaccount.com に
-// ロール roles/iam.serviceAccountTokenCreator が付与されている必要があります。
-resource "google_project_iam_member" "httpgcs_eventarc_pubsub" {
-  project  = var.google.project
-  role     = "roles/iam.serviceAccountTokenCreator"
-  member   = "serviceAccount:service-${var.google.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
 }

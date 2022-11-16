@@ -18,7 +18,7 @@ resource "google_service_account" "dataform" {
 }
 
 resource "google_project_iam_member" "dataform" {
-  for_each = toset(["roles/workflows.invoker", "roles/dataform.editor", "roles/logging.logWriter"])
+  for_each = toset(["roles/dataform.editor", "roles/logging.logWriter"])
   project  = var.project_id
   role     = each.key
   member   = "serviceAccount:${google_service_account.dataform.email}"
@@ -27,11 +27,12 @@ resource "google_project_iam_member" "dataform" {
 resource "google_workflows_workflow" "dataform" {
   name            = "dataform"
   region          = var.region
-  service_account = google_service_account.dataform.id
+  service_account = google_service_account.dataform_workflow_invoker.id
   source_contents = templatefile("${path.module}/templates/dataform.tftpl.yaml", {
     repository = "projects/jpdata/locations/us-central1/repositories/jpdata-dataform",
     connection_id = var.connection_id,
-    bucket_source = var.bucket_source,
+    bucket_source = var.bucket_name,
+    bucket_eventarc = var.bucket_eventarc_name,
   })
 }
 
@@ -79,4 +80,58 @@ resource "google_cloudbuild_trigger" "dataform" {
       branch = "^main$"
     }
   }
+}
+
+resource "google_service_account" "dataform_workflow_invoker" {
+  account_id   = "dataform-workflow-invoker"
+}
+
+resource "google_project_iam_member" "eventarc" {
+  for_each = toset([
+    "roles/eventarc.eventReceiver",
+    "roles/workflows.invoker",
+  ])
+  project  = var.project_id
+  role     = each.key
+  member   = "serviceAccount:${google_service_account.dataform_workflow_invoker.email}"
+}
+
+resource "google_eventarc_trigger" "eventarc" {
+  name     = "eventarc"
+  location = var.region
+  matching_criteria {
+    attribute = "type"
+    value     = "google.cloud.storage.object.v1.finalized"
+  }
+  matching_criteria {
+    attribute = "bucket"
+    value     = var.bucket_eventarc_name
+  }
+  destination {
+    workflow = google_workflows_workflow.dataform.id
+  }
+  service_account = google_service_account.dataform_workflow_invoker.email
+  depends_on = [
+    google_project_iam_member.eventarc,
+    google_project_iam_member.eventarc_gs,
+    google_project_iam_member.eventarc_pubsub,
+  ]
+}
+
+// このトリガーでは、Cloud Storage 経由でイベントを受け取るために、
+// サービス アカウント service-120299025068@gs-project-accounts.iam.gserviceaccount.com に
+// ロール roles/pubsub.publisher が付与されている必要があります。
+resource "google_project_iam_member" "eventarc_gs" {
+  project  = var.project_id
+  role     = "roles/pubsub.publisher"
+  member   = "serviceAccount:service-${var.project_number}@gs-project-accounts.iam.gserviceaccount.com"
+}
+
+// Cloud Pub/Sub で ID トークンを作成するには、
+// このプロジェクトのサービス アカウント service-120299025068@gcp-sa-pubsub.iam.gserviceaccount.com に
+// ロール roles/iam.serviceAccountTokenCreator が付与されている必要があります。
+resource "google_project_iam_member" "eventarc_pubsub" {
+  project  = var.project_id
+  role     = "roles/iam.serviceAccountTokenCreator"
+  member   = "serviceAccount:service-${var.project_number}@gcp-sa-pubsub.iam.gserviceaccount.com"
 }
