@@ -69,15 +69,6 @@ resource "google_storage_bucket" "source_eventarc" {
   }
 }
 
-resource "google_storage_bucket" "source_houjinbangou_change_history" {
-  name     = "${var.google.project}-source-houjinbangou-change-history"
-  location = var.google.region
-  uniform_bucket_level_access = true
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-
 resource "google_service_account" "httpgcs" {
   account_id   = "httpgcs"
 }
@@ -135,16 +126,16 @@ module "houjinbangou" {
   })
 }
 
-module "houjinbangou_change_history" {
+module "houjinbangou_change_history_diff" {
   source = "../../modules/httpgcs"
   project_id = var.google.project
-  name = "houjinbangou_change_history"
+  name = "houjinbangou_change_history_diff"
   service_account_id = google_service_account.httpgcs.id
   service_account_email = google_service_account.httpgcs.email
   schedule = "0 0 * * *"
   region = var.google.region
-  source_contents = templatefile("templates/houjinbangou_change_history.tftpl.yaml", {
-    bucket = google_storage_bucket.source_houjinbangou_change_history.name
+  source_contents = templatefile("templates/houjinbangou_change_history_diff.tftpl.yaml", {
+    bucket = google_storage_bucket.source.name
     repositoryId = google_artifact_registry_repository.source.repository_id
     location = google_artifact_registry_repository.source.location
     secretName = "${google_secret_manager_secret.houjinbangou_webapi_id.name}/versions/latest"

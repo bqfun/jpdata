@@ -31,7 +31,7 @@ resource "google_workflows_workflow" "dataform" {
   source_contents = templatefile("${path.module}/templates/dataform.tftpl.yaml", {
     repository = "projects/jpdata/locations/us-central1/repositories/jpdata-dataform",
     connection_id = "${google_bigquery_connection.main.project}.${google_bigquery_connection.main.location}.${google_bigquery_connection.main.connection_id}",
-    bucket_source = var.bucket_name,
+    bucket = var.bucket_name,
     bucket_eventarc = var.bucket_eventarc_name,
   })
 }

@@ -26,10 +26,11 @@
           taskSpec:
             runnables:
               - container:
-                  imageUri: $${location + "-docker.pkg.dev/" + projectId + "/" + repositoryId + "/houjinbangou-change-history:latest"}
+                  imageUri: $${location + "-docker.pkg.dev/" + projectId + "/" + repositoryId + "/houjinbangou-change-history-diff:latest"}
                 environment:
                   variables:
                     BUCKET: $${bucket}
+                    OBJECT_PREFIX: "houjinbangou/diff/"
                     SECRET_NAME: $${secretName}
 
         allocationPolicy:

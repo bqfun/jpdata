@@ -19,7 +19,7 @@ main:
               vars:
                 connectionID: $${connectionID}
                 bucketEventarc: $${bucketEventarc}
-                bucket: $${bucketSource}
+                bucket: $${bucket}
         result: compilationResult
     - createWorkflowInvocation:
         call: http.post
