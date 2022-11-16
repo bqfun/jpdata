@@ -57,7 +57,7 @@ gcloud beta builds triggers create github \
     --name=terraform \
     --repo-name=jpdata \
     --repo-owner=bqfun \
-    --branch-pattern=^main$ \
+    --branch-pattern=.* \
     --build-config=terraform/cloudbuild.yaml \
     --included-files=terraform/** \
     --service-account=projects/${GOOGLE_CLOUD_PROJECT}/serviceAccounts/terraform@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com
