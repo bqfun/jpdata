@@ -1,12 +1,20 @@
 steps:
-  - name: 'hashicorp/terraform:1.2.6'
+  - name: 'hashicorp/terraform:1.3.4'
     args: ['init']
     dir: 'terraform/environments/prod'
-  - name: 'hashicorp/terraform:1.2.6'
+  - name: 'hashicorp/terraform:1.3.4'
     args: ['plan']
     dir: 'terraform/environments/prod'
-  - name: 'hashicorp/terraform:1.2.6'
-    args: ['apply', '-auto-approve']
+  - name: 'hashicorp/terraform:1.3.4'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        if [ $BRANCH_NAME == "main" ]; then
+          terraform apply -auto-approve
+        else
+          echo "SKIPPING APPLYING"
+        fi
     dir: 'terraform/environments/prod'
 options:
   logging: CLOUD_LOGGING_ONLY
