@@ -6,8 +6,8 @@ resource "google_project_service" "project" {
     "workflows.googleapis.com",
   ])
 
-  project = var.project_id
-  service = each.key
+  project            = var.project_id
+  service            = each.key
   disable_on_destroy = false
 }
 
@@ -16,22 +16,22 @@ resource "google_workflows_workflow" "httpgcs" {
   region          = var.region
   service_account = var.service_account_id
   source_contents = templatefile("${path.module}/templates/source_contents.tftpl.yaml", {
-    bucket = var.bucket_name
+    bucket       = var.bucket_name
     repositoryId = var.repository_repository_id
-    location = var.repository_location
-    secretName = "${var.secret_name}/versions/latest"
-    workflowId = var.dataform_workflow_id
+    location     = var.repository_location
+    secretName   = "${var.secret_name}/versions/latest"
+    workflowId   = var.dataform_workflow_id
   })
 }
 
 resource "google_cloud_scheduler_job" "httpgcs" {
-  name        = "houjinbangou_change_history_diff"
-  schedule    = var.schedule
-  time_zone   = "Asia/Tokyo"
-  region      = var.region
+  name      = "houjinbangou_change_history_diff"
+  schedule  = var.schedule
+  time_zone = "Asia/Tokyo"
+  region    = var.region
 
   http_target {
-    uri = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.httpgcs.id}/executions"
+    uri         = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.httpgcs.id}/executions"
     http_method = "POST"
     oauth_token {
       service_account_email = var.service_account_email
