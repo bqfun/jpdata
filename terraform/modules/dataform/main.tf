@@ -1,9 +1,13 @@
 resource "google_project_service" "project" {
   for_each = toset([
+    "bigqueryconnection.googleapis.com",
     "cloudbuild.googleapis.com",
+    "cloudresourcemanager.googleapis.com",
     "cloudscheduler.googleapis.com",
     "dataform.googleapis.com",
     "iam.googleapis.com",
+    "pubsub.googleapis.com",
+    "secretmanager.googleapis.com",
     "workflowexecutions.googleapis.com",
     "workflows.googleapis.com",
   ])
@@ -27,7 +31,7 @@ resource "google_project_iam_member" "dataform" {
 resource "google_workflows_workflow" "dataform" {
   name            = "dataform"
   region          = var.region
-  service_account = google_service_account.dataform_workflow_invoker.id
+  service_account = google_service_account.dataform.id
   source_contents = templatefile("${path.module}/templates/source_contents.tftpl.yaml", {
     repository      = "projects/jpdata/locations/us-central1/repositories/jpdata-dataform",
     connection_id   = "${google_bigquery_connection.main.project}.${google_bigquery_connection.main.location}.${google_bigquery_connection.main.connection_id}",
@@ -47,7 +51,7 @@ resource "google_cloud_scheduler_job" "dataform_daily" {
     http_method = "POST"
     body        = base64encode("{\"argument\": \"{\\\"includedTags\\\": [\\\"daily\\\"]}\"}")
     oauth_token {
-      service_account_email = google_service_account.dataform.email
+      service_account_email = google_service_account.dataform_workflow_invoker.email
     }
   }
 }
@@ -63,7 +67,7 @@ resource "google_cloud_scheduler_job" "dataform_monthly" {
     http_method = "POST"
     body        = base64encode("{\"argument\": \"{\\\"includedTags\\\": [\\\"monthly\\\"]}\"}")
     oauth_token {
-      service_account_email = google_service_account.dataform.email
+      service_account_email = google_service_account.dataform_workflow_invoker.email
     }
   }
 }
@@ -71,7 +75,7 @@ resource "google_cloud_scheduler_job" "dataform_monthly" {
 resource "google_cloudbuild_trigger" "dataform" {
   name            = "dataform"
   filename        = "cloudbuild.yaml"
-  service_account = google_service_account.dataform.id
+  service_account = google_service_account.dataform_workflow_invoker.id
 
   github {
     owner = "bqfun"
@@ -147,4 +151,21 @@ resource "google_project_iam_member" "main_connection_permission_grant" {
   project = var.project_id
   role    = "roles/storage.objectViewer"
   member  = format("serviceAccount:%s", google_bigquery_connection.main.cloud_resource[0].service_account_id)
+}
+
+resource "google_secret_manager_secret" "github_personal_access_token" {
+  secret_id = "github-personal-access-token"
+
+  replication {
+    automatic = true
+  }
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+resource "google_secret_manager_secret_iam_member" "github_personal_access_token" {
+  project   = google_secret_manager_secret.github_personal_access_token.project
+  secret_id = google_secret_manager_secret.github_personal_access_token.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:service-${var.project_number}@gcp-sa-dataform.iam.gserviceaccount.com"
 }

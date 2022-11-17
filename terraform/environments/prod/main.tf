@@ -3,35 +3,16 @@ resource "google_project_service" "project" {
     "analyticshub.googleapis.com",
     "artifactregistry.googleapis.com",
     "batch.googleapis.com",
-    "bigqueryconnection.googleapis.com",
     "cloudbuild.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "compute.googleapis.com",
     "iam.googleapis.com",
-    "pubsub.googleapis.com",
     "secretmanager.googleapis.com",
   ])
 
   project            = var.google.project
   service            = each.key
   disable_on_destroy = false
-}
-
-resource "google_secret_manager_secret" "github_personal_access_token" {
-  secret_id = "github-personal-access-token"
-
-  replication {
-    automatic = true
-  }
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-resource "google_secret_manager_secret_iam_member" "github_personal_access_token" {
-  project   = google_secret_manager_secret.github_personal_access_token.project
-  secret_id = google_secret_manager_secret.github_personal_access_token.secret_id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:service-${var.google.number}@gcp-sa-dataform.iam.gserviceaccount.com"
 }
 
 resource "google_secret_manager_secret" "houjinbangou_webapi_id" {
