@@ -80,8 +80,12 @@ resource "google_service_account" "workflow" {
 }
 
 resource "google_project_iam_member" "workflow" {
+  for_each = toset([
+    "roles/batch.jobsEditor",
+    "roles/workflows.invoker",
+  ])
   project = var.project_id
-  role    = "roles/batch.jobsEditor"
+  role    = each.key
   member  = "serviceAccount:${google_service_account.workflow.email}"
 }
 
