@@ -1,7 +1,6 @@
 resource "google_project_service" "workflow" {
   for_each = toset([
     "batch.googleapis.com",
-    "cloudbuild.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "cloudscheduler.googleapis.com",
     "compute.googleapis.com",
@@ -16,18 +15,16 @@ resource "google_project_service" "workflow" {
 }
 
 resource "google_workflows_workflow" "workflow" {
-  name            = "houjinbangou_latest"
+  name            = "gbizinfo"
   region          = var.region
   service_account = google_service_account.workflow.id
   source_contents = templatefile("${path.module}/templates/source_contents.tftpl.yaml", {
     bucket       = var.bucket_eventarc_name
-    repositoryId = var.repository_repository_id
-    location     = var.repository_location
   })
 }
 
 resource "google_cloud_scheduler_job" "workflow" {
-  name      = "houjinbangou_latest"
+  name      = "gbizinfo"
   schedule  = var.schedule
   time_zone = "Asia/Tokyo"
   region    = var.region
@@ -41,22 +38,8 @@ resource "google_cloud_scheduler_job" "workflow" {
   }
 }
 
-resource "google_cloudbuild_trigger" "workflow" {
-  name     = "dockerfiles-houjinbangou-latest"
-  filename = "dockerfiles/houjinbangou_latest/cloudbuild.yaml"
-
-  github {
-    owner = "bqfun"
-    name  = "jpdata"
-    push {
-      branch = "^main$"
-    }
-  }
-  included_files = ["dockerfiles/houjinbangou_latest/**"]
-}
-
 resource "google_service_account" "workflow" {
-  account_id = "houjinbangou-latest"
+  account_id = "gbizinfo"
 }
 
 resource "google_project_iam_member" "workflow" {
@@ -74,7 +57,7 @@ resource "google_service_account_iam_member" "workflow" {
 }
 
 resource "google_service_account" "workflow_invoker" {
-  account_id = "houjinbangou-latest-invoker"
+  account_id = "gbizinfo-invoker"
 }
 
 resource "google_project_iam_member" "workflow_invoker" {
