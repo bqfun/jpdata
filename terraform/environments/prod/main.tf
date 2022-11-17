@@ -78,7 +78,7 @@ module "houjinbangou_latest" {
   project_id               = var.google.project
   schedule                 = "0 0 1 * *"
   region                   = var.google.region
-  bucket_eventarc_name     = google_storage_bucket.source.name
+  bucket_eventarc_name     = google_storage_bucket.source_eventarc.name
   repository_repository_id = google_artifact_registry_repository.source.repository_id
   repository_location      = google_artifact_registry_repository.source.location
 }
