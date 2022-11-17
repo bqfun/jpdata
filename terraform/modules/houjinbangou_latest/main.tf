@@ -56,7 +56,7 @@ resource "google_cloudbuild_trigger" "houjinbangou_latest" {
 }
 
 resource "google_service_account" "workflow" {
-  account_id = "houjinbangou-latest-workflow"
+  account_id = "houjinbangou-latest"
 }
 
 resource "google_project_iam_member" "workflow" {
@@ -74,7 +74,7 @@ resource "google_service_account_iam_member" "workflow" {
 }
 
 resource "google_service_account" "workflow_invoker" {
-  account_id = "houjinbangou-latest-workflow-invoker"
+  account_id = "houjinbangou-latest-invoker"
 }
 
 resource "google_project_iam_member" "workflow_invoker" {
