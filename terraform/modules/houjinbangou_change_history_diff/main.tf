@@ -76,7 +76,7 @@ resource "google_secret_manager_secret_iam_member" "houjinbangou_webapi_id" {
 }
 
 resource "google_service_account" "workflow" {
-  account_id = "houjinbangou-change-history-diff-workflow"
+  account_id = "houjinbangou-diff-workflow"
 }
 
 resource "google_project_iam_member" "workflow" {
