@@ -1,4 +1,4 @@
-resource "google_project_service" "project" {
+resource "google_project_service" "workflow" {
   for_each = toset([
     "batch.googleapis.com",
     "cloudbuild.googleapis.com",
@@ -16,7 +16,7 @@ resource "google_project_service" "project" {
   disable_on_destroy = false
 }
 
-resource "google_workflows_workflow" "httpgcs" {
+resource "google_workflows_workflow" "workflow" {
   name            = "houjinbangou_change_history_diff"
   region          = var.region
   service_account = google_service_account.workflow.id
@@ -29,14 +29,14 @@ resource "google_workflows_workflow" "httpgcs" {
   })
 }
 
-resource "google_cloud_scheduler_job" "httpgcs" {
+resource "google_cloud_scheduler_job" "workflow" {
   name      = "houjinbangou_change_history_diff"
   schedule  = var.schedule
   time_zone = "Asia/Tokyo"
   region    = var.region
 
   http_target {
-    uri         = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.httpgcs.id}/executions"
+    uri         = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.workflow.id}/executions"
     http_method = "POST"
     oauth_token {
       service_account_email = google_service_account.workflow_invoker.email
@@ -44,7 +44,7 @@ resource "google_cloud_scheduler_job" "httpgcs" {
   }
 }
 
-resource "google_cloudbuild_trigger" "dockerfiles_houjinbangou_change_history_diff" {
+resource "google_cloudbuild_trigger" "workflow" {
   name     = "dockerfiles-houjinbangou-change-history-diff"
   filename = "dockerfiles/houjinbangou_change_history_diff/cloudbuild.yaml"
 
@@ -105,4 +105,10 @@ resource "google_project_iam_member" "workflow_invoker" {
   project = var.project_id
   role    = "roles/workflows.invoker"
   member  = "serviceAccount:${google_service_account.workflow_invoker.email}"
+}
+
+resource "google_storage_bucket_iam_member" "cloud_batch" {
+  bucket = var.bucket_name
+  role    = "roles/storage.objectAdmin"
+  member  = "serviceAccount:${data.google_compute_default_service_account.default.email}"
 }

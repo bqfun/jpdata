@@ -2,10 +2,7 @@ resource "google_project_service" "project" {
   for_each = toset([
     "analyticshub.googleapis.com",
     "artifactregistry.googleapis.com",
-    "batch.googleapis.com",
     "cloudresourcemanager.googleapis.com",
-    "compute.googleapis.com",
-    "iam.googleapis.com",
   ])
 
   project            = var.google.project
@@ -31,46 +28,20 @@ resource "google_storage_bucket" "source_eventarc" {
   }
 }
 
-resource "google_service_account" "httpgcs" {
-  account_id = "httpgcs"
-}
-
-resource "google_project_iam_member" "httpgcs" {
-  for_each = toset([
-    "roles/batch.jobsEditor",
-    "roles/eventarc.eventReceiver",
-    "roles/iam.serviceAccountUser",
-    "roles/workflows.invoker",
-  ])
-  project = var.google.project
-  role    = each.key
-  member  = "serviceAccount:${google_service_account.httpgcs.email}"
-}
-
 module "gbizinfo" {
-  source                = "../../modules/httpgcs"
+  source                = "../../modules/gbizinfo"
   project_id            = var.google.project
-  name                  = "gbizinfo"
-  service_account_id    = google_service_account.httpgcs.id
-  service_account_email = google_service_account.httpgcs.email
   schedule              = "0 9 * * *"
   region                = var.google.region
-  source_contents = templatefile("templates/gbizinfo.tftpl.yaml", {
-    bucket = google_storage_bucket.source_eventarc.name
-  })
+  bucket_eventarc_name  = google_storage_bucket.source_eventarc.name
 }
 
 module "shukujitsu" {
-  source                = "../../modules/httpgcs"
+  source                = "../../modules/shukujitsu"
   project_id            = var.google.project
-  name                  = "shukujitsu"
-  service_account_id    = google_service_account.httpgcs.id
-  service_account_email = google_service_account.httpgcs.email
   schedule              = "0 6 * * *"
   region                = var.google.region
-  source_contents = templatefile("templates/shukujitsu.tftpl.yaml", {
-    bucket = google_storage_bucket.source_eventarc.name
-  })
+  bucket_eventarc_name  = google_storage_bucket.source_eventarc.name
 }
 
 module "houjinbangou_latest" {
@@ -103,12 +74,6 @@ module "dataform" {
   region               = var.google.region
   bucket_name          = google_storage_bucket.source.name
   bucket_eventarc_name = google_storage_bucket.source_eventarc.name
-}
-
-resource "google_project_iam_member" "cloud_batch_upload_objects_to_cloud_storage" {
-  project = var.google.project
-  role    = "roles/storage.objectAdmin"
-  member  = "serviceAccount:${var.google.number}-compute@developer.gserviceaccount.com"
 }
 
 resource "google_artifact_registry_repository" "source" {

@@ -147,10 +147,14 @@ resource "google_bigquery_connection" "main" {
   cloud_resource {}
 }
 
-resource "google_project_iam_member" "main_connection_permission_grant" {
-  project = var.project_id
+resource "google_storage_bucket_iam_member" "main_connection_permission_grant" {
+  for_each = toset([
+    var.bucket_eventarc_name,
+    var.bucket_name,
+  ])
   role    = "roles/storage.objectViewer"
   member  = format("serviceAccount:%s", google_bigquery_connection.main.cloud_resource[0].service_account_id)
+  bucket  = each.key
 }
 
 resource "google_secret_manager_secret" "github_personal_access_token" {
