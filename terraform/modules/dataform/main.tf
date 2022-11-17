@@ -170,7 +170,7 @@ resource "google_secret_manager_secret_iam_member" "github_personal_access_token
   member    = "serviceAccount:service-${var.project_number}@gcp-sa-dataform.iam.gserviceaccount.com"
 }
 
-resource "google_project_iam_member" "dataform" {
+resource "google_project_iam_member" "default" {
   for_each = toset([
     "roles/dataform.serviceAgent",
     "roles/bigquery.jobUser",
