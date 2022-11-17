@@ -10,7 +10,7 @@
       - workflowId: ${workflowId}
       - arguments:
           includedTags:
-            - change_history_diff/*
+            - houjinbangou/diff/*
 - createAndRunBatchJob:
     call: http.post
     args:

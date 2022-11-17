@@ -3,33 +3,14 @@ resource "google_project_service" "project" {
     "analyticshub.googleapis.com",
     "artifactregistry.googleapis.com",
     "batch.googleapis.com",
-    "cloudbuild.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "compute.googleapis.com",
     "iam.googleapis.com",
-    "secretmanager.googleapis.com",
   ])
 
   project            = var.google.project
   service            = each.key
   disable_on_destroy = false
-}
-
-resource "google_secret_manager_secret" "houjinbangou_webapi_id" {
-  secret_id = "houjinbangou-webapi-id"
-
-  replication {
-    automatic = true
-  }
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-resource "google_secret_manager_secret_iam_member" "houjinbangou_webapi_id" {
-  project   = google_secret_manager_secret.houjinbangou_webapi_id.project
-  secret_id = google_secret_manager_secret.houjinbangou_webapi_id.secret_id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${var.google.number}-compute@developer.gserviceaccount.com"
 }
 
 resource "google_storage_bucket" "source" {
@@ -92,46 +73,27 @@ module "shukujitsu" {
   })
 }
 
-module "houjinbangou" {
-  source                = "../../modules/httpgcs"
-  project_id            = var.google.project
-  name                  = "houjinbangou"
-  service_account_id    = google_service_account.httpgcs.id
-  service_account_email = google_service_account.httpgcs.email
-  schedule              = "0 0 1 * *"
-  region                = var.google.region
-  source_contents = templatefile("templates/houjinbangou_latest.tftpl.yaml", {
-    bucket       = google_storage_bucket.source_eventarc.name
-    repositoryId = google_artifact_registry_repository.source.repository_id
-    location     = google_artifact_registry_repository.source.location
-  })
+module "houjinbangou_latest" {
+  source                   = "../../modules/houjinbangou_latest"
+  project_id               = var.google.project
+  schedule                 = "0 0 1 * *"
+  region                   = var.google.region
+  bucket_eventarc_name     = google_storage_bucket.source_eventarc.name
+  repository_repository_id = google_artifact_registry_repository.source.repository_id
+  repository_location      = google_artifact_registry_repository.source.location
 }
 
 module "houjinbangou_change_history_diff" {
   source                = "../../modules/houjinbangou_change_history_diff"
   project_id            = var.google.project
-  service_account_id    = google_service_account.httpgcs.id
-  service_account_email = google_service_account.httpgcs.email
+  project_number        = var.google.number
   schedule              = "0 0 * * *"
   region                = var.google.region
 
   bucket_name              = google_storage_bucket.source.name
   repository_repository_id = google_artifact_registry_repository.source.repository_id
   repository_location      = google_artifact_registry_repository.source.location
-  secret_name              = google_secret_manager_secret.houjinbangou_webapi_id.name
   dataform_workflow_id     = module.dataform.workflow_id
-}
-
-resource "google_project_iam_member" "dataform" {
-  for_each = toset([
-    "roles/dataform.serviceAgent",
-    "roles/bigquery.jobUser",
-    "roles/bigquery.dataOwner",
-    "roles/bigquery.connectionAdmin",
-  ])
-  project = var.google.project
-  role    = each.key
-  member  = "serviceAccount:service-${var.google.number}@gcp-sa-dataform.iam.gserviceaccount.com"
 }
 
 module "dataform" {
@@ -156,18 +118,4 @@ resource "google_artifact_registry_repository" "source" {
   lifecycle {
     prevent_destroy = true
   }
-}
-
-resource "google_cloudbuild_trigger" "dockerfiles_houjinbangou_latest" {
-  name     = "dockerfiles-houjinbangou-latest"
-  filename = "dockerfiles/houjinbangou_latest/cloudbuild.yaml"
-
-  github {
-    owner = "bqfun"
-    name  = "jpdata"
-    push {
-      branch = "^main$"
-    }
-  }
-  included_files = ["dockerfiles/houjinbangou_latest/**"]
 }
