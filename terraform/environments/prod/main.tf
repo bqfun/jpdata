@@ -84,3 +84,8 @@ resource "google_artifact_registry_repository" "source" {
     prevent_destroy = true
   }
 }
+
+module "lineage" {
+  source               = "../../modules/lineage"
+  project_id           = var.google.project
+}
