@@ -16,7 +16,7 @@ resource "google_project_service" "workflow" {
 }
 
 resource "google_workflows_workflow" "workflow" {
-  name            = "etl"
+  name            = "base_registry_address"
   region          = var.region
   service_account = google_service_account.workflow.id
   source_contents = templatefile("${path.module}/templates/source_contents.tftpl.yaml", {
@@ -27,7 +27,7 @@ resource "google_workflows_workflow" "workflow" {
 }
 
 resource "google_cloud_scheduler_job" "workflow" {
-  name      = "etl"
+  name      = "base_registry_address"
   schedule  = var.schedule
   time_zone = "Asia/Tokyo"
   region    = var.region
@@ -56,7 +56,7 @@ resource "google_cloudbuild_trigger" "workflow" {
 }
 
 resource "google_service_account" "workflow" {
-  account_id = "etl"
+  account_id = "base-registry-address"
 }
 
 resource "google_project_iam_member" "workflow" {
@@ -74,7 +74,7 @@ resource "google_service_account_iam_member" "workflow" {
 }
 
 resource "google_service_account" "workflow_invoker" {
-  account_id = "etl-invoker"
+  account_id = "base-registry-address-invoker"
 }
 
 resource "google_project_iam_member" "workflow_invoker" {
