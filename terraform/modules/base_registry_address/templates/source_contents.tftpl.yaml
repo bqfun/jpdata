@@ -24,7 +24,7 @@
                   imageUri: $${location + "-docker.pkg.dev/" + projectId + "/" + repositoryId + "/etl:latest"}
                 environment:
                   variables:
-                    SOURCE_CONTENTS:
+                    SOURCE_CONTENTS: '
                       {
                         "extract": {
                           "method": "GET",
@@ -40,7 +40,7 @@
                           "object": "base_registry_address/mt_town_all.csv",
                           "name": "mt_town_all.csv"
                         }
-                      }
+                      }'
 
         allocationPolicy:
           instances:
