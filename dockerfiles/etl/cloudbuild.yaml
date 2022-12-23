@@ -1,0 +1,13 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - '-t'
+      - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/etl:$COMMIT_SHA
+      - '-t'
+      - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/etl:latest
+      - .
+    dir: dockerfiles/etl
+images:
+  - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/etl:$COMMIT_SHA
+  - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/etl:latest
