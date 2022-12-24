@@ -4,25 +4,16 @@
 2. Terraform環境を用意する
 3. アラートを設定する
 4. Dataform環境を用意する
-5. Analytics Hub環境を用意する
 
 ## サービスを有効化する
 
 ```shell
 gcloud services enable \
-    analyticshub.googleapis.com \
-    artifactregistry.googleapis.com \
-    batch.googleapis.com \
-    bigqueryconnection.googleapis.com \
     cloudbuild.googleapis.com \
     cloudresourcemanager.googleapis.com \
-    compute.googleapis.com \
     dataform.googleapis.com \
     iam.googleapis.com \
-    pubsub.googleapis.com \
-    secretmanager.googleapis.com \
-    workflowexecutions.googleapis.com \
-    workflows.googleapis.com
+    secretmanager.googleapis.com
 ```
 
 ## Terraform環境を整備する
@@ -83,50 +74,3 @@ severity=ERROR log_name="projects/jpdata/logs/batch_agent_logs"
 - Dataformリポジトリ jpdata-dataform を作成する
 - ソース接続用のSecret（github-personal-access-token）に値を設定
 - ソースGitHubリポジトリ接続
-
-## Analytics Hub環境を用意する
-
-### エクスチェンジを作成する
-
-https://console.cloud.google.com/bigquery/analytics-hub/exchanges からエクスチェンジを作成する。
-リージョン asia-northeast1 、表示名 jpdata 、メインの連絡先 https://bqfun.jp/ 。説明は以下。
-
-```
-BigQueryユーザコミュニティBQ Funにて、オープンデータを加工してBigQuery上で公開するエクスチェンジ。
-https://bqfun.jp/
-```
-
-allAuthenticatedUsers にロール「Analytics Hub サブスクライバー」を付与する。
-
-### リスティングを作成する
-
-リスティング単位のロール付与はしない。
-
-#### gBizINFO preprocessed by BQ FUN
-表示名：gBizINFO preprocessed by BQ FUN
-メインの連絡先：https://bqfun.jp/
-カテゴリ：公共部門
-
-共有データセット：gbizinfo
-
-ドキュメント：データセットのDescriptionと同一
-
-#### JP Holidays preprocessed by BQ FUN
-
-表示名：JP Holidays preprocessed by BQ FUN
-メインの連絡先：https://bqfun.jp/
-カテゴリ：公共部門
-
-共有データセット：gbizinfo
-
-ドキュメント：データセットのDescriptionと同一
-
-#### Corporate Number preprocessed by BQ FUN
-
-表示名：Corporate Number preprocessed by BQ FUN
-メインの連絡先：https://bqfun.jp/
-カテゴリ：公共部門
-
-共有データセット：houjinbangou
-
-ドキュメント：データセットのDescriptionと同一
