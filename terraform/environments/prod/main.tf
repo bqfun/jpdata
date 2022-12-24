@@ -96,6 +96,7 @@ resource "google_artifact_registry_repository" "source" {
 }
 
 module "lineage" {
-  source               = "../../modules/lineage"
-  project_id           = var.google.project
+  source     = "../../modules/lineage"
+  project_id = var.google.project
+  location   = var.google.region
 }
