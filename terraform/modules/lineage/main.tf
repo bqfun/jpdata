@@ -56,7 +56,7 @@ resource "google_dataplex_asset" "primary" {
   ])
   project       = var.project_id
   location      = var.location
-  name          = "asset"
+  name          = replace(each.key, "_", "-")
   lake          = google_dataplex_lake.primary.name
   dataplex_zone = google_dataplex_zone.structured.name
 
