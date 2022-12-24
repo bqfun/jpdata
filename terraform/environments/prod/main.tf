@@ -100,3 +100,9 @@ module "lineage" {
   project_id = var.google.project
   location   = var.google.region
 }
+
+module "analyticshub" {
+  source = "../../modules/analyticshub"
+  project_number = var.google.number
+  location       = var.google.region
+}
