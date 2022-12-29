@@ -24,3 +24,5 @@ steps:
     dir: dockerfiles/simplte
 images:
   - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/simplte:$COMMIT_SHA
+options:
+  logging: CLOUD_LOGGING_ONLY
