@@ -88,3 +88,40 @@ resource "google_storage_bucket_iam_member" "cloud_batch" {
   role    = "roles/storage.objectAdmin"
   member  = "serviceAccount:${data.google_compute_default_service_account.default.email}"
 }
+
+locals {
+  body = <<-EOT
+  {
+    "extraction": {
+      "method": "GET",
+      "url": "https://gov-csv-export-public.s3.ap-northeast-1.amazonaws.com/mt_town/mt_town_all.csv.zip"
+    },
+    "transformations": [
+      {
+        "call": "unzip"
+      }
+    ],
+    "loading": {
+      "bucket": "jpdata-source",
+      "object": "mt_town_all.csv",
+      "name": "mt_town_all.csv"
+    }
+  }
+  EOT
+}
+
+resource "google_cloud_scheduler_job" "job" {
+  name      = "base_registry_address_tmp"
+  schedule  = var.schedule
+  time_zone = "Asia/Tokyo"
+  region    = var.region
+
+  http_target {
+    http_method = "POST"
+    uri         = var.simplte_url
+    body        = base64encode(local.body)
+    oauth_token {
+      service_account_email = google_service_account.workflow_invoker.email
+    }
+  }
+}

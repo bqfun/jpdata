@@ -1,6 +1,5 @@
 resource "google_project_service" "project" {
   for_each = toset([
-    "analyticshub.googleapis.com",
     "artifactregistry.googleapis.com",
     "cloudresourcemanager.googleapis.com",
   ])
@@ -68,13 +67,14 @@ module "houjinbangou_change_history_diff" {
 }
 
 module "base_registry_address" {
-  source                = "../../modules/base_registry_address"
+  source                   = "../../modules/base_registry_address"
   project_id               = var.google.project
   schedule                 = "0 0 1 * *"
   region                   = var.google.region
   bucket_eventarc_name     = google_storage_bucket.source_eventarc.name
   repository_repository_id = google_artifact_registry_repository.source.repository_id
   repository_location      = google_artifact_registry_repository.source.location
+  simplte_url              = module.simplte.url
 }
 
 module "dataform" {
