@@ -35,12 +35,38 @@ module "gbizinfo" {
   bucket_eventarc_name  = google_storage_bucket.source_eventarc.name
 }
 
-module "shukujitsu" {
-  source                = "../../modules/shukujitsu"
-  project_id            = var.google.project
-  schedule              = "0 6 * * *"
-  region                = var.google.region
-  bucket_eventarc_name  = google_storage_bucket.source_eventarc.name
+resource "google_cloud_scheduler_job" "shukujitsu" {
+  name       = "shukujitsu"
+  schedule   = "0 6 * * *"
+  time_zone  = "Asia/Tokyo"
+  project_id = var.google.project
+  region     = var.google.region
+
+  http_target {
+    uri         = module.simplte.url
+    http_method = "POST"
+    body = base64encode(<<-EOT
+      {
+        "extraction": {
+          "method": "GET",
+          "url": "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv"
+        },
+        "transformations": [
+          {
+            "call": "fromShiftJIS"
+          }
+        ],
+        "loading": {
+          "bucket": "${google_storage_bucket.source_eventarc.name}",
+          "object": "syukujitsu.csv"
+        }
+      }
+      EOT
+    )
+    oidc_token {
+      service_account_email = module.simplte.invoker_email
+    }
+  }
 }
 
 module "houjinbangou_latest" {
@@ -66,13 +92,39 @@ module "houjinbangou_change_history_diff" {
   dataform_workflow_id     = module.dataform.workflow_id
 }
 
-module "base_registry_address" {
-  source        = "../../modules/base_registry_address"
-  project_id    = var.google.project
-  schedule      = "0 0 1 * *"
-  region        = var.google.region
-  simplte_url   = module.simplte.url
-  simplte_invoker_email = module.simplte.invoker_email
+resource "google_cloud_scheduler_job" "base_registry_address" {
+  name       = "base_registry_address"
+  schedule   = "0 0 1 * *"
+  time_zone  = "Asia/Tokyo"
+  project_id = var.google.project
+  region     = var.google.region
+
+  http_target {
+    uri         = module.simplte.url
+    http_method = "POST"
+    body = base64encode(<<-EOT
+      {
+        "extraction": {
+          "method": "GET",
+          "url": "https://gov-csv-export-public.s3.ap-northeast-1.amazonaws.com/mt_town/mt_town_all.csv.zip"
+        },
+        "transformations": [
+          {
+            "call": "unzip"
+          }
+        ],
+        "loading": {
+          "bucket": "${google_storage_bucket.source_eventarc.name}",
+          "object": "base_registry_address/mt_town_all.csv",
+          "name": "mt_town_all.csv"
+        }
+      }
+      EOT
+    )
+    oidc_token {
+      service_account_email = module.simplte.invoker_email
+    }
+  }
 }
 
 module "dataform" {
