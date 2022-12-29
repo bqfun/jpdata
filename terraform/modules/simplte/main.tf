@@ -21,6 +21,7 @@ resource "google_cloudbuild_trigger" "simplte" {
     }
   }
   included_files = ["dockerfiles/simplte/**"]
+  service_account = google_service_account.builder.id
 }
 
 resource "google_cloud_run_service" "simplte" {
@@ -38,11 +39,34 @@ resource "google_cloud_run_service" "simplte" {
   autogenerate_revision_name = true
 }
 
+resource "google_service_account" "builder" {
+  account_id = "simplte-builder"
+}
+
+resource "google_cloud_run_service_iam_member" "builder" {
+  location = google_cloud_run_service.simplte.location
+  project = google_cloud_run_service.simplte.project
+  service = google_cloud_run_service.simplte.name
+  role = "roles/run.developer"
+  member = "serviceAccount:${google_service_account.builder.email}"
+}
+
+resource "google_project_iam_member" "builder" {
+  for_each = toset([
+    "roles/iam.serviceAccountUser",
+    "roles/logging.logWriter",
+  ])
+
+  project = var.project_id
+  role    = each.key
+  member  = "serviceAccount:${google_service_account.builder.email}"
+}
+
 resource "google_service_account" "invoker" {
   account_id = "simplte-invoker"
 }
 
-resource "google_cloud_run_service_iam_member" "member" {
+resource "google_cloud_run_service_iam_member" "invoker" {
   location = google_cloud_run_service.simplte.location
   project = google_cloud_run_service.simplte.project
   service = google_cloud_run_service.simplte.name

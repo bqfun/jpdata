@@ -1,50 +1,39 @@
-- createAndRunBatchJob:
-    call: http.post
-    args:
-      url: $${"https://batch.googleapis.com/v1/projects/" + sys.get_env("GOOGLE_CLOUD_PROJECT_ID") + "/locations/us-central1/jobs"}
-      query:
-        job_id: $${"job-gbizinfo-" + string(int(sys.now()))}
-      headers:
-        Content-Type: application/json
-      auth:
-        type: OAuth2
-      body:
-        taskGroups:
-          taskSpec:
-            runnables:
-              - script:
-                  text: $${"curl https://info.gbiz.go.jp/hojin/Download -d downenc=UTF-8 -d downfile=$${DOWNFILE} -d downtype=csv | gsutil cp - gs://${bucket}/gbizinfo/$${OBJECT}.csv"}
-          taskEnvironments:
-            - variables:
-                OBJECT: basic
-                DOWNFILE: "7"
-            - variables:
-                OBJECT: certification
-                DOWNFILE: "8"
-            - variables:
-                OBJECT: commendation
-                DOWNFILE: "9"
-            - variables:
-                OBJECT: subsidy
-                DOWNFILE: "10"
-            - variables:
-                OBJECT: procurement
-                DOWNFILE: "11"
-            - variables:
-                OBJECT: patent
-                DOWNFILE: "12"
-            - variables:
-                OBJECT: finance
-                DOWNFILE: "13"
-            - variables:
-                OBJECT: workplace
-                DOWNFILE: "14"
-
-        allocationPolicy:
-          instances:
-            - policy:
-                machineType: e2-micro
-                provisioningModel: SPOT
-
-        logsPolicy:
-          destination: CLOUD_LOGGING
+- gbizinfo:
+    parallel:
+      for:
+        value: value
+        in:
+          - object: basic
+            downfile: "7"
+          - object: certification
+            downfile: "8"
+          - object: commendation
+            downfile: "9"
+          - object: subsidy
+            downfile: "10"
+          - object: procurement
+            downfile: "11"
+          - object: patent
+            downfile: "12"
+          - object: finance
+            downfile: "13"
+          - object: workplace
+            downfile: "14"
+        steps:
+          - download:
+              call: http.post
+              args:
+                url: https://simplte-uj7o2omtca-an.a.run.app
+                auth:
+                  type: OIDC
+                body:
+                  extraction:
+                    method: POST
+                    url: https://info.gbiz.go.jp/hojin/Download
+                    body:
+                      downenc: UTF-8
+                      downfile: $${value.downfile}
+                      downtype: csv
+                  loading:
+                    bucket: ${bucket}
+                    object: $${value.object + ".csv"}
