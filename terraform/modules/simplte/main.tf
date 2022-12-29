@@ -31,7 +31,7 @@ resource "google_cloud_run_service" "simplte" {
   template {
     spec {
       containers {
-        image = "${var.repository_location}-docker.pkg.dev/${var.repository_project_id}/${var.repository_id}/simplte"
+        image = "${var.repository_location}-docker.pkg.dev/${var.repository_project_id}/${var.repository_id}/simplte:latest"
       }
     }
   }
@@ -49,6 +49,14 @@ resource "google_cloud_run_service_iam_member" "builder" {
   service = google_cloud_run_service.simplte.name
   role = "roles/run.developer"
   member = "serviceAccount:${google_service_account.builder.email}"
+}
+
+resource "google_artifact_registry_repository_iam_member" "builder" {
+  project    = var.repository_project_id
+  location   = var.repository_location
+  repository = var.repository_id
+  role       = "roles/artifactregistry.writer"
+  member     = "serviceAccount:${google_service_account.builder.email}"
 }
 
 resource "google_project_iam_member" "builder" {
