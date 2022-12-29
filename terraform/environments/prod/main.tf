@@ -108,7 +108,10 @@ module "analyticshub" {
 }
 
 module "simplte" {
-  source = "../../modules/simplte"
-  project_id = var.google.project
-  location   = var.google.region
+  source                = "../../modules/simplte"
+  project_id            = var.google.project
+  location              = var.google.region
+  repository_location   = google_artifact_registry_repository.source.location
+  repository_project_id = google_artifact_registry_repository.source.project
+  repository_id         = google_artifact_registry_repository.source.repository_id
 }
