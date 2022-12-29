@@ -37,3 +37,11 @@ resource "google_cloud_run_service" "simplte" {
 
   autogenerate_revision_name = true
 }
+
+resource "google_cloud_run_service_iam_member" "member" {
+  location = google_cloud_run_service.simplte.location
+  project = google_cloud_run_service.simplte.project
+  service = google_cloud_run_service.simplte.name
+  role = "roles/run.invoker"
+  member = "serviceAccount:${var.invoker_email}"
+}

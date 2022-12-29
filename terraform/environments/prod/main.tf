@@ -114,4 +114,5 @@ module "simplte" {
   repository_location   = google_artifact_registry_repository.source.location
   repository_project_id = google_artifact_registry_repository.source.project
   repository_id         = google_artifact_registry_repository.source.repository_id
+  invoker_email         = module.base_registry_address.invoker_email
 }
