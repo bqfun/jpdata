@@ -3,13 +3,13 @@ steps:
     args:
       - build
       - '-t'
-      - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/simplte:$COMMIT_SHA
+      - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/simplte:latest
       - .
     dir: dockerfiles/simplte
   - name: gcr.io/cloud-builders/docker
     args:
       - push
-      - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/simplte:$COMMIT_SHA
+      - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/simplte:latest
     dir: dockerfiles/simplte
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gcloud
@@ -18,11 +18,11 @@ steps:
       - deploy
       - simplte
       - --image
-      - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/simplte:$COMMIT_SHA
+      - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/simplte:latest
       - --region
       - asia-northeast1
     dir: dockerfiles/simplte
 images:
-  - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/simplte:$COMMIT_SHA
+  - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/simplte:latest
 options:
   logging: CLOUD_LOGGING_ONLY
