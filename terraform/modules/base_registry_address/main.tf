@@ -120,7 +120,7 @@ resource "google_cloud_scheduler_job" "job" {
     http_method = "POST"
     uri         = var.simplte_url
     body        = base64encode(local.body)
-    oauth_token {
+    oidc_token {
       service_account_email = google_service_account.workflow_invoker.email
     }
   }
