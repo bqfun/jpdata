@@ -39,7 +39,6 @@ resource "google_cloud_scheduler_job" "shukujitsu" {
   name       = "shukujitsu"
   schedule   = "0 6 * * *"
   time_zone  = "Asia/Tokyo"
-  project_id = var.google.project
   region     = var.google.region
 
   http_target {
@@ -96,7 +95,6 @@ resource "google_cloud_scheduler_job" "base_registry_address" {
   name       = "base_registry_address"
   schedule   = "0 0 1 * *"
   time_zone  = "Asia/Tokyo"
-  project_id = var.google.project
   region     = var.google.region
 
   http_target {
