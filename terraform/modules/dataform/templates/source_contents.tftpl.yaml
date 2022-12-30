@@ -4,7 +4,6 @@ main:
     - init:
         assign:
           - repository: ${repository}
-          - connectionID: ${connection_id}
           - bucket: ${bucket}
           - bucketEventarc: ${bucket_eventarc}
     - createCompilationResult:
@@ -17,7 +16,6 @@ main:
             git_commitish: main
             codeCompilationConfig:
               vars:
-                connectionID: $${connectionID}
                 bucketEventarc: $${bucketEventarc}
                 bucket: $${bucket}
         result: compilationResult

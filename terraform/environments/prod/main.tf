@@ -28,11 +28,12 @@ resource "google_storage_bucket" "source_eventarc" {
 }
 
 module "gbizinfo" {
-  source                = "../../modules/gbizinfo"
-  project_id            = var.google.project
-  schedule              = "0 9 * * *"
-  region                = var.google.region
-  bucket_eventarc_name  = google_storage_bucket.source_eventarc.name
+  source                      = "../../modules/gbizinfo"
+  project_id                  = var.google.project
+  schedule                    = "0 9 * * *"
+  region                      = var.google.region
+  bucket_eventarc_name        = google_storage_bucket.source_eventarc.name
+  workflow_service_account_id = module.simplte.invoker_id
 }
 
 resource "google_cloud_scheduler_job" "shukujitsu" {
