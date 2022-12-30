@@ -35,14 +35,13 @@ resource "google_cloud_run_service" "simplte" {
         resources {
           limits = {
             # https://cloud.google.com/run/docs/configuring/cpu
-            # 1024 MiB memory require a minimum of 0.5 vCPUs
-            # Total cpu < 1 is not supported with concurrency > 1
             cpu = "1000m"
             # https://cloud.google.com/run/docs/configuring/memory-limits
-            memory = "1536Mi"
+            memory = "2048Mi"
           }
         }
       }
+      container_concurrency = 1
     }
   }
 
