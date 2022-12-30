@@ -36,4 +36,4 @@
                       downtype: csv
                   loading:
                     bucket: ${bucket}
-                    object: $${value.object + ".csv"}
+                    object: $${"gbizinfo/" + value.object + ".csv"}
