@@ -32,7 +32,16 @@ resource "google_cloud_run_service" "simplte" {
     spec {
       containers {
         image = "${var.repository_location}-docker.pkg.dev/${var.repository_project_id}/${var.repository_id}/simplte:latest"
+        resources {
+          limits = {
+            # https://cloud.google.com/run/docs/configuring/cpu
+            cpu = "1000m"
+            # https://cloud.google.com/run/docs/configuring/memory-limits
+            memory = "2048Mi"
+          }
+        }
       }
+      container_concurrency = 1
     }
   }
 

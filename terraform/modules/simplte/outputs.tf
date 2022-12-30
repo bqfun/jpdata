@@ -4,3 +4,6 @@ output "url" {
 output "invoker_email" {
   value       = google_service_account.invoker.email
 }
+output "invoker_id" {
+  value       = google_service_account.invoker.id
+}

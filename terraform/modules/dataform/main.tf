@@ -1,8 +1,6 @@
 resource "google_project_service" "project" {
   for_each = toset([
-    "bigqueryconnection.googleapis.com",
     "cloudbuild.googleapis.com",
-    "cloudresourcemanager.googleapis.com",
     "cloudscheduler.googleapis.com",
     "dataform.googleapis.com",
     "iam.googleapis.com",
@@ -34,7 +32,6 @@ resource "google_workflows_workflow" "dataform" {
   service_account = google_service_account.dataform.id
   source_contents = templatefile("${path.module}/templates/source_contents.tftpl.yaml", {
     repository      = "projects/jpdata/locations/us-central1/repositories/jpdata-dataform",
-    connection_id   = "${google_bigquery_connection.main.project}.${google_bigquery_connection.main.location}.${google_bigquery_connection.main.connection_id}",
     bucket          = var.bucket_name,
     bucket_eventarc = var.bucket_eventarc_name,
   })
@@ -140,23 +137,6 @@ resource "google_project_iam_member" "eventarc_pubsub" {
   member  = "serviceAccount:service-${var.project_number}@gcp-sa-pubsub.iam.gserviceaccount.com"
 }
 
-resource "google_bigquery_connection" "main" {
-  connection_id = "main"
-  project       = var.project_id
-  location      = var.region
-  cloud_resource {}
-}
-
-resource "google_storage_bucket_iam_member" "main_connection_permission_grant" {
-  for_each = toset([
-    var.bucket_eventarc_name,
-    var.bucket_name,
-  ])
-  role    = "roles/storage.objectViewer"
-  member  = format("serviceAccount:%s", google_bigquery_connection.main.cloud_resource[0].service_account_id)
-  bucket  = each.key
-}
-
 resource "google_secret_manager_secret" "github_personal_access_token" {
   secret_id = "github-personal-access-token"
 
@@ -176,10 +156,10 @@ resource "google_secret_manager_secret_iam_member" "github_personal_access_token
 
 resource "google_project_iam_member" "default" {
   for_each = toset([
-    "roles/dataform.serviceAgent",
     "roles/bigquery.jobUser",
     "roles/bigquery.dataOwner",
-    "roles/bigquery.connectionAdmin",
+    "roles/dataform.serviceAgent",
+    "roles/storage.objectViewer",
   ])
   project = var.project_id
   role    = each.key

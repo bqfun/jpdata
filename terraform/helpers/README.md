@@ -64,7 +64,10 @@ https://console.cloud.google.com/monitoring/alerting/notifications からSlack�
 以下のようなポリシーを設定し、通知チャネルにSlack BQ FUN jpdataを設定する。
 
 ```
+Workflow の実行中にエラーが発生しました
 severity=ERROR resource.type="workflows.googleapis.com/Workflow"
+
+Batch 実行中にエラーが発生しました
 severity=ERROR log_name="projects/jpdata/logs/batch_agent_logs"
 ```
 
