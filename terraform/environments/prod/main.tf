@@ -164,3 +164,9 @@ module "simplte" {
   repository_project_id = google_artifact_registry_repository.source.project
   repository_id         = google_artifact_registry_repository.source.repository_id
 }
+
+resource "google_project_iam_member" "health_dashboard" {
+  project = var.google.project
+  role    = "roles/bigquery.metadataViewer"
+  member  = "user:na0@bqfun.jp"
+}
