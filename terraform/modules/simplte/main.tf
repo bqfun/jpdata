@@ -35,7 +35,8 @@ resource "google_cloud_run_service" "simplte" {
         resources {
           limits = {
             # https://cloud.google.com/run/docs/configuring/cpu
-            cpu = "250m"
+            # 1024 MiB memory require a minimum of 0.5 vCPUs
+            cpu = "500m"
             # https://cloud.google.com/run/docs/configuring/memory-limits
             memory = "1024Mi"
           }
