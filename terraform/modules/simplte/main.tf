@@ -39,7 +39,7 @@ resource "google_cloud_run_service" "simplte" {
             # Total cpu < 1 is not supported with concurrency > 1
             cpu = "1000m"
             # https://cloud.google.com/run/docs/configuring/memory-limits
-            memory = "1024Mi"
+            memory = "1536Mi"
           }
         }
       }
