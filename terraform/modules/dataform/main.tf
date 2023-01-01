@@ -193,12 +193,12 @@ resource "google_cloudbuild_trigger" "bqfunc" {
 
     step {
       name = "gcr.io/cloud-builders/gcloud"
-      args = ["workflows", "run", "dataform", "--location", "asia-northeast1", "--data", '{"location": "asia-northeast1"}']
+      args = ["workflows", "run", "dataform", "--location", "asia-northeast1", "--data", "{\"location\": \"asia-northeast1\"}"]
     }
 
     step {
       name = "gcr.io/cloud-builders/gcloud"
-      args = ["workflows", "run", "dataform", "--location", "asia-northeast1", "--data", '{"location": "US"}']
+      args = ["workflows", "run", "dataform", "--location", "asia-northeast1", "--data", "{\"location\": \"US\"}"]
     }
 
     options {
