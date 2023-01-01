@@ -90,6 +90,7 @@ resource "google_service_account" "dataform_workflow_invoker" {
 resource "google_project_iam_member" "eventarc" {
   for_each = toset([
     "roles/eventarc.eventReceiver",
+    "roles/logging.logWriter",
     "roles/workflows.invoker",
   ])
   project = var.project_id
@@ -165,3 +166,45 @@ resource "google_project_iam_member" "default" {
   role    = each.key
   member  = "serviceAccount:service-${var.project_number}@gcp-sa-dataform.iam.gserviceaccount.com"
 }
+
+// bqfunc の間借り実装
+
+resource "google_workflows_workflow" "bqfunc" {
+  name            = "bqfunc"
+  region          = var.region
+  service_account = google_service_account.dataform.id
+  source_contents = templatefile("${path.module}/templates/bqfunc.tftpl.yaml", {
+    repository      = "projects/jpdata/locations/us-central1/repositories/bqfunc",
+  })
+}
+
+resource "google_cloudbuild_trigger" "bqfunc" {
+  name            = "bqfunc"
+  service_account = google_service_account.dataform_workflow_invoker.id
+
+  github {
+    owner = "bqfun"
+    name  = "bqfunc"
+    push {
+      branch = "^master$"
+    }
+  }
+
+  build {
+
+    step {
+      name = "gcr.io/cloud-builders/gcloud"
+      args = ["workflows", "run", "bqfunc", "--location", "asia-northeast1", "--data", "{\"location\": \"asia-northeast1\"}"]
+    }
+
+    step {
+      name = "gcr.io/cloud-builders/gcloud"
+      args = ["workflows", "run", "bqfunc", "--location", "asia-northeast1", "--data", "{\"location\": \"US\"}"]
+    }
+
+    options {
+      logging = "CLOUD_LOGGING_ONLY"
+    }
+  }
+}
+
