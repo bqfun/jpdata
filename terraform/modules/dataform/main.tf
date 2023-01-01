@@ -179,7 +179,6 @@ resource "google_workflows_workflow" "bqfunc" {
 
 resource "google_cloudbuild_trigger" "bqfunc" {
   name            = "bqfunc"
-  filename        = "cloudbuild.yaml"
   service_account = google_service_account.dataform_workflow_invoker.id
 
   github {
@@ -189,4 +188,22 @@ resource "google_cloudbuild_trigger" "bqfunc" {
       branch = "^master$"
     }
   }
+
+  build {
+
+    step {
+      name = "gcr.io/cloud-builders/gcloud"
+      args = ["workflows", "run", "dataform", "--location", "asia-northeast1", "--data", '{"location": "asia-northeast1"}']
+    }
+
+    step {
+      name = "gcr.io/cloud-builders/gcloud"
+      args = ["workflows", "run", "dataform", "--location", "asia-northeast1", "--data", '{"location": "US"}']
+    }
+
+    options {
+      logging = "CLOUD_LOGGING_ONLY"
+    }
+  }
 }
+
