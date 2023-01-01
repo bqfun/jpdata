@@ -90,6 +90,7 @@ resource "google_service_account" "dataform_workflow_invoker" {
 resource "google_project_iam_member" "eventarc" {
   for_each = toset([
     "roles/eventarc.eventReceiver",
+    "roles/logging.logWriter",
     "roles/workflows.invoker",
   ])
   project = var.project_id
@@ -193,12 +194,12 @@ resource "google_cloudbuild_trigger" "bqfunc" {
 
     step {
       name = "gcr.io/cloud-builders/gcloud"
-      args = ["workflows", "run", "dataform", "--location", "asia-northeast1", "--data", "{\"location\": \"asia-northeast1\"}"]
+      args = ["workflows", "run", "bqfunc", "--location", "asia-northeast1", "--data", "{\"location\": \"asia-northeast1\"}"]
     }
 
     step {
       name = "gcr.io/cloud-builders/gcloud"
-      args = ["workflows", "run", "dataform", "--location", "asia-northeast1", "--data", "{\"location\": \"US\"}"]
+      args = ["workflows", "run", "bqfunc", "--location", "asia-northeast1", "--data", "{\"location\": \"US\"}"]
     }
 
     options {

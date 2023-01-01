@@ -54,6 +54,11 @@ gcloud beta builds triggers create github \
     --service-account=projects/${GOOGLE_CLOUD_PROJECT}/serviceAccounts/terraform@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com
 ```
 
+同様の手順で、次のリポジトリを接続する（トリガーはTerraformで作成される）。
+
+- bqfun/jpdata-dataform
+- bqfun/bqfunc
+
 ## アラートを設定する
 
 ### 通知チャネルを作成する
