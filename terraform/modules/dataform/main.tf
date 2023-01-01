@@ -165,3 +165,28 @@ resource "google_project_iam_member" "default" {
   role    = each.key
   member  = "serviceAccount:service-${var.project_number}@gcp-sa-dataform.iam.gserviceaccount.com"
 }
+
+// bqfunc の間借り実装
+
+resource "google_workflows_workflow" "bqfunc" {
+  name            = "bqfunc"
+  region          = var.region
+  service_account = google_service_account.dataform.id
+  source_contents = templatefile("${path.module}/templates/bqfunc.tftpl.yaml", {
+    repository      = "projects/jpdata/locations/us-central1/repositories/bqfunc",
+  })
+}
+
+resource "google_cloudbuild_trigger" "bqfunc" {
+  name            = "bqfunc"
+  filename        = "cloudbuild.yaml"
+  service_account = google_service_account.dataform_workflow_invoker.id
+
+  github {
+    owner = "bqfun"
+    name  = "bqfunc"
+    push {
+      branch = "^master$"
+    }
+  }
+}
