@@ -31,7 +31,7 @@ resource "google_cloud_run_service" "simplte" {
   template {
     spec {
       containers {
-        image = "${var.repository_location}-docker.pkg.dev/${var.repository_project_id}/${var.repository_id}/simplte:latest"
+        image = "${var.repository_location}-docker.pkg.dev/${var.repository_project_id}/${var.repository_id}/simplte"
         resources {
           limits = {
             # https://cloud.google.com/run/docs/configuring/cpu
