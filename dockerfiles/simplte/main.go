@@ -37,6 +37,9 @@ func request(method, url string, body map[string]string) (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode > 299 {
+		return "", fmt.Errorf("Response failed with status code: %d and\nbody: %s\n", resp.StatusCode, body)
+	}
 
 	f, err := os.CreateTemp("", "")
 	if err != nil {

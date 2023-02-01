@@ -49,7 +49,7 @@ resource "google_cloud_scheduler_job" "shukujitsu" {
       {
         "extraction": {
           "method": "GET",
-          "url": "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv"
+          "url": "https://www8.cao.go.jp/chosei/shukujitsu/shukujitsu.csv"
         },
         "transformations": [
           {
