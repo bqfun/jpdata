@@ -144,6 +144,15 @@ resource "google_artifact_registry_repository" "source" {
   }
 }
 
+resource "google_artifact_registry_repository" "jpdata" {
+  location      = var.google.region
+  repository_id = "jpdata"
+  format        = "DOCKER"
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 module "lineage" {
   source     = "../../modules/lineage"
   project_id = var.google.project
@@ -160,9 +169,9 @@ module "simplte" {
   source                = "../../modules/simplte"
   project_id            = var.google.project
   location              = var.google.region
-  repository_location   = google_artifact_registry_repository.source.location
-  repository_project_id = google_artifact_registry_repository.source.project
-  repository_id         = google_artifact_registry_repository.source.repository_id
+  repository_location   = google_artifact_registry_repository.jpdata.location
+  repository_project_id = google_artifact_registry_repository.jpdata.project
+  repository_id         = google_artifact_registry_repository.jpdata.repository_id
 }
 
 resource "google_project_iam_member" "health_dashboard" {
