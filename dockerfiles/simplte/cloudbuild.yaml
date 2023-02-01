@@ -1,28 +1,30 @@
 steps:
-  - name: gcr.io/cloud-builders/docker
+  - name: gcr.io/k8s-skaffold/pack
     args:
       - build
-      - '-t'
-      - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/simplte:latest
-      - .
-    dir: dockerfiles/simplte
+      - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA'
+      - '--builder=gcr.io/buildpacks/builder:v1'
+      - '--network=cloudbuild'
+      - '--path=dockerfiles/simplte'
+    entrypoint: pack
   - name: gcr.io/cloud-builders/docker
     args:
       - push
-      - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/simplte:latest
-    dir: dockerfiles/simplte
+      - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA'
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    entrypoint: gcloud
     args:
       - run
-      - deploy
-      - simplte
-      - --image
-      - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/simplte:latest
-      - --region
-      - asia-northeast1
-    dir: dockerfiles/simplte
+      - services
+      - update
+      - $_SERVICE_NAME
+      - '--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA'
+      - '--region=$_DEPLOY_REGION'
+    entrypoint: gcloud
 images:
-  - asia-northeast1-docker.pkg.dev/$PROJECT_ID/source/simplte:latest
+  - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA'
+substitutions:
+  _GCR_HOSTNAME: asia-northeast1-docker.pkg.dev
+  _SERVICE_NAME: simplte
+  _DEPLOY_REGION: asia-northeast1
 options:
   logging: CLOUD_LOGGING_ONLY

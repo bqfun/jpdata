@@ -144,6 +144,15 @@ resource "google_artifact_registry_repository" "source" {
   }
 }
 
+resource "google_artifact_registry_repository" "jpdata" {
+  location      = var.google.region
+  repository_id = "jpdata"
+  format        = "DOCKER"
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 module "lineage" {
   source     = "../../modules/lineage"
   project_id = var.google.project
