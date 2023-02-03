@@ -27,46 +27,84 @@ resource "google_storage_bucket" "source_eventarc" {
   }
 }
 
-module "gbizinfo" {
-  source                      = "../../modules/gbizinfo"
+module "daily" {
+  source                      = "../../modules/scheduled_workflow"
+  name                        = "daily"
   project_id                  = var.google.project
-  schedule                    = "0 9 * * *"
   region                      = var.google.region
-  bucket_eventarc_name        = google_storage_bucket.source_eventarc.name
+  schedule                    = "0 9 * * *"
+  time_zone                   = "Asia/Tokyo"
   workflow_service_account_id = module.simplte.invoker_id
-}
-
-resource "google_cloud_scheduler_job" "shukujitsu" {
-  name       = "shukujitsu"
-  schedule   = "0 6 * * *"
-  time_zone  = "Asia/Tokyo"
-  region     = var.google.region
-
-  http_target {
-    uri         = module.simplte.url
-    http_method = "POST"
-    body = base64encode(<<-EOT
-      {
-        "extraction": {
-          "method": "GET",
-          "url": "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv"
-        },
-        "transformations": [
-          {
-            "call": "fromShiftJIS"
-          }
-        ],
-        "loading": {
-          "bucket": "${google_storage_bucket.source_eventarc.name}",
-          "object": "syukujitsu.csv"
-        }
-      }
-      EOT
-    )
-    oidc_token {
-      service_account_email = module.simplte.invoker_email
-    }
-  }
+  source_contents             = <<-EOF
+  - init:
+      assign:
+        - bodies:
+          - extraction:
+              method: GET
+              url: https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv
+            transformations:
+              - call: fromShiftJIS
+            loading:
+              bucket: ${google_storage_bucket.source_eventarc.name}
+              object: syukujitsu.csv
+          - extraction:
+              method: GET
+              url: https://gov-csv-export-public.s3.ap-northeast-1.amazonaws.com/mt_town/mt_town_all.csv.zip
+            transformations:
+              - call: unzip
+            loading:
+              bucket: ${google_storage_bucket.source_eventarc.name}
+              object: base_registry_address/mt_town_all.csv
+              name: mt_town_all.csv
+  - gbizinfo:
+      for:
+        value: value
+        in:
+          - object: basic
+            downfile: "7"
+          - object: certification
+            downfile: "8"
+          - object: commendation
+            downfile: "9"
+          - object: subsidy
+            downfile: "10"
+          - object: procurement
+            downfile: "11"
+          - object: patent
+            downfile: "12"
+          - object: finance
+            downfile: "13"
+          - object: workplace
+            downfile: "14"
+        steps:
+          - gbizinfoAssign:
+              assign:
+                - body:
+                    extraction:
+                      method: POST
+                      url: https://info.gbiz.go.jp/hojin/Download
+                      body:
+                        downenc: UTF-8
+                        downfile: $${value.downfile}
+                        downtype: csv
+                    loading:
+                      bucket: ${google_storage_bucket.source_eventarc.name}
+                      object: $${"gbizinfo/" + value.object + ".csv"}
+                - bodies: $${list.concat(bodies, body)}
+  - download:
+      parallel:
+        for:
+          value: body
+          in: $${bodies}
+          steps:
+            - simplte:
+                call: http.post
+                args:
+                  url: ${module.simplte.url}
+                  auth:
+                    type: OIDC
+                  body: $${body}
+EOF
 }
 
 module "houjinbangou_latest" {
@@ -90,40 +128,6 @@ module "houjinbangou_change_history_diff" {
   repository_repository_id = google_artifact_registry_repository.source.repository_id
   repository_location      = google_artifact_registry_repository.source.location
   dataform_workflow_id     = module.dataform.workflow_id
-}
-
-resource "google_cloud_scheduler_job" "base_registry_address" {
-  name       = "base_registry_address"
-  schedule   = "0 0 1 * *"
-  time_zone  = "Asia/Tokyo"
-  region     = var.google.region
-
-  http_target {
-    uri         = module.simplte.url
-    http_method = "POST"
-    body = base64encode(<<-EOT
-      {
-        "extraction": {
-          "method": "GET",
-          "url": "https://gov-csv-export-public.s3.ap-northeast-1.amazonaws.com/mt_town/mt_town_all.csv.zip"
-        },
-        "transformations": [
-          {
-            "call": "unzip"
-          }
-        ],
-        "loading": {
-          "bucket": "${google_storage_bucket.source_eventarc.name}",
-          "object": "base_registry_address/mt_town_all.csv",
-          "name": "mt_town_all.csv"
-        }
-      }
-      EOT
-    )
-    oidc_token {
-      service_account_email = module.simplte.invoker_email
-    }
-  }
 }
 
 module "dataform" {

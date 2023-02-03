@@ -1,5 +1,7 @@
 variable "project_id" {}
+variable "name" {}
 variable "region" {}
+variable "source_contents" {}
 variable "schedule" {}
-variable "bucket_eventarc_name" {}
+variable "time_zone" {}
 variable "workflow_service_account_id" {}
