@@ -2,6 +2,7 @@ resource "google_project_service" "project" {
   for_each = toset([
     "artifactregistry.googleapis.com",
     "cloudresourcemanager.googleapis.com",
+    "datalineage.googleapis.com",
   ])
 
   project            = var.google.project
@@ -25,6 +26,12 @@ resource "google_storage_bucket" "source_eventarc" {
   lifecycle {
     prevent_destroy = true
   }
+}
+
+resource "google_project_iam_member" "simplte" {
+  project = var.google.project
+  role    = "roles/workflows.invoker"
+  member  = "serviceAccount:${module.simplte.invoker_email}"
 }
 
 module "daily" {
@@ -104,6 +111,34 @@ module "daily" {
                   auth:
                     type: OIDC
                   body: $${body}
+  - checkIfFirstDayOfMonth:
+      switch:
+        - condition: $${text.substring(time.format(sys.now()), 8, 10) == "01"}
+          steps:
+            - stepA:
+                assign:
+                  - argument:
+                      body:
+                        includedTags: ["daily", "monthly"]
+        - condition: true
+          steps:
+            - stepB:
+                assign:
+                  - argument:
+                      body:
+                        includedTags: ["daily"]
+  - wait:
+      call: sys.sleep
+      args:
+        seconds: 120
+  - dataform:
+      call: http.post
+      args:
+        url: https://workflowexecutions.googleapis.com/v1/${module.dataform.workflow_id}/executions
+        auth:
+          type: OAuth2
+        body:
+          argument: $${json.encode_to_string(argument)}
 EOF
 }
 
@@ -155,12 +190,6 @@ resource "google_artifact_registry_repository" "jpdata" {
   lifecycle {
     prevent_destroy = true
   }
-}
-
-module "lineage" {
-  source     = "../../modules/lineage"
-  project_id = var.google.project
-  location   = var.google.region
 }
 
 module "analyticshub" {

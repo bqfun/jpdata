@@ -1,7 +1,6 @@
 resource "google_project_service" "project" {
   for_each = toset([
     "cloudbuild.googleapis.com",
-    "cloudscheduler.googleapis.com",
     "dataform.googleapis.com",
     "iam.googleapis.com",
     "pubsub.googleapis.com",
@@ -35,38 +34,6 @@ resource "google_workflows_workflow" "dataform" {
     bucket          = var.bucket_name,
     bucket_eventarc = var.bucket_eventarc_name,
   })
-}
-
-resource "google_cloud_scheduler_job" "dataform_daily" {
-  name      = "dataform-daily"
-  schedule  = "0 0 * * *"
-  time_zone = "Asia/Tokyo"
-  region    = var.region
-
-  http_target {
-    uri         = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.dataform.id}/executions"
-    http_method = "POST"
-    body        = base64encode("{\"argument\": \"{\\\"includedTags\\\": [\\\"daily\\\"]}\"}")
-    oauth_token {
-      service_account_email = google_service_account.dataform_workflow_invoker.email
-    }
-  }
-}
-
-resource "google_cloud_scheduler_job" "dataform_monthly" {
-  name      = "dataform-monthly"
-  schedule  = "0 0 1 * *"
-  time_zone = "Asia/Tokyo"
-  region    = var.region
-
-  http_target {
-    uri         = "https://workflowexecutions.googleapis.com/v1/${google_workflows_workflow.dataform.id}/executions"
-    http_method = "POST"
-    body        = base64encode("{\"argument\": \"{\\\"includedTags\\\": [\\\"monthly\\\"]}\"}")
-    oauth_token {
-      service_account_email = google_service_account.dataform_workflow_invoker.email
-    }
-  }
 }
 
 resource "google_cloudbuild_trigger" "dataform" {
