@@ -29,7 +29,7 @@ main:
             compilationResult: $${compilationResult.body.name}
             invocationConfig:
               includedTags: $${default(map.get(event, "includedTags"), [map.get(event, ["data", "name"])])}
-              transitiveDependentsIncluded: true
+              transitiveDependentsIncluded: $${default(map.get(event, "transitiveDependentsIncluded"), true)}
         result: workflowInvocation
     - checkIfDone:
         switch:

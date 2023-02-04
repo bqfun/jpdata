@@ -119,6 +119,7 @@ module "daily" {
                 assign:
                   - argument:
                       body:
+                        transitiveDependentsIncluded: false
                         includedTags: ["daily", "monthly"]
         - condition: true
           steps:
@@ -126,6 +127,7 @@ module "daily" {
                 assign:
                   - argument:
                       body:
+                        transitiveDependentsIncluded: false
                         includedTags: ["daily"]
   - wait:
       call: sys.sleep

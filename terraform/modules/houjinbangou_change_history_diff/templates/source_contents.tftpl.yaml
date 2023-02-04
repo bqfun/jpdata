@@ -9,6 +9,7 @@
       - secretName: ${secretName}
       - workflowId: ${workflowId}
       - arguments:
+          transitiveDependentsIncluded: true
           includedTags:
             - houjinbangou/diff/*
 - createAndRunBatchJob:
