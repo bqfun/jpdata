@@ -54,15 +54,6 @@ module "daily" {
             loading:
               bucket: ${google_storage_bucket.source_eventarc.name}
               object: syukujitsu.csv
-          - extraction:
-              method: GET
-              url: https://gov-csv-export-public.s3.ap-northeast-1.amazonaws.com/mt_town/mt_town_all.csv.zip
-            transformations:
-              - call: unzip
-            loading:
-              bucket: ${google_storage_bucket.source_eventarc.name}
-              object: base_registry_address/mt_town_all.csv
-              name: mt_town_all.csv
   - gbizinfo:
       for:
         value: value
@@ -97,6 +88,27 @@ module "daily" {
                     loading:
                       bucket: ${google_storage_bucket.source_eventarc.name}
                       object: $${"gbizinfo/" + value.object + ".csv"}
+                - bodies: $${list.concat(bodies, body)}
+  - baseRegistryAddress:
+      for:
+        value: value
+        in:
+          - mt_town
+          - mt_city
+          - mt_pref
+        steps:
+          - baseRegistryAddressAssign:
+              assign:
+                - body:
+                    extraction:
+                      method: GET
+                      url: $${"https://gov-csv-export-public.s3.ap-northeast-1.amazonaws.com/" + value + "/" + value + "_all.csv.zip"}
+                    transformations:
+                      - call: unzip
+                    loading:
+                      bucket: ${google_storage_bucket.source_eventarc.name}
+                      object: $${"base_registry_address/" + value + "_all.csv"}
+                      name: $${value + "_all.csv"}
                 - bodies: $${list.concat(bodies, body)}
   - download:
       parallel:
