@@ -130,27 +130,23 @@ module "daily" {
             - stepA:
                 assign:
                   - argument:
-                      body:
-                        transitiveDependentsIncluded: false
-                        includedTags: ["daily", "monthly"]
+                      transitiveDependentsIncluded: false
+                      includedTags: ["daily", "monthly"]
         - condition: true
           steps:
             - stepB:
                 assign:
                   - argument:
-                      body:
-                        transitiveDependentsIncluded: false
-                        includedTags: ["daily"]
+                      transitiveDependentsIncluded: false
+                      includedTags: ["daily"]
   - wait:
       call: sys.sleep
       args:
         seconds: 120
   - dataform:
-      call: http.post
+      call: googleapis.workflowexecutions.v1.projects.locations.workflows.executions.create
       args:
-        url: https://workflowexecutions.googleapis.com/v1/${module.dataform.workflow_id}/executions
-        auth:
-          type: OAuth2
+        parent: ${module.dataform.workflow_id}
         body:
           argument: $${json.encode_to_string(argument)}
 EOF
