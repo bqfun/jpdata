@@ -175,3 +175,15 @@ resource "google_cloudbuild_trigger" "bqfunc" {
   }
 }
 
+resource "google_dataform_repository" "jpdata" {
+  provider = google-beta
+  project = var.project_id
+  region = "us-central1"
+  name = "jpdata-dataform"
+
+  git_remote_settings {
+    url = "https://github.com/bqfun/jpdata-dataform.git"
+    default_branch = "main"
+    authentication_token_secret_version = "${google_secret_manager_secret.github_personal_access_token.id}/versions/latest"
+  }
+}
