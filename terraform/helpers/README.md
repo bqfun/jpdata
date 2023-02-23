@@ -11,9 +11,7 @@
 gcloud services enable \
     cloudbuild.googleapis.com \
     cloudresourcemanager.googleapis.com \
-    dataform.googleapis.com \
-    iam.googleapis.com \
-    secretmanager.googleapis.com
+    iam.googleapis.com
 ```
 
 ## Terraform環境を整備する
@@ -79,6 +77,4 @@ severity=ERROR log_name="projects/jpdata/logs/batch_agent_logs"
 ## Dataform環境を用意する
 - Cloud BuildのGitHubリポジトリbqfun/jpdata-dataformを接続
 - Cloud BuildのDataformトリガーを設定する
-- Dataformリポジトリ jpdata-dataform を作成する
-- ソース接続用のSecret（github-personal-access-token）に値を設定
-- ソースGitHubリポジトリ接続
+- Dataformリポジトリ接続用のSecret（github-personal-access-token）に値を設定
