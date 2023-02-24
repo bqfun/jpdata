@@ -3,7 +3,7 @@
 1. サービスを有効化する
 2. Terraform環境を用意する
 3. アラートを設定する
-4. Dataform環境を用意する
+4. Dataform実行用のシークレットを用意する
 
 ## サービスを有効化する
 
@@ -39,7 +39,12 @@ https://console.cloud.google.com/cloud-build/triggers の「リポジトリを�
 「ソースを選択」で「GitHub（Cloud Build GitHub アプリ）」を選択後、認証を進める。
 
 「リポジトリを選択」で、GitHub アカウント：bqfun、リポジトリ：bqfun/jpdataを選択する。
-Webからのトリガーの作成はスキップして、Cloud Shellで次のコマンドを入力する。
+Webからのトリガーの作成はスキップし、同様の手順で次のリポジトリを接続する（トリガーはTerraformで作成される）。
+
+- bqfun/jpdata-dataform
+- bqfun/bqfunc
+
+Cloud Shellで次のコマンドを入力して、Terraformのトリガーを作成する。
 
 ```shell
 gcloud beta builds triggers create github \
@@ -51,11 +56,6 @@ gcloud beta builds triggers create github \
     --included-files=terraform/** \
     --service-account=projects/${GOOGLE_CLOUD_PROJECT}/serviceAccounts/terraform@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com
 ```
-
-同様の手順で、次のリポジトリを接続する（トリガーはTerraformで作成される）。
-
-- bqfun/jpdata-dataform
-- bqfun/bqfunc
 
 ## アラートを設定する
 
@@ -74,7 +74,6 @@ Batch 実行中にエラーが発生しました
 severity=ERROR log_name="projects/jpdata/logs/batch_agent_logs"
 ```
 
-## Dataform環境を用意する
-- Cloud BuildのGitHubリポジトリbqfun/jpdata-dataformを接続
-- Cloud BuildのDataformトリガーを設定する
-- Dataformリポジトリ接続用のSecret（github-personal-access-token）に値を設定
+## Dataformリポジトリ接続用のSecret（github-personal-access-token）に値を設定
+https://github.com/settings/tokens からFine-grained tokensを選択し、トークンを生成する。
+生成されたトークンをSecret Managerに登録する。
