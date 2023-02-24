@@ -134,6 +134,19 @@ resource "google_project_iam_member" "default" {
   member  = "serviceAccount:service-${var.project_number}@gcp-sa-dataform.iam.gserviceaccount.com"
 }
 
+resource "google_dataform_repository" "jpdata" {
+  provider = google-beta
+  project = var.project_id
+  region = "us-central1"
+  name = "jpdata-dataform"
+
+  git_remote_settings {
+    url = "https://github.com/bqfun/jpdata-dataform.git"
+    default_branch = "main"
+    authentication_token_secret_version = "${google_secret_manager_secret.github_personal_access_token.id}/versions/latest"
+  }
+}
+
 // bqfunc の間借り実装
 
 resource "google_workflows_workflow" "bqfunc" {
@@ -183,19 +196,6 @@ resource "google_dataform_repository" "bqfunc" {
 
   git_remote_settings {
     url = "https://github.com/bqfun/bqfunc.git"
-    default_branch = "main"
-    authentication_token_secret_version = "${google_secret_manager_secret.github_personal_access_token.id}/versions/latest"
-  }
-}
-
-resource "google_dataform_repository" "jpdata" {
-  provider = google-beta
-  project = var.project_id
-  region = "us-central1"
-  name = "jpdata-dataform"
-
-  git_remote_settings {
-    url = "https://github.com/bqfun/jpdata-dataform.git"
     default_branch = "main"
     authentication_token_secret_version = "${google_secret_manager_secret.github_personal_access_token.id}/versions/latest"
   }
