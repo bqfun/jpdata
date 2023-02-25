@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"bufio"
 	"bytes"
 	"cloud.google.com/go/storage"
 	"context"
@@ -175,6 +176,36 @@ func uploadFileIfUpdated(bucket, object, name string) error {
 	return nil
 }
 
+func replaceFirstLine(source string, newFirstLine string) (string, error) {
+	src, err := os.Open(source)
+	if err != nil {
+		log.Printf("os.Open: %v", err)
+		return "", err
+	}
+
+	defer src.Close()
+	r := bufio.NewReader(src)
+	if _, _, err = r.ReadLine(); err != nil {
+		log.Printf("r.ReadLine: %v", err)
+		return "", err
+	}
+
+	dst, err := os.CreateTemp("", "")
+	if err != nil {
+		log.Printf("os.CreateTemp: %v", err)
+		return "", err
+	}
+	defer dst.Close()
+
+	mr := io.MultiReader(strings.NewReader(newFirstLine+"\n"), r)
+	if _, err := io.Copy(dst, mr); err != nil {
+		log.Printf("io.Copy: %v", err)
+		return "", err
+	}
+
+	return dst.Name(), nil
+}
+
 func main() {
 	log.Print("starting server...")
 	http.HandleFunc("/", handler)
@@ -193,51 +224,48 @@ func main() {
 	}
 }
 
-func unzipSlice(names []string) ([]string, error) {
-	var a []string
-	for _, name := range names {
-		ns, err := unzip(name)
-		if err != nil {
-			log.Printf("unzip: %v", err)
-			return nil, err
-		}
-		a = append(a, ns...)
+func (t Transformation) transform(name string) ([]string, error) {
+	transformers := map[string]func(string) ([]string, error){
+		"unzip": unzip,
+		"fromShiftJIS": func(s string) ([]string, error) {
+			n, err := fromShiftJIS(s)
+			return []string{n}, err
+		},
+		"replaceFirstLine": func(s string) ([]string, error) {
+			n, err := replaceFirstLine(s, t.NewFirstLine)
+			return []string{n}, err
+		},
 	}
-	return a, nil
-}
-
-func fromShiftJISSlice(names []string) ([]string, error) {
-	var a []string
-	for _, name := range names {
-		n, err := fromShiftJIS(name)
-		if err != nil {
-			log.Printf("fromShiftJIS: %v", err)
-			return nil, err
-		}
-		a = append(a, n)
+	f, ok := transformers[t.Call]
+	if !ok {
+		return nil, fmt.Errorf("unsupported call: %v", t.Call)
 	}
-	return a, nil
+	ns, err := f(name)
+	if err != nil {
+		log.Printf("call transformers: %v", err)
+		return nil, err
+	}
+	return ns, nil
 }
 
 func transformThenRemove(names []string, t Transformation) ([]string, error) {
 	var nextNames []string
-	var err error
-
-	if t.Call == "unzip" {
-		nextNames, err = unzipSlice(names)
-	} else if t.Call == "fromShiftJIS" {
-		nextNames, err = fromShiftJISSlice(names)
-	} else {
-		nextNames, err = nil, fmt.Errorf("unsupported call: %v", t.Call)
-	}
 	for _, name := range names {
+		ns, err := t.transform(name)
+		if err != nil {
+			log.Printf("t.transform: %v", err)
+			return nil, err
+		}
+		nextNames = append(nextNames, ns...)
+
 		os.Remove(name)
 	}
-	return nextNames, err
+	return nextNames, nil
 }
 
 type Transformation struct {
-	Call string
+	Call         string
+	NewFirstLine string
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
