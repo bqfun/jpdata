@@ -6,31 +6,35 @@ main:
           - repository: ${repository}
           - bucket: ${bucket}
           - bucketEventarc: ${bucket_eventarc}
-    - createCompilationResult:
-        call: http.post
-        args:
-          url: $${"https://dataform.googleapis.com/v1beta1/" + repository + "/compilationResults"}
-          auth:
-            type: OAuth2
-          body:
-            git_commitish: main
-            codeCompilationConfig:
-              vars:
-                bucketEventarc: $${bucketEventarc}
-                bucket: $${bucket}
-        result: compilationResult
-    - createWorkflowInvocation:
-        call: http.post
-        args:
-          url: $${"https://dataform.googleapis.com/v1beta1/" + repository + "/workflowInvocations"}
-          auth:
-            type: OAuth2
-          body:
-            compilationResult: $${compilationResult.body.name}
-            invocationConfig:
-              includedTags: $${default(map.get(event, "includedTags"), [map.get(event, ["data", "name"])])}
-              transitiveDependentsIncluded: $${default(map.get(event, "transitiveDependentsIncluded"), true)}
-        result: workflowInvocation
+    - tryCreateWorkflowInvocation:
+        try:
+          steps:
+            - createCompilationResult:
+                call: http.post
+                args:
+                  url: $${"https://dataform.googleapis.com/v1beta1/" + repository + "/compilationResults"}
+                  auth:
+                    type: OAuth2
+                  body:
+                    git_commitish: main
+                    codeCompilationConfig:
+                      vars:
+                        bucketEventarc: $${bucketEventarc}
+                        bucket: $${bucket}
+                result: compilationResult
+            - createWorkflowInvocation:
+                call: http.post
+                args:
+                  url: $${"https://dataform.googleapis.com/v1beta1/" + repository + "/workflowInvocations"}
+                  auth:
+                    type: OAuth2
+                  body:
+                    compilationResult: $${compilationResult.body.name}
+                    invocationConfig:
+                      includedTags: $${default(map.get(event, "includedTags"), [map.get(event, ["data", "name"])])}
+                      transitiveDependentsIncluded: $${default(map.get(event, "transitiveDependentsIncluded"), true)}
+                result: workflowInvocation
+        retry: $${http.default_retry}
     - checkIfDone:
         switch:
           - condition: $${workflowInvocation.body.state == "SUCCEEDED"}
