@@ -137,7 +137,7 @@ resource "google_project_iam_member" "default" {
 resource "google_dataform_repository" "jpdata" {
   provider = google-beta
   project = var.project_id
-  region = "us-central1"
+  region = var.region
   name = "jpdata-dataform"
 
   git_remote_settings {
@@ -191,7 +191,7 @@ resource "google_cloudbuild_trigger" "bqfunc" {
 resource "google_dataform_repository" "bqfunc" {
   provider = google-beta
   project = var.project_id
-  region = "us-central1"
+  region = var.region
   name = "bqfunc"
 
   git_remote_settings {
