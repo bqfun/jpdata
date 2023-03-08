@@ -30,7 +30,8 @@ resource "google_workflows_workflow" "dataform" {
   region          = var.region
   service_account = google_service_account.dataform.id
   source_contents = templatefile("${path.module}/templates/source_contents.tftpl.yaml", {
-    repository      = "projects/jpdata/locations/us-central1/repositories/jpdata-dataform",
+
+    repository      = google_dataform_repository.jpdata.id,
     bucket          = var.bucket_name,
     bucket_eventarc = var.bucket_eventarc_name,
   })
@@ -154,7 +155,7 @@ resource "google_workflows_workflow" "bqfunc" {
   region          = var.region
   service_account = google_service_account.dataform.id
   source_contents = templatefile("${path.module}/templates/bqfunc.tftpl.yaml", {
-    repository      = "projects/jpdata/locations/us-central1/repositories/bqfunc",
+    repository      = google_dataform_repository.bqfunc.id,
   })
 }
 
