@@ -9,8 +9,7 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/text/encoding/japanese"
-	"golang.org/x/text/transform"
+	"golang.org/x/net/html/charset"
 	"io"
 	"log"
 	"net/http"
@@ -19,7 +18,15 @@ import (
 	"strings"
 )
 
-func request(method, url string, body map[string]string) (string, error) {
+type ChainedCloser struct {
+	r io.Reader
+	c io.Closer
+}
+
+func (c ChainedCloser) Read(p []byte) (n int, err error) { return c.r.Read(p) }
+func (c ChainedCloser) Close() error                     { return c.c.Close() }
+
+func request(method, url string, body map[string]string) (io.ReadCloser, error) {
 	v := neturl.Values{}
 	for key, value := range body {
 		v.Set(key, value)
@@ -27,7 +34,7 @@ func request(method, url string, body map[string]string) (string, error) {
 	req, err := http.NewRequest(method, url, strings.NewReader(v.Encode()))
 	if err != nil {
 		log.Printf("http.NewRequest: %v", err)
-		return "", err
+		return nil, err
 	}
 	if len(v) != 0 {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -35,104 +42,40 @@ func request(method, url string, body map[string]string) (string, error) {
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Printf("http.DefaultClient.Do: %v", err)
-		return "", err
+		return nil, err
 	}
-	defer resp.Body.Close()
 	if resp.StatusCode > 299 {
-		return "", fmt.Errorf("Response failed with status code: %d and\nbody: %s\n", resp.StatusCode, body)
+		return nil, fmt.Errorf("Response failed with status code: %d and\nbody: %s\n", resp.StatusCode, body)
 	}
 
-	f, err := os.CreateTemp("", "")
-	if err != nil {
-		log.Printf("os.CreateTemp: %v", err)
-		return "", err
-	}
-	defer f.Close()
-	if _, err := io.Copy(f, resp.Body); err != nil {
-		log.Printf("io.Copy: %v", err)
-		return "", err
-	}
-	return f.Name(), nil
+	return resp.Body, nil
 }
 
-func fromShiftJIS(name string) (string, error) {
-	f, err := os.Open(name)
-	if err != nil {
-		log.Printf("os.Open: %v", err)
-		return "", err
-	}
-	defer f.Close()
-
-	dst, err := os.CreateTemp("", "")
-	if err != nil {
-		log.Printf("os.CreateTemp: %v", err)
-		return "", err
-	}
-	defer dst.Close()
-
-	src := transform.NewReader(f, japanese.ShiftJIS.NewDecoder())
-	if _, err := io.Copy(dst, src); err != nil {
-		log.Printf("io.Copy: %v", err)
-		return "", err
-	}
-	return dst.Name(), nil
+func convert(label string, r io.ReadCloser) (io.Reader, error) {
+	return charset.NewReaderLabel(label, r)
 }
 
-func unzip(name string) ([]string, error) {
-	r, err := zip.OpenReader(name)
+func unzip(reader io.ReadCloser) (io.ReadCloser, error) {
+	b := bytes.NewBuffer([]byte{})
+	size, err := io.Copy(b, reader)
 	if err != nil {
-		log.Printf("zip.OpenReader: %v", err)
+		return nil, err
+	}
+	reader.Close()
+
+	br := bytes.NewReader(b.Bytes())
+	r, err := zip.NewReader(br, size)
+	if err != nil {
 		return nil, err
 	}
 
-	var names []string
-	for _, f := range r.File {
-		name, err := func(f *zip.File) (string, error) {
-			src, err := f.Open()
-			if err != nil {
-				log.Printf("File.Open: %v", err)
-				return "", err
-			}
-			defer src.Close()
-
-			dst, err := os.Create(f.Name)
-			if err != nil {
-				log.Printf("os.Create: %v", err)
-				return "", err
-			}
-			defer dst.Close()
-			if _, err := io.Copy(dst, src); err != nil {
-				log.Printf("io.Copy: %v", err)
-				return "", err
-			}
-			return f.Name, nil
-		}(f)
-		if err != nil {
-			return nil, err
-		}
-		names = append(names, name)
+	if len(r.File) == 0 {
+		return nil, nil
 	}
-	return names, nil
+	return r.File[0].Open()
 }
 
-func md5Sum(name string) ([]byte, error) {
-	f, err := os.Open(name)
-	if err != nil {
-		log.Printf("os.Open: %v", err)
-		return nil, err
-	}
-	defer f.Close()
-
-	h := md5.New()
-	if _, err := io.Copy(h, f); err != nil {
-		log.Printf("io.Copy: %v", err)
-		return nil, err
-	}
-
-	return h.Sum(nil), nil
-}
-
-func uploadFileIfUpdated(bucket, object, name string) error {
+func uploadFileIfUpdated(bucket, object string, reader io.Reader) error {
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
 	if err != nil {
@@ -141,21 +84,16 @@ func uploadFileIfUpdated(bucket, object, name string) error {
 	}
 	defer client.Close()
 
-	f, err := os.Open(name)
+	data, err := io.ReadAll(reader)
 	if err != nil {
-		log.Printf("os.Open: %v", err)
 		return err
 	}
-	defer f.Close()
-
 	o := client.Bucket(bucket).Object(object)
 	attrs, err := o.Attrs(ctx)
+
 	if err == nil {
-		sum, err := md5Sum(name)
-		if err != nil {
-			return err
-		}
-		if bytes.Equal(sum, attrs.MD5) {
+		sum := md5.Sum(data)
+		if bytes.Equal(sum[:], attrs.MD5) {
 			log.Println("Skipped")
 			return nil
 		}
@@ -165,7 +103,8 @@ func uploadFileIfUpdated(bucket, object, name string) error {
 	}
 
 	wc := o.NewWriter(ctx)
-	if _, err = io.Copy(wc, f); err != nil {
+
+	if _, err := wc.Write(data); err != nil {
 		log.Printf("ObjectHandle.NewWriter: %v", err)
 		return err
 	}
@@ -176,34 +115,14 @@ func uploadFileIfUpdated(bucket, object, name string) error {
 	return nil
 }
 
-func replaceFirstLine(source string, newFirstLine string) (string, error) {
-	src, err := os.Open(source)
-	if err != nil {
-		log.Printf("os.Open: %v", err)
-		return "", err
-	}
-
-	defer src.Close()
-	r := bufio.NewReader(src)
-	if _, _, err = r.ReadLine(); err != nil {
+func replaceFirstLine(newFirstLine string, reader io.ReadCloser) (io.ReadCloser, error) {
+	r := bufio.NewReader(reader)
+	if _, _, err := r.ReadLine(); err != nil {
 		log.Printf("r.ReadLine: %v", err)
-		return "", err
+		return nil, err
 	}
 
-	dst, err := os.CreateTemp("", "")
-	if err != nil {
-		log.Printf("os.CreateTemp: %v", err)
-		return "", err
-	}
-	defer dst.Close()
-
-	mr := io.MultiReader(strings.NewReader(newFirstLine+"\n"), r)
-	if _, err := io.Copy(dst, mr); err != nil {
-		log.Printf("io.Copy: %v", err)
-		return "", err
-	}
-
-	return dst.Name(), nil
+	return ChainedCloser{io.MultiReader(strings.NewReader(newFirstLine+"\n"), r), reader}, nil
 }
 
 func main() {
@@ -213,7 +132,7 @@ func main() {
 	// Determine port for HTTP service.
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8081"
+		port = "8080"
 		log.Printf("defaulting to port %s", port)
 	}
 
@@ -224,48 +143,39 @@ func main() {
 	}
 }
 
-func (t Transformation) transform(name string) ([]string, error) {
-	transformers := map[string]func(string) ([]string, error){
-		"unzip": unzip,
-		"fromShiftJIS": func(s string) ([]string, error) {
-			n, err := fromShiftJIS(s)
-			return []string{n}, err
-		},
-		"replaceFirstLine": func(s string) ([]string, error) {
-			n, err := replaceFirstLine(s, t.NewFirstLine)
-			return []string{n}, err
-		},
-	}
-	f, ok := transformers[t.Call]
-	if !ok {
+func (t Transformation) transform(reader io.ReadCloser) (io.ReadCloser, error) {
+	var nextReader io.ReadCloser
+	var err error
+
+	if t.Call == "unzip" {
+		nextReader, err = unzip(reader)
+	} else if t.Call == "fromShiftJIS" {
+		var nr io.Reader
+		nr, err = convert("shift-jis", reader)
+		nextReader = ChainedCloser{nr, reader}
+	} else if t.Call == "convert" {
+		var nr io.Reader
+		nr, err = convert(t.Charset, reader)
+		nextReader = ChainedCloser{nr, reader}
+	} else if t.Call == "replaceFirstLine" {
+		var nr io.Reader
+		nr, err = replaceFirstLine(t.NewFirstLine, reader)
+		nextReader = ChainedCloser{nr, reader}
+	} else {
 		return nil, fmt.Errorf("unsupported call: %v", t.Call)
 	}
-	ns, err := f(name)
+
 	if err != nil {
 		log.Printf("call transformers: %v", err)
 		return nil, err
 	}
-	return ns, nil
-}
-
-func transformThenRemove(names []string, t Transformation) ([]string, error) {
-	var nextNames []string
-	for _, name := range names {
-		ns, err := t.transform(name)
-		if err != nil {
-			log.Printf("t.transform: %v", err)
-			return nil, err
-		}
-		nextNames = append(nextNames, ns...)
-
-		os.Remove(name)
-	}
-	return nextNames, nil
+	return nextReader, nil
 }
 
 type Transformation struct {
 	Call         string
 	NewFirstLine string
+	Charset      string
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -288,42 +198,27 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-	name, err := request(d.Extraction.Method, d.Extraction.Url, d.Extraction.Body)
+	reader, err := request(d.Extraction.Method, d.Extraction.Url, d.Extraction.Body)
 	fmt.Printf("%v", d.Extraction.Body)
 	if err != nil {
 		log.Printf("request: %v", err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-	defer os.Remove(name)
 
-	names := []string{name}
-	for _, transformation := range d.Transformations {
-		names, err = transformThenRemove(names, transformation)
+	for _, t := range d.Transformations {
+		reader, err = t.transform(reader)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 	}
 
-	if d.Loading.Name == "" {
-		if len(names) != 1 {
-			log.Printf("Loading.Name not specified")
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-			return
-		}
-		d.Loading.Name = names[0]
-	}
-
-	if err := uploadFileIfUpdated(d.Loading.Bucket, d.Loading.Object, d.Loading.Name); err != nil {
+	if err := uploadFileIfUpdated(d.Loading.Bucket, d.Loading.Object, reader); err != nil {
 		log.Printf("uploadFileIfUpdated: %v", err)
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
-
+	reader.Close()
 	fmt.Fprintf(w, "Successfully loaded data from %s to gs://%s/%s.", d.Extraction.Url, d.Loading.Bucket, d.Loading.Object)
-
-	for _, name := range names {
-		os.Remove(name)
-	}
 }
