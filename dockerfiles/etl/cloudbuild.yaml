@@ -3,7 +3,7 @@ steps:
     args:
       - pack
       - build
-      - $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME
+      - $_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME-$_LOCATION/$_SERVICE_NAME
       - --network
       - cloudbuild
       - --builder
