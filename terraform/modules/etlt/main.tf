@@ -53,15 +53,16 @@ resource "google_workflows_workflow" "transformation" {
               query: |-
                 ${indent(14, var.transformation.query)}
               tableDefinitions:
-                syukujitsu:
+                file:
                   sourceUris:
                     - gs://${google_storage_bucket.default.name}/${local.name}
                   schema:
                     fields:
-                      %{ for f in var.transformation.fields ~}
-                      - name: ${f}
+                      %{ for item in var.transformation.fields ~}
+
+                      - name: ${item}
                         type: STRING
-                      %{ endfor ~}
+                      %{ endfor }
                   sourceFormat: CSV
                   csvOptions:
                     skipLeadingRows: 1
