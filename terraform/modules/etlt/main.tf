@@ -35,7 +35,7 @@ resource "google_bigquery_dataset_iam_member" "t" {
 }
 
 resource "google_workflows_workflow" "transformation" {
-  name            = "etlt-${random_string.default.result}"
+  name            = "etlt-t-${random_string.default.result}"
   region          = var.loading.location
   service_account = google_service_account.default.id
 
@@ -152,7 +152,7 @@ resource "google_cloud_run_v2_job_iam_member" "default" {
 }
 
 resource "google_workflows_workflow" "etl" {
-  name            = "etl-${random_string.default.result}"
+  name            = "etlt-etl-${random_string.default.result}"
   region          = var.loading.location
   service_account = google_service_account.default.id
 
