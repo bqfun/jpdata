@@ -217,6 +217,77 @@ module "simplte" {
   repository_id         = google_artifact_registry_repository.jpdata.repository_id
 }
 
+resource "google_artifact_registry_repository" "etl" {
+  location      = "us-west1"
+  repository_id = "jpdata-us-west1"
+  format        = "DOCKER"
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "google_cloudbuild_trigger" "etl" {
+  name     = "dockerfiles-etl"
+  filename = "dockerfiles/etl/cloudbuild.yaml"
+
+  github {
+    owner = "bqfun"
+    name  = "jpdata"
+    push {
+      branch = "^main$"
+    }
+  }
+  included_files = ["dockerfiles/etl/**"]
+}
+
+module "shukujitsu" {
+  source     = "../../modules/etlt"
+  image      = "us-west1-docker.pkg.dev/jpdata/${google_artifact_registry_repository.etl.repository_id}/etl:latest"
+  extraction = {
+    url = "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv"
+  }
+  tweaks = [
+    {
+      call = "convert"
+      args = {
+        charset = "shift-jis"
+      }
+    }
+  ]
+  loading = {
+    location = "us-west1"
+  }
+  transformation = {
+    bigquery_dataset_id       = "US__shukujitsu"
+    bigquery_dataset_location = "US"
+    fields                    = ["date", "name"]
+    query = <<-EOF
+    CREATE OR REPLACE TABLE holidays(
+      date DATE PRIMARY KEY NOT ENFORCED NOT NULL OPTIONS(description="国民の祝日・休日月日"),
+      name STRING NOT NULL OPTIONS(description="国民の祝日・休日名称"),
+    )
+    OPTIONS(
+      description="https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv",
+      friendly_name="国民の祝日",
+      labels=[
+        ("freshness", "daily")
+      ]
+    )
+    AS
+    SELECT
+      PARSE_DATE("%Y/%m/%d", date) AS date,
+      name,
+    FROM
+      file
+    QUALIFY
+      IF(1013<=COUNT(*)OVER(), TRUE, ERROR("COUNT(*) < 1013"))
+      AND IF(1=COUNT(*)OVER(PARTITION BY date), TRUE, ERROR("A duplicate date has been found"))
+    ORDER BY
+      date
+    EOF
+  }
+}
+
 resource "google_project_iam_member" "health_dashboard" {
   project = var.google.project
   role    = "roles/bigquery.metadataViewer"

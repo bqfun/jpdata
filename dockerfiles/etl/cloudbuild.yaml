@@ -1,0 +1,18 @@
+steps:
+  - name: gcr.io/k8s-skaffold/pack
+    args:
+      - pack
+      - build
+      - $_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME-$_LOCATION/$_SERVICE_NAME
+      - --network
+      - cloudbuild
+      - --builder
+      - gcr.io/buildpacks/builder
+    dir: dockerfiles/etl
+images:
+  - '$_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME-$_LOCATION/$_SERVICE_NAME'
+substitutions:
+  _LOCATION: us-west1
+  _SERVICE_NAME: etl
+options:
+  logging: CLOUD_LOGGING_ONLY
