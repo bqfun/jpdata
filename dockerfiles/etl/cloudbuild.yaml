@@ -9,17 +9,6 @@ steps:
       - --builder
       - gcr.io/buildpacks/builder
     dir: dockerfiles/etl
-  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    args:
-      - run
-      - services
-      - update
-      - $_SERVICE_NAME
-      - --image
-      - $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME
-      - --region
-      - $_DEPLOY_REGION
-    entrypoint: gcloud
 images:
   - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME'
 substitutions:

@@ -192,6 +192,10 @@ func main() {
 			continue
 		}
 
+		if etl.Extraction.Method == "" {
+			etl.Extraction.Method = http.MethodGet
+		}
+
 		reader, err := request(etl.Extraction.Method, etl.Extraction.Url, etl.Extraction.Body)
 		if err != nil {
 			log.Fatalf("request: %v", err)
