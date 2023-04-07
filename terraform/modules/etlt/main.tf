@@ -70,7 +70,7 @@ resource "google_workflows_workflow" "transformation" {
   EOT
 }
 
-resource "google_eventarc_trigger" "eventarc" {
+resource "google_eventarc_trigger" "default" {
   name     = "eventarc"
   location = var.loading.location
   matching_criteria {
@@ -86,6 +86,7 @@ resource "google_eventarc_trigger" "eventarc" {
   }
   service_account = google_service_account.default.email
   depends_on = [
+    google_project_iam_member.default,
     google_project_iam_member.eventarc_gs,
     google_project_iam_member.eventarc_pubsub,
   ]
@@ -119,6 +120,14 @@ resource "google_storage_bucket_iam_member" "default" {
 
 // extract and tweaks
 
+// This trigger needs the role roles/eventarc.eventReceiver granted to
+// service account etlt-eijwue@jpdata.iam.gserviceaccount.com to receive events via Cloud Audit Logs.
+resource "google_project_iam_member" "default" {
+  project = data.google_project.project.project_id
+  role    = "roles/eventarc.eventReceiver"
+  member  = "serviceAccount:${google_service_account.default.email}"
+}
+
 resource "google_cloud_run_v2_job" "default" {
   name     = local.name
   location = var.loading.location
@@ -147,9 +156,10 @@ resource "google_cloud_run_v2_job" "default" {
 }
 
 resource "google_cloud_run_v2_job_iam_member" "default" {
-  name   = google_cloud_run_v2_job.default.name
-  role   = "roles/run.invoker"
-  member = "serviceAccount:${google_service_account.default.email}"
+  location = google_cloud_run_v2_job.default.location
+  name     = google_cloud_run_v2_job.default.name
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_service_account.default.email}"
 }
 
 resource "google_workflows_workflow" "etl" {
