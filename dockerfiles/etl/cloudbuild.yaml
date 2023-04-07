@@ -10,9 +10,9 @@ steps:
       - gcr.io/buildpacks/builder
     dir: dockerfiles/etl
 images:
-  - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME'
+  - '$_LOCATION-docker.pkg.dev/$PROJECT_ID-$_LOCATION/$REPO_NAME/$_SERVICE_NAME'
 substitutions:
-  _GCR_HOSTNAME: us-west1-docker.pkg.dev
+  _LOCATION: us-west1
   _SERVICE_NAME: etl
 options:
   logging: CLOUD_LOGGING_ONLY
