@@ -217,6 +217,20 @@ module "simplte" {
   repository_id         = google_artifact_registry_repository.jpdata.repository_id
 }
 
+resource "google_cloudbuild_trigger" "etl" {
+  name     = "dockerfiles-etl"
+  filename = "dockerfiles/etl/cloudbuild.yaml"
+
+  github {
+    owner = "bqfun"
+    name  = "jpdata"
+    push {
+      branch = "^main$"
+    }
+  }
+  included_files = ["dockerfiles/etl/**"]
+}
+
 resource "google_project_iam_member" "health_dashboard" {
   project = var.google.project
   role    = "roles/bigquery.metadataViewer"
