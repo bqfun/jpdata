@@ -261,7 +261,7 @@ module "shukujitsu" {
     bigquery_dataset_id       = "shukujitsu__us"
     bigquery_dataset_location = "US"
     fields                    = ["date", "name"]
-    sql = <<-EOF
+    query = <<-EOF
     CREATE OR REPLACE TABLE holidays(
       date DATE PRIMARY KEY NOT ENFORCED NOT NULL OPTIONS(description="国民の祝日・休日月日"),
       name STRING NOT NULL OPTIONS(description="国民の祝日・休日名称"),
