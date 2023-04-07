@@ -217,6 +217,15 @@ module "simplte" {
   repository_id         = google_artifact_registry_repository.jpdata.repository_id
 }
 
+resource "google_artifact_registry_repository" "etl" {
+  location      = "us-west1"
+  repository_id = "jpdata-us-west1"
+  format        = "DOCKER"
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 resource "google_cloudbuild_trigger" "etl" {
   name     = "dockerfiles-etl"
   filename = "dockerfiles/etl/cloudbuild.yaml"
