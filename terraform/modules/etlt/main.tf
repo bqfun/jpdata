@@ -72,7 +72,7 @@ resource "google_workflows_workflow" "transformation" {
 
 resource "google_eventarc_trigger" "default" {
   name     = "eventarc"
-  location = var.loading.location
+  location = google_storage_bucket.default.location
   matching_criteria {
     attribute = "type"
     value     = "google.cloud.storage.object.v1.finalized"
@@ -120,11 +120,20 @@ resource "google_storage_bucket_iam_member" "default" {
 
 // extract and tweaks
 
-// This trigger needs the role roles/eventarc.eventReceiver granted to
-// service account etlt-eijwue@jpdata.iam.gserviceaccount.com to receive events via Cloud Audit Logs.
 resource "google_project_iam_member" "eventarc" {
+  for_each = toset([
+    // This trigger needs the role roles/eventarc.eventReceiver granted to
+    // service account etlt-eijwue@jpdata.iam.gserviceaccount.com to receive events via Cloud Audit Logs.
+    "roles/eventarc.eventReceiver",
+    // ログを書く
+    "roles/logging.logWriter",
+    // workflow から run job を実行する
+    "roles/run.viewer",
+    // eventarc から workflow を実行する
+    "roles/workflows.invoker",
+  ])
   project = data.google_project.project.project_id
-  role    = "roles/eventarc.eventReceiver"
+  role    = each.key
   member  = "serviceAccount:${google_service_account.default.email}"
 }
 
@@ -160,12 +169,6 @@ resource "google_cloud_run_v2_job_iam_member" "default" {
   name     = google_cloud_run_v2_job.default.name
   role     = "roles/run.invoker"
   member   = "serviceAccount:${google_service_account.default.email}"
-}
-
-resource "google_project_iam_member" "run" {
-  project = data.google_project.project.project_id
-  role    = "roles/run.viewer"
-  member  = "serviceAccount:${google_service_account.default.email}"
 }
 
 resource "google_workflows_workflow" "etl" {
