@@ -123,6 +123,10 @@ module "daily" {
                   auth:
                     type: OIDC
                   body: $${body}
+  - loadShukujitsu:
+      call: googleapis.workflowexecutions.v1.projects.locations.workflows.executions.create
+      args:
+        parent: ${module.shukujitsu.etl_workflow_id}
   - checkIfFirstDayOfMonth:
       switch:
         - condition: $${text.substring(time.format(sys.now()), 8, 10) == "01"}
