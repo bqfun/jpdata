@@ -242,7 +242,7 @@ resource "google_cloudbuild_trigger" "etl" {
 
 module "shukujitsu" {
   source     = "../../modules/etlt"
-  image      = "us-west1-docker.pkg.dev/jpdata/${google_artifact_registry_repository.etl.repository_id}/etl"
+  image      = "us-west1-docker.pkg.dev/jpdata/${google_artifact_registry_repository.etl.repository_id}/etl:latest"
   extraction = {
     url = "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv"
   }
