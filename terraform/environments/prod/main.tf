@@ -258,7 +258,7 @@ module "shukujitsu" {
     location = "us-west1"
   }
   transformation = {
-    bigquery_dataset_id       = "shukujitsu__us"
+    bigquery_dataset_id       = "US__shukujitsu"
     bigquery_dataset_location = "US"
     fields                    = ["date", "name"]
     query = <<-EOF

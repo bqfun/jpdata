@@ -35,7 +35,7 @@ resource "google_bigquery_dataset_iam_member" "t" {
 }
 
 resource "google_workflows_workflow" "transformation" {
-  name            = "etlt-t-${random_string.default.result}"
+  name            = "${local.name}-t"
   region          = var.loading.location
   service_account = google_service_account.default.id
 
@@ -72,7 +72,7 @@ resource "google_workflows_workflow" "transformation" {
 
 resource "google_eventarc_trigger" "default" {
   name     = "eventarc"
-  location = google_storage_bucket.default.location
+  location = var.loading.location
   matching_criteria {
     attribute = "type"
     value     = "google.cloud.storage.object.v1.finalized"
@@ -122,6 +122,8 @@ resource "google_storage_bucket_iam_member" "default" {
 
 resource "google_project_iam_member" "eventarc" {
   for_each = toset([
+    // workflow から bigquery job を実行する
+    "roles/bigquery.jobUser",
     // This trigger needs the role roles/eventarc.eventReceiver granted to
     // service account etlt-eijwue@jpdata.iam.gserviceaccount.com to receive events via Cloud Audit Logs.
     "roles/eventarc.eventReceiver",
@@ -172,7 +174,7 @@ resource "google_cloud_run_v2_job_iam_member" "default" {
 }
 
 resource "google_workflows_workflow" "etl" {
-  name            = "etlt-etl-${random_string.default.result}"
+  name            = "${local.name}-etl"
   region          = var.loading.location
   service_account = google_service_account.default.id
 
