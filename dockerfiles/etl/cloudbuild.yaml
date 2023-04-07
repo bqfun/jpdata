@@ -12,8 +12,7 @@ steps:
 images:
   - '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME'
 substitutions:
-  _GCR_HOSTNAME: asia-northeast1-docker.pkg.dev
+  _GCR_HOSTNAME: us-west1-docker.pkg.dev
   _SERVICE_NAME: etl
-  _DEPLOY_REGION: asia-northeast1
 options:
   logging: CLOUD_LOGGING_ONLY
