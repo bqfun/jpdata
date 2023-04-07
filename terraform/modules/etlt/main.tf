@@ -94,7 +94,7 @@ resource "google_eventarc_trigger" "eventarc" {
 // サービス アカウント service-120299025068@gs-project-accounts.iam.gserviceaccount.com に
 // ロール roles/pubsub.publisher が付与されている必要があります。
 resource "google_project_iam_member" "eventarc_gs" {
-  project = var.project_id
+  project = data.google_project.project.name
   role    = "roles/pubsub.publisher"
   member  = "serviceAccount:service-${data.google_project.project.number}@gs-project-accounts.iam.gserviceaccount.com"
 }
@@ -103,7 +103,7 @@ resource "google_project_iam_member" "eventarc_gs" {
 // このプロジェクトのサービス アカウント service-120299025068@gcp-sa-pubsub.iam.gserviceaccount.com に
 // ロール roles/iam.serviceAccountTokenCreator が付与されている必要があります。
 resource "google_project_iam_member" "eventarc_pubsub" {
-  project = var.project_id
+  project = data.google_project.project.name
   role    = "roles/iam.serviceAccountTokenCreator"
   member  = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
 }
@@ -160,7 +160,7 @@ resource "google_workflows_workflow" "etl" {
   - etl:
       call: googleapis.run.v1.namespaces.jobs.run
       args:
-          name: namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.default.name}
+          name: namespaces/${data.google_project.project.name}/jobs/${google_cloud_run_v2_job.default.name}
           location: ${google_cloud_run_v2_job.default.location}
   EOT
 }
