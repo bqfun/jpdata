@@ -45,15 +45,7 @@ module "daily" {
   source_contents             = <<-EOF
   - init:
       assign:
-        - bodies:
-          - extraction:
-              method: GET
-              url: https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv
-            transformations:
-              - call: fromShiftJIS
-            loading:
-              bucket: ${google_storage_bucket.source_eventarc.name}
-              object: syukujitsu.csv
+        - bodies: []
   - gbizinfo:
       for:
         value: value
@@ -110,6 +102,10 @@ module "daily" {
                       object: $${"base_registry_address/" + value + "_all.csv"}
                       name: $${value + "_all.csv"}
                 - bodies: $${list.concat(bodies, body)}
+  - shukujitsu:
+      call: googleapis.workflowexecutions.v1.projects.locations.workflows.executions.create
+      args:
+        parent: ${module.shukujitsu.workflow_id}
   - download:
       parallel:
         for:
@@ -123,10 +119,6 @@ module "daily" {
                   auth:
                     type: OIDC
                   body: $${body}
-  - loadShukujitsu:
-      call: googleapis.workflowexecutions.v1.projects.locations.workflows.executions.create
-      args:
-        parent: ${module.shukujitsu.etl_workflow_id}
   - checkIfFirstDayOfMonth:
       switch:
         - condition: $${text.substring(time.format(sys.now()), 8, 10) == "01"}
@@ -245,7 +237,7 @@ resource "google_cloudbuild_trigger" "etl" {
 }
 
 module "shukujitsu" {
-  source     = "../../modules/etlt"
+  source     = "../../modules/workflows_http_to_bigquery_datasets"
   image      = "us-west1-docker.pkg.dev/jpdata/${google_artifact_registry_repository.etl.repository_id}/etl:latest"
   extraction = {
     url = "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv"
@@ -258,13 +250,9 @@ module "shukujitsu" {
       }
     }
   ]
-  loading = {
-    location = "us-west1"
-  }
   transformation = {
-    bigquery_dataset_id       = "US__shukujitsu"
-    bigquery_dataset_location = "US"
-    fields                    = ["date", "name"]
+    dataset_id_suffix = "shukujitsu"
+    fields            = ["date", "name"]
     query = <<-EOF
     CREATE OR REPLACE TABLE holidays(
       date DATE PRIMARY KEY NOT ENFORCED NOT NULL OPTIONS(description="国民の祝日・休日月日"),
