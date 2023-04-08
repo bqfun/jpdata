@@ -7,8 +7,8 @@ locals {
 }
 
 resource "google_storage_bucket" "default" {
-  name          = local.name
-  location      = var.loading.location
+  name     = local.name
+  location = var.loading.location
 }
 
 // loading
@@ -24,8 +24,8 @@ resource "google_storage_bucket_iam_member" "default" {
 resource "google_project_iam_member" "default" {
   project = data.google_project.project.project_id
   // workflow から run job を実行する
-  role    = "roles/run.viewer"
-  member  = "serviceAccount:${var.service_account_email}"
+  role   = "roles/run.viewer"
+  member = "serviceAccount:${var.service_account_email}"
 }
 
 resource "google_cloud_run_v2_job" "default" {
@@ -33,7 +33,7 @@ resource "google_cloud_run_v2_job" "default" {
   location = var.loading.location
 
   template {
-    template{
+    template {
       containers {
         image = var.image
 
@@ -41,7 +41,7 @@ resource "google_cloud_run_v2_job" "default" {
           name = "ETL"
           value = jsonencode([
             {
-              Extraction = var.extraction
+              Extraction      = var.extraction
               Transformations = var.tweaks
               Loading = {
                 Bucket = google_storage_bucket.default.name

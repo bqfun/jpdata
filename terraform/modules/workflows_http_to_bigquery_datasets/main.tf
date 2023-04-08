@@ -1,7 +1,7 @@
 data "google_project" "project" {}
 
 locals {
-  default = "wf-${var.transformation.dataset_id_suffix}"
+  default                  = "wf-${var.transformation.dataset_id_suffix}"
   shukujitsu_us_dataset_id = "US__${var.transformation.dataset_id_suffix}"
 }
 
@@ -15,7 +15,7 @@ module "http_to_cloud_storage" {
   image                 = var.image
   extraction            = var.extraction
   tweaks                = var.tweaks
-  loading               = {
+  loading = {
     location = "us-west1"
   }
 }
@@ -33,7 +33,7 @@ module "cloud_storage_to_bigquery" {
 }
 
 module "bigquery_to_bigquery" {
-  source = "github.com/bqfun/terraform-modules-cloud-workflows-etlt//modules/bigquery_dataset_to_bigquery_dataset"
+  source                       = "github.com/bqfun/terraform-modules-cloud-workflows-etlt//modules/bigquery_dataset_to_bigquery_dataset"
   service_account_email        = google_service_account.default.email
   source_dataset_id            = local.shukujitsu_us_dataset_id
   destination_dataset_id       = var.transformation.dataset_id_suffix

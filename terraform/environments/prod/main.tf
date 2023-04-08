@@ -159,11 +159,11 @@ module "houjinbangou_latest" {
 }
 
 module "houjinbangou_change_history_diff" {
-  source                = "../../modules/houjinbangou_change_history_diff"
-  project_id            = var.google.project
-  project_number        = var.google.number
-  schedule              = "0 0 * * *"
-  region                = var.google.region
+  source         = "../../modules/houjinbangou_change_history_diff"
+  project_id     = var.google.project
+  project_number = var.google.number
+  schedule       = "0 0 * * *"
+  region         = var.google.region
 
   bucket_name              = google_storage_bucket.source.name
   repository_repository_id = google_artifact_registry_repository.source.repository_id
@@ -199,7 +199,7 @@ resource "google_artifact_registry_repository" "jpdata" {
 }
 
 module "analyticshub" {
-  source = "../../modules/analyticshub"
+  source         = "../../modules/analyticshub"
   project_number = var.google.number
   location       = var.google.region
 }
@@ -237,8 +237,8 @@ resource "google_cloudbuild_trigger" "etl" {
 }
 
 module "shukujitsu" {
-  source     = "../../modules/workflows_http_to_bigquery_datasets"
-  image      = "us-west1-docker.pkg.dev/jpdata/${google_artifact_registry_repository.etl.repository_id}/etl:latest"
+  source = "../../modules/workflows_http_to_bigquery_datasets"
+  image  = "us-west1-docker.pkg.dev/jpdata/${google_artifact_registry_repository.etl.repository_id}/etl:latest"
   extraction = {
     url = "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv"
   }
@@ -253,7 +253,7 @@ module "shukujitsu" {
   transformation = {
     dataset_id_suffix = "shukujitsu"
     fields            = ["date", "name"]
-    query = <<-EOF
+    query             = <<-EOF
     CREATE OR REPLACE TABLE holidays(
       date DATE PRIMARY KEY NOT ENFORCED NOT NULL OPTIONS(description="国民の祝日・休日月日"),
       name STRING NOT NULL OPTIONS(description="国民の祝日・休日名称"),

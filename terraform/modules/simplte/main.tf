@@ -20,7 +20,7 @@ resource "google_cloudbuild_trigger" "simplte" {
       branch = "^main$"
     }
   }
-  included_files = ["dockerfiles/simplte/**"]
+  included_files  = ["dockerfiles/simplte/**"]
   service_account = google_service_account.builder.id
 }
 
@@ -54,10 +54,10 @@ resource "google_service_account" "builder" {
 
 resource "google_cloud_run_service_iam_member" "builder" {
   location = google_cloud_run_service.simplte.location
-  project = google_cloud_run_service.simplte.project
-  service = google_cloud_run_service.simplte.name
-  role = "roles/run.developer"
-  member = "serviceAccount:${google_service_account.builder.email}"
+  project  = google_cloud_run_service.simplte.project
+  service  = google_cloud_run_service.simplte.name
+  role     = "roles/run.developer"
+  member   = "serviceAccount:${google_service_account.builder.email}"
 }
 
 resource "google_artifact_registry_repository_iam_member" "builder" {
@@ -85,8 +85,8 @@ resource "google_service_account" "invoker" {
 
 resource "google_cloud_run_service_iam_member" "invoker" {
   location = google_cloud_run_service.simplte.location
-  project = google_cloud_run_service.simplte.project
-  service = google_cloud_run_service.simplte.name
-  role = "roles/run.invoker"
-  member = "serviceAccount:${google_service_account.invoker.email}"
+  project  = google_cloud_run_service.simplte.project
+  service  = google_cloud_run_service.simplte.name
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_service_account.invoker.email}"
 }
