@@ -4,6 +4,7 @@
 2. Terraform環境を用意する
 3. アラートを設定する
 4. Dataform実行用のシークレットを用意する
+5. BigQueryデータセットを作成する
 
 ## サービスを有効化する
 
@@ -77,3 +78,7 @@ severity=ERROR log_name="projects/jpdata/logs/batch_agent_logs"
 ## Dataformリポジトリ接続用のSecret（github-personal-access-token）に値を設定
 https://github.com/settings/tokens からFine-grained tokensを選択し、トークンを生成する。
 生成されたトークンをSecret Managerに登録する。
+
+## BigQueryデータセットを作成する
+- US__shukujitsu
+- shukujitsu

@@ -1,0 +1,2 @@
+BigQuery DataTransfer Serviceを用いて、BigQueryデータセットを別リージョンにコピーする。
+他のスクリプトから依存関係を作るためのWorkflowを返す。
