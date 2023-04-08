@@ -109,6 +109,6 @@ resource "google_project_iam_member" "workflow_invoker" {
 
 resource "google_storage_bucket_iam_member" "cloud_batch" {
   bucket = var.bucket_name
-  role    = "roles/storage.objectAdmin"
-  member  = "serviceAccount:${data.google_compute_default_service_account.default.email}"
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${data.google_compute_default_service_account.default.email}"
 }

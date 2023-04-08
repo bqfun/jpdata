@@ -15,7 +15,7 @@ variable "tweaks" {
 
 variable "loading" {
   type = object({
-    location    = string
+    location = string
   })
 }
 

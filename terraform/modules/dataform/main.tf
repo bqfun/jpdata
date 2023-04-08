@@ -137,13 +137,13 @@ resource "google_project_iam_member" "default" {
 
 resource "google_dataform_repository" "jpdata" {
   provider = google-beta
-  project = var.project_id
-  region = var.region
-  name = "jpdata-dataform"
+  project  = var.project_id
+  region   = var.region
+  name     = "jpdata-dataform"
 
   git_remote_settings {
-    url = "https://github.com/bqfun/jpdata-dataform.git"
-    default_branch = "main"
+    url                                 = "https://github.com/bqfun/jpdata-dataform.git"
+    default_branch                      = "main"
     authentication_token_secret_version = "${google_secret_manager_secret.github_personal_access_token.id}/versions/latest"
   }
 }
@@ -155,7 +155,7 @@ resource "google_workflows_workflow" "bqfunc" {
   region          = var.region
   service_account = google_service_account.dataform.id
   source_contents = templatefile("${path.module}/templates/bqfunc.tftpl.yaml", {
-    repository      = google_dataform_repository.bqfunc.id,
+    repository = google_dataform_repository.bqfunc.id,
   })
 }
 
@@ -191,13 +191,13 @@ resource "google_cloudbuild_trigger" "bqfunc" {
 
 resource "google_dataform_repository" "bqfunc" {
   provider = google-beta
-  project = var.project_id
-  region = var.region
-  name = "bqfunc"
+  project  = var.project_id
+  region   = var.region
+  name     = "bqfunc"
 
   git_remote_settings {
-    url = "https://github.com/bqfun/bqfunc.git"
-    default_branch = "main"
+    url                                 = "https://github.com/bqfun/bqfunc.git"
+    default_branch                      = "main"
     authentication_token_secret_version = "${google_secret_manager_secret.github_personal_access_token.id}/versions/latest"
   }
 }

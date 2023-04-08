@@ -12,10 +12,10 @@ resource "google_project_service" "workflow" {
 }
 
 resource "google_cloud_scheduler_job" "workflow" {
-  name             = var.name
-  schedule         = var.schedule
-  time_zone        = var.time_zone
-  region           = var.region
+  name      = var.name
+  schedule  = var.schedule
+  time_zone = var.time_zone
+  region    = var.region
 
   http_target {
     http_method = "POST"
