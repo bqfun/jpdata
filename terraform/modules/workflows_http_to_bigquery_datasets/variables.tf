@@ -9,7 +9,7 @@ variable "extraction" {
 variable "tweaks" {
   type = list(object({
     call = string
-    args = map(any)
+    args = optional(map(any))
   }))
 }
 

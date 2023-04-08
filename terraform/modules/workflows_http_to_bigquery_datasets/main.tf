@@ -1,7 +1,7 @@
 data "google_project" "project" {}
 
 locals {
-  default                  = "wf-${var.transformation.dataset_id_suffix}"
+  default                  = "wf-${replace(var.transformation.dataset_id_suffix, "_", "-")}"
   shukujitsu_us_dataset_id = "US__${var.transformation.dataset_id_suffix}"
 }
 
