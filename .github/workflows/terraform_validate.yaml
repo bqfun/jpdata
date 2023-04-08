@@ -1,6 +1,0 @@
-on: [push]
-steps:
-  - uses: actions/checkout@v3
-  - uses: hashicorp/setup-terraform@v2
-  - run: terraform validate
-    working-directory: ./terraform/environments/prod
