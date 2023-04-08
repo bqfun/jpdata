@@ -82,3 +82,5 @@ https://github.com/settings/tokens からFine-grained tokensを選択し、ト�
 ## BigQueryデータセットを作成する
 - US__shukujitsu
 - shukujitsu
+- US__base_registry_address
+- base_registry_address
