@@ -245,197 +245,203 @@ resource "google_cloudbuild_trigger" "etl" {
 
 module "shukujitsu" {
   source = "../../modules/workflows_http_to_bigquery_datasets"
-  image  = "us-west1-docker.pkg.dev/jpdata/${google_artifact_registry_repository.etl.repository_id}/etl:latest"
-  extraction = {
-    url = "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv"
-  }
-  tweaks = [
-    {
-      call = "convert"
-      args = {
-        charset = "shift-jis"
-      }
+  simplte_name = module.simplte.name
+  simplte_url  = module.simplte.url
+  dataset_id_suffix = "shukujitsu"
+  etlt = [{
+    extraction = {
+      url = "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv"
     }
-  ]
-  transformation = {
-    dataset_id_suffix = "shukujitsu"
-    fields            = ["date", "name"]
-    query             = <<-EOF
-    CREATE OR REPLACE TABLE holidays(
-      date DATE PRIMARY KEY NOT ENFORCED NOT NULL OPTIONS(description="国民の祝日・休日月日"),
-      name STRING NOT NULL OPTIONS(description="国民の祝日・休日名称"),
-    )
-    OPTIONS(
-      description="https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv",
-      friendly_name="国民の祝日",
-      labels=[
-        ("freshness", "daily")
-      ]
-    )
-    AS
-    SELECT
-      PARSE_DATE("%Y/%m/%d", date) AS date,
-      name,
-    FROM
-      file
-    QUALIFY
-      IF(1013<=COUNT(*)OVER(), TRUE, ERROR("COUNT(*) < 1013"))
-      AND IF(1=COUNT(*)OVER(PARTITION BY date), TRUE, ERROR("A duplicate date has been found"))
-    ORDER BY
-      date
-    EOF
-  }
+    tweaks = [
+      {
+        call = "convert"
+        args = {
+          charset = "shift-jis"
+        }
+      }
+    ]
+    transformation = {
+      fields            = ["date", "name"]
+      query             = <<-EOF
+      CREATE OR REPLACE TABLE holidays(
+        date DATE PRIMARY KEY NOT ENFORCED NOT NULL OPTIONS(description="国民の祝日・休日月日"),
+        name STRING NOT NULL OPTIONS(description="国民の祝日・休日名称"),
+      )
+      OPTIONS(
+        description="https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv",
+        friendly_name="国民の祝日",
+        labels=[
+          ("freshness", "daily")
+        ]
+      )
+      AS
+      SELECT
+        PARSE_DATE("%Y/%m/%d", date) AS date,
+        name,
+      FROM
+        file
+      QUALIFY
+        IF(1013<=COUNT(*)OVER(), TRUE, ERROR("COUNT(*) < 1013"))
+        AND IF(1=COUNT(*)OVER(PARTITION BY date), TRUE, ERROR("A duplicate date has been found"))
+      ORDER BY
+        date
+      EOF
+    }
+  }]
 }
 
 module "base_registry_address_town" {
   source = "../../modules/workflows_http_to_bigquery_datasets"
-  image  = "us-west1-docker.pkg.dev/jpdata/${google_artifact_registry_repository.etl.repository_id}/etl:latest"
-  extraction = {
-    url = "https://catalog.registries.digital.go.jp/rsc/address/mt_town_all.csv.zip"
-  }
-  tweaks = [
-    {
-      call = "unzip"
+  simplte_name = module.simplte.name
+  simplte_url  = module.simplte.url
+  dataset_id_suffix = "base_registry_address"
+  etlt = [{
+    extraction = {
+      url = "https://catalog.registries.digital.go.jp/rsc/address/mt_town_all.csv.zip"
     }
-  ]
-  transformation = {
-    dataset_id_suffix = "base_registry_address"
-    fields = [
-      "local_goverment_code",
-      "town_id",
-      "town_classification_code",
-      "prefecture",
-      "prefecture_kana",
-      "prefecture_en",
-      "district",
-      "district_kana",
-      "district_en",
-      "city",
-      "city_kana",
-      "city_en",
-      "government_ordinance_city",
-      "government_ordinance_city_kana",
-      "government_ordinance_city_en",
-      "ooaza",
-      "ooaza_kana",
-      "ooaza_en",
-      "chome",
-      "chome_kana",
-      "chome_number",
-      "koaza",
-      "koaza_kana",
-      "koaza_en",
-      "is_residential",
-      "_01",
-      "_02",
-      "_03",
-      "_04",
-      "_05",
-      "_06",
-      "_07",
-      "effective_from",
-      "effective_to",
-      "original_data_code",
-      "postal_code",
-      "remarks",
+    tweaks = [
+      {
+        call = "unzip"
+      }
     ]
-    query = <<-EOF
-    CREATE OR REPLACE TABLE town(
-      PRIMARY KEY (local_goverment_code, town_id, is_residential) NOT ENFORCED,
-      local_goverment_code STRING NOT NULL OPTIONS(description="全国地方公共団体コード"),
-      town_id STRING NOT NULL OPTIONS(description="町字id"),
-      town_classification_code STRING NOT NULL OPTIONS(description="町字区分コード"),
-      prefecture STRING NOT NULL OPTIONS(description="都道府県名"),
-      prefecture_kana STRING NOT NULL OPTIONS(description="都道府県名_カナ"),
-      prefecture_en STRING NOT NULL OPTIONS(description="都道府県名_英字"),
-      district STRING OPTIONS(description="郡名"),
-      district_kana STRING OPTIONS(description="郡名_カナ"),
-      district_en STRING OPTIONS(description="郡名_英字"),
-      city STRING NOT NULL OPTIONS(description="市区町村名"),
-      city_kana STRING NOT NULL OPTIONS(description="市区町村名_カナ"),
-      city_en STRING NOT NULL OPTIONS(description="市区町村名_英字"),
-      government_ordinance_city STRING OPTIONS(description="政令市区名"),
-      government_ordinance_city_kana STRING OPTIONS(description="政令市区名_カナ"),
-      government_ordinance_city_en STRING OPTIONS(description="政令市区名_英字"),
-      ooaza STRING OPTIONS(description="大字・町名"),
-      ooaza_kana STRING OPTIONS(description="大字・町名_カナ"),
-      ooaza_en STRING OPTIONS(description="大字・町名_英字"),
-      chome STRING OPTIONS(description="丁目名"),
-      chome_kana STRING OPTIONS(description="丁目名_カナ"),
-      chome_number INTEGER OPTIONS(description="丁目名_数字"),
-      koaza STRING OPTIONS(description="小字名"),
-      koaza_kana STRING OPTIONS(description="小字名_カナ"),
-      koaza_en STRING OPTIONS(description="小字名_英字"),
-      is_residential BOOL OPTIONS(description="住居表示フラグ"),
-      _01 STRING OPTIONS(description="住居表示方式コード"),
-      _02 STRING OPTIONS(description="大字・町_通称フラグ"),
-      _03 STRING OPTIONS(description="小字_通称フラグ"),
-      _04 STRING OPTIONS(description="大字・町外字フラグ"),
-      _05 STRING OPTIONS(description="小字外字フラグ"),
-      _06 STRING OPTIONS(description="状態フラグ"),
-      _07 STRING OPTIONS(description="起番フラグ"),
-      effective_from DATE NOT NULL OPTIONS(description="効力発生日"),
-      effective_to DATE OPTIONS(description="廃止日"),
-      original_data_code STRING NOT NULL OPTIONS(description="原典資料コード"),
-      postal_code STRING OPTIONS(description="郵便番号"),
-      remarks STRING OPTIONS(description="備考"),
-    )
-    OPTIONS(
-      description="https://catalog.registries.digital.go.jp/rsc/address/mt_town_all.csv.zip",
-      friendly_name="日本 町字マスター データセット",
-      labels=[
-        ("freshness", "daily")
+    transformation = {
+      fields = [
+        "local_goverment_code",
+        "town_id",
+        "town_classification_code",
+        "prefecture",
+        "prefecture_kana",
+        "prefecture_en",
+        "district",
+        "district_kana",
+        "district_en",
+        "city",
+        "city_kana",
+        "city_en",
+        "government_ordinance_city",
+        "government_ordinance_city_kana",
+        "government_ordinance_city_en",
+        "ooaza",
+        "ooaza_kana",
+        "ooaza_en",
+        "chome",
+        "chome_kana",
+        "chome_number",
+        "koaza",
+        "koaza_kana",
+        "koaza_en",
+        "is_residential",
+        "_01",
+        "_02",
+        "_03",
+        "_04",
+        "_05",
+        "_06",
+        "_07",
+        "effective_from",
+        "effective_to",
+        "original_data_code",
+        "postal_code",
+        "remarks",
       ]
-    )
-    AS
-    SELECT
-      local_goverment_code,
-      town_id,
-      town_classification_code,
-      prefecture,
-      prefecture_kana,
-      prefecture_en,
-      district,
-      district_kana,
-      district_en,
-      city,
-      city_kana,
-      city_en,
-      government_ordinance_city,
-      government_ordinance_city_kana,
-      government_ordinance_city_en,
-      ooaza,
-      ooaza_kana,
-      ooaza_en,
-      chome,
-      chome_kana,
-      CAST(chome_number AS INT64) AS chome_number,
-      koaza,
-      koaza_kana,
-      koaza_en,
-      CASE is_residential
-        WHEN "1" THEN TRUE
-        WHEN "0" THEN FALSE
-        ELSE ERROR("Unsupported is_residential: " || IFNULL(is_residential, "NULL"))
-      END AS is_residential,
-      _01,
-      _02,
-      _03,
-      _04,
-      _05,
-      _06,
-      _07,
-      PARSE_DATE("%Y-%m-%d", effective_from) AS effective_from,
-      PARSE_DATE("%Y-%m-%d", effective_to) AS effective_to,
-      original_data_code,
-      postal_code,
-      remarks,
-    FROM
-      file
-    QUALIFY
-      IF(1=COUNT(*)OVER(PARTITION BY local_goverment_code, town_id, is_residential), TRUE, ERROR("Duplicated keys found"))
-    EOF
-  }
+      query = <<-EOF
+      CREATE OR REPLACE TABLE town(
+        PRIMARY KEY (local_goverment_code, town_id, is_residential) NOT ENFORCED,
+        local_goverment_code STRING NOT NULL OPTIONS(description="全国地方公共団体コード"),
+        town_id STRING NOT NULL OPTIONS(description="町字id"),
+        town_classification_code STRING NOT NULL OPTIONS(description="町字区分コード"),
+        prefecture STRING NOT NULL OPTIONS(description="都道府県名"),
+        prefecture_kana STRING NOT NULL OPTIONS(description="都道府県名_カナ"),
+        prefecture_en STRING NOT NULL OPTIONS(description="都道府県名_英字"),
+        district STRING OPTIONS(description="郡名"),
+        district_kana STRING OPTIONS(description="郡名_カナ"),
+        district_en STRING OPTIONS(description="郡名_英字"),
+        city STRING NOT NULL OPTIONS(description="市区町村名"),
+        city_kana STRING NOT NULL OPTIONS(description="市区町村名_カナ"),
+        city_en STRING NOT NULL OPTIONS(description="市区町村名_英字"),
+        government_ordinance_city STRING OPTIONS(description="政令市区名"),
+        government_ordinance_city_kana STRING OPTIONS(description="政令市区名_カナ"),
+        government_ordinance_city_en STRING OPTIONS(description="政令市区名_英字"),
+        ooaza STRING OPTIONS(description="大字・町名"),
+        ooaza_kana STRING OPTIONS(description="大字・町名_カナ"),
+        ooaza_en STRING OPTIONS(description="大字・町名_英字"),
+        chome STRING OPTIONS(description="丁目名"),
+        chome_kana STRING OPTIONS(description="丁目名_カナ"),
+        chome_number INTEGER OPTIONS(description="丁目名_数字"),
+        koaza STRING OPTIONS(description="小字名"),
+        koaza_kana STRING OPTIONS(description="小字名_カナ"),
+        koaza_en STRING OPTIONS(description="小字名_英字"),
+        is_residential BOOL OPTIONS(description="住居表示フラグ"),
+        _01 STRING OPTIONS(description="住居表示方式コード"),
+        _02 STRING OPTIONS(description="大字・町_通称フラグ"),
+        _03 STRING OPTIONS(description="小字_通称フラグ"),
+        _04 STRING OPTIONS(description="大字・町外字フラグ"),
+        _05 STRING OPTIONS(description="小字外字フラグ"),
+        _06 STRING OPTIONS(description="状態フラグ"),
+        _07 STRING OPTIONS(description="起番フラグ"),
+        effective_from DATE NOT NULL OPTIONS(description="効力発生日"),
+        effective_to DATE OPTIONS(description="廃止日"),
+        original_data_code STRING NOT NULL OPTIONS(description="原典資料コード"),
+        postal_code STRING OPTIONS(description="郵便番号"),
+        remarks STRING OPTIONS(description="備考"),
+      )
+      OPTIONS(
+        description="https://catalog.registries.digital.go.jp/rsc/address/mt_town_all.csv.zip",
+        friendly_name="日本 町字マスター データセット",
+        labels=[
+          ("freshness", "daily")
+        ]
+      )
+      AS
+      SELECT
+        local_goverment_code,
+        town_id,
+        town_classification_code,
+        prefecture,
+        prefecture_kana,
+        prefecture_en,
+        district,
+        district_kana,
+        district_en,
+        city,
+        city_kana,
+        city_en,
+        government_ordinance_city,
+        government_ordinance_city_kana,
+        government_ordinance_city_en,
+        ooaza,
+        ooaza_kana,
+        ooaza_en,
+        chome,
+        chome_kana,
+        CAST(chome_number AS INT64) AS chome_number,
+        koaza,
+        koaza_kana,
+        koaza_en,
+        CASE is_residential
+          WHEN "1" THEN TRUE
+          WHEN "0" THEN FALSE
+          ELSE ERROR("Unsupported is_residential: " || IFNULL(is_residential, "NULL"))
+        END AS is_residential,
+        _01,
+        _02,
+        _03,
+        _04,
+        _05,
+        _06,
+        _07,
+        PARSE_DATE("%Y-%m-%d", effective_from) AS effective_from,
+        PARSE_DATE("%Y-%m-%d", effective_to) AS effective_to,
+        original_data_code,
+        postal_code,
+        remarks,
+      FROM
+        file
+      QUALIFY
+        IF(1=COUNT(*)OVER(PARTITION BY local_goverment_code, town_id, is_residential), TRUE, ERROR("Duplicated keys found"))
+      EOF
+    }
+  }]
 }
 
 resource "google_project_iam_member" "health_dashboard" {

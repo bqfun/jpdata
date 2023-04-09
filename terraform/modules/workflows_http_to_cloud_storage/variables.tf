@@ -1,4 +1,5 @@
-variable "image" {}
+variable "simplte_url" {}
+variable "simplte_name" {}
 
 variable "extraction" {
   type = object({
@@ -9,7 +10,7 @@ variable "extraction" {
 variable "tweaks" {
   type = list(object({
     call = string
-    args = map(any)
+    args = optional(map(any))
   }))
 }
 

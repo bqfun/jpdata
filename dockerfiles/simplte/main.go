@@ -2,7 +2,6 @@ package main
 
 import (
 	"archive/zip"
-	"bufio"
 	"bytes"
 	"cloud.google.com/go/storage"
 	"context"
@@ -75,18 +74,18 @@ func unzip(reader io.ReadCloser) (io.ReadCloser, error) {
 	return r.File[0].Open()
 }
 
-func uploadFileIfUpdated(bucket, object string, reader io.Reader) error {
+func uploadFileIfUpdated(bucket, object string, reader io.Reader) (bool, error) {
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		log.Printf("storage.NewClient: %v", err)
-		return err
+		return false, err
 	}
 	defer client.Close()
 
 	data, err := io.ReadAll(reader)
 	if err != nil {
-		return err
+		return false, err
 	}
 	o := client.Bucket(bucket).Object(object)
 	attrs, err := o.Attrs(ctx)
@@ -95,34 +94,24 @@ func uploadFileIfUpdated(bucket, object string, reader io.Reader) error {
 		sum := md5.Sum(data)
 		if bytes.Equal(sum[:], attrs.MD5) {
 			log.Println("Skipped")
-			return nil
+			return false, nil
 		}
 	} else if err != storage.ErrObjectNotExist {
 		log.Printf("ObjectHandle.Attrs: %v", err)
-		return err
+		return false, err
 	}
 
 	wc := o.NewWriter(ctx)
 
 	if _, err := wc.Write(data); err != nil {
 		log.Printf("ObjectHandle.NewWriter: %v", err)
-		return err
+		return false, err
 	}
 	if err := wc.Close(); err != nil {
 		log.Printf("Writer.Close: %v", err)
-		return err
+		return false, err
 	}
-	return nil
-}
-
-func replaceFirstLine(newFirstLine string, reader io.ReadCloser) (io.ReadCloser, error) {
-	r := bufio.NewReader(reader)
-	if _, _, err := r.ReadLine(); err != nil {
-		log.Printf("r.ReadLine: %v", err)
-		return nil, err
-	}
-
-	return ChainedCloser{io.MultiReader(strings.NewReader(newFirstLine+"\n"), r), reader}, nil
+	return true, nil
 }
 
 func main() {
@@ -143,23 +132,15 @@ func main() {
 	}
 }
 
-func (t Transformation) transform(reader io.ReadCloser) (io.ReadCloser, error) {
+func (t Tweak) tweak(reader io.ReadCloser) (io.ReadCloser, error) {
 	var nextReader io.ReadCloser
 	var err error
 
 	if t.Call == "unzip" {
 		nextReader, err = unzip(reader)
-	} else if t.Call == "fromShiftJIS" {
-		var nr io.Reader
-		nr, err = convert("shift-jis", reader)
-		nextReader = ChainedCloser{nr, reader}
 	} else if t.Call == "convert" {
 		var nr io.Reader
-		nr, err = convert(t.Charset, reader)
-		nextReader = ChainedCloser{nr, reader}
-	} else if t.Call == "replaceFirstLine" {
-		var nr io.Reader
-		nr, err = replaceFirstLine(t.NewFirstLine, reader)
+		nr, err = convert(t.Args["charset"], reader)
 		nextReader = ChainedCloser{nr, reader}
 	} else {
 		return nil, fmt.Errorf("unsupported call: %v", t.Call)
@@ -172,53 +153,59 @@ func (t Transformation) transform(reader io.ReadCloser) (io.ReadCloser, error) {
 	return nextReader, nil
 }
 
-type Transformation struct {
-	Call         string
-	NewFirstLine string
-	Charset      string
+type Extraction struct {
+	Method string
+	Url    string
+	Body   map[string]string
+}
+type Tweak struct {
+	Call string
+	Args map[string]string
+}
+type Loading struct {
+	Bucket string
+	Object string
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	var d struct {
-		Extraction struct {
-			Method string
-			Url    string
-			Body   map[string]string
-		}
-		Transformations []Transformation
-		Loading         struct {
-			Bucket string
-			Object string
-			Name   string
-		}
+		Extraction Extraction
+		Tweaks     []Tweak
+		Loading    Loading
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
 		log.Printf("json.NewDecoder: %v", err)
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, `{"error": "Internal Server Error"}`)
 		return
 	}
 	reader, err := request(d.Extraction.Method, d.Extraction.Url, d.Extraction.Body)
 	fmt.Printf("%v", d.Extraction.Body)
 	if err != nil {
 		log.Printf("request: %v", err)
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, `{"error": "Internal Server Error"}`)
 		return
 	}
 
-	for _, t := range d.Transformations {
-		reader, err = t.transform(reader)
+	for _, t := range d.Tweaks {
+		reader, err = t.tweak(reader)
 		if err != nil {
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			log.Printf("tweak: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintln(w, `{"error": "Internal Server Error"}`)
 			return
 		}
 	}
 
-	if err := uploadFileIfUpdated(d.Loading.Bucket, d.Loading.Object, reader); err != nil {
+	isUpdated, err := uploadFileIfUpdated(d.Loading.Bucket, d.Loading.Object, reader)
+	if err != nil {
 		log.Printf("uploadFileIfUpdated: %v", err)
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, `{"error": "Internal Server Error"}`)
 		return
 	}
 	reader.Close()
-	fmt.Fprintf(w, "Successfully loaded data from %s to gs://%s/%s.", d.Extraction.Url, d.Loading.Bucket, d.Loading.Object)
+	fmt.Fprintf(w, `{"is_updated": %t}`, isUpdated)
 }

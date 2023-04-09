@@ -1,11 +1,25 @@
-output "source_contents" {
+output "yaml" {
   value = <<-EOT
-  - http_to_cloud_storage_${random_uuid.default.result}:
-      call: googleapis.run.v1.namespaces.jobs.run
-      args:
-          name: namespaces/${data.google_project.project.name}/jobs/${google_cloud_run_v2_job.default.name}
-          location: ${google_cloud_run_v2_job.default.location}
-  EOT
+- http_to_cloud_storage_${random_uuid.default.result}:
+    call: http.post
+    args:
+      url: ${var.simplte_url}
+      auth:
+        type: OIDC
+      body:
+        extraction:
+          ${indent(10, yamlencode(var.extraction))}
+        tweaks:
+          %{ for k, v in var.tweaks ~}
+
+          - call: ${v.call}
+            args:
+              ${yamlencode(coalesce(v.args, {}))}
+          %{~ endfor }
+        loading:
+          bucket: ${google_storage_bucket.default.name}
+          object: ${local.name}
+EOT
 }
 
 output "bucket_name" {

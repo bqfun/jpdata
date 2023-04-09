@@ -28,36 +28,9 @@ resource "google_project_iam_member" "default" {
   member = "serviceAccount:${var.service_account_email}"
 }
 
-resource "google_cloud_run_v2_job" "default" {
-  name     = local.name
-  location = var.loading.location
-
-  template {
-    template {
-      containers {
-        image = var.image
-
-        env {
-          name = "ETL"
-          value = jsonencode([
-            {
-              Extraction      = var.extraction
-              Transformations = var.tweaks
-              Loading = {
-                Bucket = google_storage_bucket.default.name
-                Object = local.name
-              }
-            }
-          ])
-        }
-      }
-    }
-  }
-}
-
-resource "google_cloud_run_v2_job_iam_member" "default" {
-  location = google_cloud_run_v2_job.default.location
-  name     = google_cloud_run_v2_job.default.name
+resource "google_cloud_run_service_iam_member" "default" {
+  location = "asia-northeast1"
+  service     = var.simplte_name
   role     = "roles/run.invoker"
   member   = "serviceAccount:${var.service_account_email}"
 }

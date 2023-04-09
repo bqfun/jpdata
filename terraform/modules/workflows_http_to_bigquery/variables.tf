@@ -1,9 +1,10 @@
 variable "simplte_name" {}
 variable "simplte_url" {}
+variable "service_account_email" {}
 variable "dataset_id_suffix" {}
 
 variable "etlt" {
-  type = list(object({
+  type = object({
     extraction = object({
       url = string
     })
@@ -15,5 +16,5 @@ variable "etlt" {
       fields            = list(string)
       query             = string
     })
-  }))
+  })
 }
