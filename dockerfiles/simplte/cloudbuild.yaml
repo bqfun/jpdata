@@ -8,6 +8,7 @@ steps:
       - cloudbuild
       - --builder
       - gcr.io/buildpacks/builder
+      - --publish
     dir: dockerfiles/simplte
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     args:
