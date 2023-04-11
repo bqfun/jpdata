@@ -5,6 +5,7 @@
 3. アラートを設定する
 4. Dataform実行用のシークレットを用意する
 5. BigQueryデータセットを作成する
+6. Route to Artifact Registry
 
 ## サービスを有効化する
 
@@ -84,3 +85,9 @@ https://github.com/settings/tokens からFine-grained tokensを選択し、ト�
 - shukujitsu
 - US__base_registry_address
 - base_registry_address
+- US__gbizinfo
+- gbizinfo
+
+## Route to Artifact Registry
+gcr.ioホストのリクエストを対応するArtifact Registryリポジトリに自動的にリダイレクトさせるように、Google Cloudコンソールで設定。
+https://cloud.google.com/artifact-registry/docs/transition/setup-gcr-repo

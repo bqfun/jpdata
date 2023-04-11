@@ -1,1 +1,0 @@
-他モジュールを用いて、HTTPリクエストの結果をBigQueryのUS、asia-northeast1データセットとして保存する。
