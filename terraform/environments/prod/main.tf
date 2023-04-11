@@ -135,20 +135,6 @@ module "analyticshub" {
   location       = var.google.region
 }
 
-resource "google_cloudbuild_trigger" "etl" {
-  name     = "dockerfiles-etl"
-  filename = "dockerfiles/etl/cloudbuild.yaml"
-
-  github {
-    owner = "bqfun"
-    name  = "jpdata"
-    push {
-      branch = "^main$"
-    }
-  }
-  included_files = ["dockerfiles/etl/**"]
-}
-
 module "gbizinfo" {
   source = "../../modules/gbizinfo"
 }
