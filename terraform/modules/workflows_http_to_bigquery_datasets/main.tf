@@ -151,7 +151,7 @@ resource "google_workflows_workflow" "main" {
           result: resp
       - skipIfNotUpdated:
           switch:
-            - condition: $${not json.decode(resp.body).is_updated}
+            - condition: $${not resp.body.is_updated}
               return: true
       - assignStep:
           assign:
