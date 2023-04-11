@@ -90,8 +90,12 @@ resource "google_workflows_workflow" "main" {
   source_contents = <<-EOT
   main:
     steps:
+      - init:
+          assign:
+            - areAllSkipped: true
       - runAllExtractTweakLoadTransform:
           parallel:
+            shared: [areAllSkipped]
             for:
               value: job_args
               in:%{for i, c in var.etlt}
@@ -120,6 +124,14 @@ resource "google_workflows_workflow" "main" {
                       body: $${job_args.body}
                       query: $${job_args.query}
                       fields: $${job_args.fields}
+                    result: isSkipped
+                - mergeResponse:
+                    assign:
+                      - areAllSkipped: $${areAllSkipped and isSkipped}
+      - skipIfAllNotUpdated:
+          switch:
+            - condition: $${areAllSkipped}
+              return: true
       - transfer:
           call: googleapis.bigquerydatatransfer.v1.projects.locations.transferConfigs.startManualRuns
           args:
@@ -136,6 +148,11 @@ resource "google_workflows_workflow" "main" {
             auth:
               type: OIDC
             body: $${body}
+          result: resp
+      - skipIfNotUpdated:
+          switch:
+            - condition: $${not json.decode(resp.body).is_updated}
+              return: true
       - assignStep:
           assign:
             - queryPrefix: |
@@ -174,5 +191,7 @@ resource "google_workflows_workflow" "main" {
                     projectId: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
                   query: '$${ text.replace_all(queryPrefix + queryInfix + query, "$${staging}", "staging.`" + text.replace_all(string(sys.now()), ".", "_") + "`") }'
                   useLegacySql: false
+      - final:
+          return: false
   EOT
 }
