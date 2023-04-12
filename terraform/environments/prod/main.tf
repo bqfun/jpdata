@@ -131,8 +131,6 @@ resource "google_artifact_registry_repository" "source" {
 
 module "analyticshub" {
   source         = "../../modules/analyticshub"
-  project_number = var.google.number
-  location       = var.google.region
 }
 
 module "gbizinfo" {

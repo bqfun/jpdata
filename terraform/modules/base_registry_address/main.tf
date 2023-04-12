@@ -165,13 +165,13 @@ locals {
         "koaza_kana",
         "koaza_en",
         "is_residential",
-        "_01",
-        "_02",
-        "_03",
-        "_04",
-        "_05",
-        "_06",
-        "_07",
+        "residential_address_method",
+        "has_ooaza_alias",
+        "has_koaza_alias",
+        "ooaza_non_standard_characters",
+        "koaza_non_standard_characters",
+        "verification_status",
+        "numbering_status",
         "effective_from",
         "effective_to",
         "original_data_code",
@@ -206,13 +206,13 @@ locals {
           koaza_kana STRING OPTIONS(description="小字名_カナ"),
           koaza_en STRING OPTIONS(description="小字名_英字"),
           is_residential BOOL OPTIONS(description="住居表示フラグ"),
-          _01 STRING OPTIONS(description="住居表示方式コード"),
-          _02 STRING OPTIONS(description="大字・町_通称フラグ"),
-          _03 STRING OPTIONS(description="小字_通称フラグ"),
-          _04 STRING OPTIONS(description="大字・町外字フラグ"),
-          _05 STRING OPTIONS(description="小字外字フラグ"),
-          _06 STRING OPTIONS(description="状態フラグ"),
-          _07 STRING OPTIONS(description="起番フラグ"),
+          residential_address_method STRING OPTIONS(description="住居表示方式コード"),
+          has_ooaza_alias BOOL OPTIONS(description="大字・町_通称フラグ"),
+          has_koaza_alias BOOL OPTIONS(description="小字_通称フラグ"),
+          ooaza_non_standard_characters STRING OPTIONS(description="大字・町外字フラグ"),
+          koaza_non_standard_characters STRING OPTIONS(description="小字外字フラグ"),
+          verification_status STRING OPTIONS(description="状態フラグ"),
+          numbering_status STRING OPTIONS(description="起番フラグ"),
           effective_from DATE NOT NULL OPTIONS(description="効力発生日"),
           effective_to DATE OPTIONS(description="廃止日"),
           original_data_code STRING NOT NULL OPTIONS(description="原典資料コード"),
@@ -257,13 +257,37 @@ locals {
             WHEN "0" THEN FALSE
             ELSE ERROR("Unsupported is_residential: " || IFNULL(is_residential, "NULL"))
           END AS is_residential,
-          _01,
-          _02,
-          _03,
-          _04,
-          _05,
-          _06,
-          _07,
+          CASE residential_address_method
+            WHEN "1" THEN "街区方式"
+            WHEN "2" THEN "道路方式"
+            WHEN "0" THEN "住居表示でない"
+            ELSE ERROR("Unsupported residential_address_method: " || IFNULL(residential_address_method, "NULL"))
+          END AS residential_address_method,
+          CASE has_ooaza_alias
+            WHEN "0" THEN FALSE
+            WHEN "1" THEN TRUE
+            ELSE ERROR("Unsupported has_ooaza_alias: " || IFNULL(has_ooaza_alias, "NULL"))
+          END AS has_ooaza_alias,
+          CASE has_koaza_alias
+            WHEN "0" THEN FALSE
+            WHEN "1" THEN TRUE
+            ELSE ERROR("Unsupported has_koaza_alias: " || IFNULL(has_koaza_alias, "NULL"))
+          END AS has_koaza_alias,
+          NULLIF(ooaza_non_standard_characters, "0") AS ooaza_non_standard_characters,
+          NULLIF(koaza_non_standard_characters, "0") AS koaza_non_standard_characters,
+          CASE verification_status
+            WHEN "0" THEN "自治体確認待ち"
+            WHEN "1" THEN "地方自治法の町若しくは字に該当"
+            WHEN "2" THEN "地方自治法の町若しくは字に非該当"
+            WHEN "3" THEN "不明"
+            ELSE ERROR("Unsupported verification_status: " || IFNULL(verification_status, "NULL"))
+          END AS verification_status,
+          CASE numbering_status
+            WHEN "1" THEN "起番"
+            WHEN "2" THEN "非起番"
+            WHEN "0" THEN "登記情報に存在しない"
+            ELSE ERROR("Unsupported numbering_status: " || IFNULL(numbering_status, "NULL"))
+          END AS numbering_status,
           PARSE_DATE("%Y-%m-%d", effective_from) AS effective_from,
           PARSE_DATE("%Y-%m-%d", effective_to) AS effective_to,
           original_data_code,
