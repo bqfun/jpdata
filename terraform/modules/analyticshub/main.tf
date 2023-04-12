@@ -220,7 +220,7 @@ resource "google_bigquery_analytics_hub_listing" "base_registry_address" {
   listing_id       = "base_registry_address_preprocessed_by_bq_fun_123456789ab"
   display_name     = "Address base registry preprocessed by BQ FUN"
   primary_contact  = "https://bqfun.jp/"
-  documentation    = local.jp_holidays
+  documentation    = local.base_registry_address
   categories       = ["CATEGORY_PUBLIC_SECTOR"]
 
   bigquery_dataset {
@@ -238,7 +238,7 @@ resource "google_bigquery_analytics_hub_listing" "base_registry_address_us" {
   listing_id       = "base_registry_address_preprocessed_by_bq_fun_123456789ab"
   display_name     = "Address base registry preprocessed by BQ FUN"
   primary_contact  = "https://bqfun.jp/"
-  documentation    = local.jp_holidays
+  documentation    = local.base_registry_address
   categories       = ["CATEGORY_PUBLIC_SECTOR"]
 
   bigquery_dataset {
