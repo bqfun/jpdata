@@ -130,7 +130,7 @@ resource "google_artifact_registry_repository" "source" {
 }
 
 module "analyticshub" {
-  source         = "../../modules/analyticshub"
+  source = "../../modules/analyticshub"
 }
 
 module "gbizinfo" {
