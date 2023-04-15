@@ -127,7 +127,7 @@ resource "google_workflows_workflow" "main" {
                     result: isSkipped
                 - mergeResponse:
                     assign:
-                      - areAllSkipped: $${areAllSkipped and isSkipped}
+                      - areAllSkipped: $${areAllSkipped and default(isSkipped, false)}
       - skipIfAllNotUpdated:
           switch:
             - condition: $${areAllSkipped}
@@ -191,7 +191,5 @@ resource "google_workflows_workflow" "main" {
                     projectId: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
                   query: '$${ text.replace_all(queryPrefix + queryInfix + query, "$${staging}", "staging.`" + text.replace_all(string(sys.now()), ".", "_") + "`") }'
                   useLegacySql: false
-      - final:
-          return: false
   EOT
 }
