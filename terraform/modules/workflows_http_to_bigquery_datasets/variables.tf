@@ -21,7 +21,7 @@ variable "etlt" {
 
 variable "tweakle_image" {
   type    = string
-  default = "gcr.io/jpdata/github.com/bqfun/tweakle:f1b1611b08938817629e3863b2ccad87f86ab3f4"
+  default = "gcr.io/jpdata/github.com/bqfun/tweakle:2d7e2f1300e29c8f860006d0fb788f5c4c45c889"
 }
 
 variable "tweakle_cpu" {
