@@ -13,7 +13,7 @@ variable "etlt" {
       args = optional(map(any))
     }))
     transformation = object({
-      query  = string
+      query = string
     })
   }))
 }

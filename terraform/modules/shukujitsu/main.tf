@@ -13,7 +13,7 @@ locals {
       }
     ]
     transformation = {
-      query  = <<-EOF
+      query = <<-EOF
       CREATE OR REPLACE TABLE $${table}(
         date DATE PRIMARY KEY NOT ENFORCED NOT NULL OPTIONS(description="国民の祝日・休日月日"),
         name STRING NOT NULL OPTIONS(description="国民の祝日・休日名称"),
