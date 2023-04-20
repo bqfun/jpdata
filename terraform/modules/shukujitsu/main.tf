@@ -13,7 +13,6 @@ locals {
       }
     ]
     transformation = {
-      fields = ["date", "name"]
       query  = <<-EOF
       CREATE OR REPLACE TABLE $${table}(
         date DATE PRIMARY KEY NOT ENFORCED NOT NULL OPTIONS(description="国民の祝日・休日月日"),
@@ -28,10 +27,10 @@ locals {
       )
       AS
       SELECT
-        PARSE_DATE("%Y/%m/%d", date) AS date,
-        name,
+        PARSE_DATE("%Y/%m/%d", `国民の祝日_休日月日`) AS date,
+        `国民の祝日_休日名称` AS name,
       FROM
-        $${staging}
+        staging
       QUALIFY
         IF(1=COUNT(*)OVER(PARTITION BY date), TRUE, ERROR("A duplicate date has been found"))
       ORDER BY

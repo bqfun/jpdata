@@ -12,30 +12,6 @@ locals {
     }
     tweaks = []
     transformation = {
-      fields = [
-        "corporate_number",
-        "name",
-        "kana",
-        "name_en",
-        "postal_code",
-        "location",
-        "status",
-        "close_date",
-        "close_cause",
-        "representative_name",
-        "representative_position",
-        "capital_stock",
-        "employee_number",
-        "company_size_male",
-        "company_size_female",
-        "business_items",
-        "business_summary",
-        "company_url",
-        "date_of_establishment",
-        "founding_year",
-        "update_date",
-        "unified_qualification",
-      ]
       query = <<-EOF
         CREATE OR REPLACE TABLE $${table}(
           corporate_number STRING OPTIONS(description="法人番号"),
@@ -74,32 +50,32 @@ locals {
         )
         AS
         SELECT
-          IF(corporate_number <> "", corporate_number, ERROR('(corporate_number <> "") IS NOT TRUE')) AS corporate_number,
-          NULLIF(name, "") AS name,
-          NULLIF(kana, "") AS kana,
-          NULLIF(name_en, "") AS name_en,
+          IF(`法人番号` <> "", `法人番号`, ERROR('(`法人番号` <> "") IS NOT TRUE')) AS corporate_number,
+          NULLIF(`法人名`, "") AS name,
+          NULLIF(`法人名ふりがな`, "") AS kana,
+          NULLIF(`法人名英語`, "") AS name_en,
           CASE
-            WHEN postal_code = "" THEN NULL
-            WHEN REGEXP_CONTAINS(postal_code, "^[0-9]{7}$") THEN postal_code
-            ELSE ERROR('postal_code IS NULL OR NOT REGEXP_CONTAINS(postal_code, "^[0-9]{7}$")')
+            WHEN `郵便番号` = "" THEN NULL
+            WHEN REGEXP_CONTAINS(`郵便番号`, "^[0-9]{7}$") THEN `郵便番号`
+            ELSE ERROR('`郵便番号` IS NULL OR NOT REGEXP_CONTAINS(`郵便番号`, "^[0-9]{7}$")')
           END AS postal_code,
-          NULLIF(location, "") AS location,
-          NULLIF(status, "") AS status,
-          PARSE_DATE("%Y-%m-%d", NULLIF(close_date, "")) AS close_date,
-          CASE close_cause
+          NULLIF(`本社所在地`, "") AS location,
+          NULLIF(`ステータス`, "") AS status,
+          PARSE_DATE("%Y-%m-%d", NULLIF(`登記記録の閉鎖等年月日`, "")) AS close_date,
+          CASE `登記記録の閉鎖等の事由`
             WHEN "" THEN NULL
             WHEN "01" THEN "清算の結了等"
             WHEN "11" THEN "合併による解散等"
             WHEN "21" THEN "登記官による閉鎖"
             WHEN "31" THEN "その他の清算の結了等"
-            ELSE ERROR('close_cause NOT IN ("", "01", "21", "31")')
+            ELSE ERROR('`` NOT IN ("", "01", "21", "31")')
           END AS close_cause,
-          NULLIF(representative_name, "") AS representative_name,
-          NULLIF(representative_position, "") AS representative_position,
-          CAST(NULLIF(capital_stock, "") AS INT64) AS capital_stock,
-          CAST(NULLIF(employee_number, "") AS INT64) AS employee_number,
-          CAST(NULLIF(company_size_male, "") AS INT64) AS company_size_male,
-          CAST(NULLIF(company_size_female, "") AS INT64) AS company_size_female,
+          NULLIF(`法人代表者名`, "") AS representative_name,
+          NULLIF(`法人代表者役職`, "") AS representative_position,
+          CAST(NULLIF(`資本金`, "") AS INT64) AS capital_stock,
+          CAST(NULLIF(`従業員数`, "") AS INT64) AS employee_number,
+          CAST(NULLIF(`企業規模詳細_男性_`, "") AS INT64) AS company_size_male,
+          CAST(NULLIF(`企業規模詳細_女性_`, "") AS INT64) AS company_size_female,
           ARRAY(
             SELECT AS STRUCT
               business_item_code,
@@ -180,17 +156,17 @@ locals {
                 ELSE ERROR("Unsupported business_item_code: " || business_item_code)
               END AS business_item_name
             FROM
-              UNNEST(SPLIT(NULLIF(business_items, ""), "、")) AS business_item_code WITH OFFSET
+              UNNEST(SPLIT(NULLIF(`営業品目リスト`, ""), "、")) AS business_item_code WITH OFFSET
             ORDER BY
               OFFSET
           ) AS business_items,
-          NULLIF(business_summary, "") AS business_summary,
-          NULLIF(company_url, "") AS company_url,
-          PARSE_DATE("%Y-%m-%d", NULLIF(date_of_establishment, "")) AS date_of_establishment,
-          CAST(NULLIF(founding_year, "") AS INT64) AS founding_year,
-          IF(update_date = "", NULL, IFNULL(SAFE.PARSE_DATE("%Y-%m-%dT00:00:00+09:00", update_date), PARSE_DATE("%Y-%m-%dT00:00:00Z", update_date))) AS update_date,
+          NULLIF(`事業概要`, "") AS business_summary,
+          NULLIF(`企業ホームページ`, "") AS company_url,
+          PARSE_DATE("%Y-%m-%d", NULLIF(`設立年月日`, "")) AS date_of_establishment,
+          CAST(NULLIF(`創業年`, "") AS INT64) AS founding_year,
+          IF(`最終更新日` = "", NULL, IFNULL(SAFE.PARSE_DATE("%Y-%m-%dT00:00:00+09:00", `最終更新日`), PARSE_DATE("%Y-%m-%dT00:00:00Z", `最終更新日`))) AS update_date,
         FROM
-          $${staging}
+          staging
         EOF
     }
   }
@@ -207,20 +183,6 @@ locals {
     }
     tweaks = []
     transformation = {
-      fields = [
-        "corporate_number",
-        "name__corporate_number",
-        "location__corporate_number",
-        "name",
-        "location",
-        "date_of_approval",
-        "title",
-        "target",
-        "category",
-        "enterprise_scale",
-        "expiration_date",
-        "government_departments",
-      ]
       query = <<-EOF
         CREATE OR REPLACE TABLE $${table}(
           corporate_number STRING OPTIONS(description="法人番号"),
@@ -243,24 +205,24 @@ locals {
         )
         AS
         SELECT
-          IF(corporate_number <> "", corporate_number, ERROR('(corporate_number <> "") IS NOT TRUE')) AS corporate_number,
-          IF(name <> "", name, ERROR('(name <> "") IS NOT TRUE')) AS name,
-          NULLIF(location, "") AS location,
-          PARSE_DATE("%Y-%m-%d", NULLIF(date_of_approval, "")) AS date_of_approval,
-          IF(title <> "", title, ERROR('(title <> "") IS NOT TRUE')) AS title,
-          NULLIF(target, "") AS target,
-          NULLIF(category, "") AS category,
-          CASE enterprise_scale
+          IF(`法人番号` <> "", `法人番号`, ERROR('(`法人番号` <> "") IS NOT TRUE')) AS corporate_number,
+          IF(`法人名` <> "", `法人名`, ERROR('(`法人名` <> "") IS NOT TRUE')) AS name,
+          NULLIF(`本社所在地`, "") AS location,
+          PARSE_DATE("%Y-%m-%d", NULLIF(`認定日`, "")) AS date_of_approval,
+          IF(`届出認定等` <> "", `届出認定等`, ERROR('(`届出認定等` <> "") IS NOT TRUE')) AS title,
+          NULLIF(`対象`, "") AS target,
+          NULLIF(`部門`, "") AS category,
+          CASE `企業規模`
             WHEN "" THEN NULL
             WHEN "1" THEN "大企業"
             WHEN "2" THEN "中企業"
             WHEN "3" THEN "その他"
             WHEN "4" THEN "未定義"
           END AS enterprise_scale,
-          PARSE_DATE("%Y-%m-%d", NULLIF(expiration_date, "")) AS expiration_date,
-          IF(government_departments <> "", government_departments, ERROR('(government_departments <> "") IS NOT TRUE')) AS government_departments,
+          PARSE_DATE("%Y-%m-%d", NULLIF(`有効期限`, "")) AS expiration_date,
+          IF(`府省` <> "", `府省`, ERROR('(`府省` <> "") IS NOT TRUE')) AS government_departments,
         FROM
-          $${staging}
+          staging
         EOF
     }
   }
@@ -277,18 +239,6 @@ locals {
     }
     tweaks = []
     transformation = {
-      fields = [
-        "corporate_number",
-        "name__corporate_number",
-        "location__corporate_number",
-        "name",
-        "location",
-        "date_of_commendation",
-        "title",
-        "target",
-        "category",
-        "government_departments",
-      ]
       query = <<-EOF
         CREATE OR REPLACE TABLE $${table}(
           corporate_number STRING OPTIONS(description="法人番号"),
@@ -309,16 +259,16 @@ locals {
         )
         AS
         SELECT
-          IF(corporate_number <> "", corporate_number, ERROR('(corporate_number <> "") IS NOT TRUE')) AS corporate_number,
-          IF(name <> "", name, ERROR('(name <> "") IS NOT TRUE')) AS name,
-          NULLIF(location, "") AS location,
-          PARSE_DATE("%Y-%m-%d", NULLIF(date_of_commendation, "")) AS date_of_commendation,
-          NULLIF(title, "") AS title,
-          NULLIF(target, "") AS target,
-          NULLIF(category, "") AS category,
-          IF(government_departments <> "", government_departments, ERROR('(government_departments <> "") IS NOT TRUE')) AS government_departments,
+          IF(`法人番号` <> "", `法人番号`, ERROR('(`法人番号` <> "") IS NOT TRUE')) AS corporate_number,
+          IF(`法人名` <> "", `法人名`, ERROR('(`法人名` <> "") IS NOT TRUE')) AS name,
+          NULLIF(`本社所在地`, "") AS location,
+          PARSE_DATE("%Y-%m-%d", NULLIF(`年月日`, "")) AS date_of_commendation,
+          NULLIF(`表彰名`, "") AS title,
+          NULLIF(`受賞対象`, "") AS target,
+          NULLIF(`部門`, "") AS category,
+          IF(`府省` <> "", `府省`, ERROR('(`府省` <> "") IS NOT TRUE')) AS government_departments,
         FROM
-          $${staging}
+          staging
         EOF
     }
   }
@@ -335,21 +285,6 @@ locals {
     }
     tweaks = []
     transformation = {
-      fields = [
-        "corporate_number",
-        "name__corporate_number",
-        "location__corporate_number",
-        "name",
-        "location",
-        "date_of_approval",
-        "title",
-        "amount",
-        "target",
-        "government_departments",
-        "note",
-        "joint_signatures",
-        "subsidy_resource",
-      ]
       query = <<-EOF
         CREATE OR REPLACE TABLE $${table}(
           corporate_number STRING OPTIONS(description="法人番号"),
@@ -373,19 +308,19 @@ locals {
         )
         AS
         SELECT
-          IF(corporate_number <> "", corporate_number, ERROR('(corporate_number <> "") IS NOT TRUE')) AS corporate_number,
-          IF(name <> "", name, ERROR('(name <> "") IS NOT TRUE')) AS name,
-          NULLIF(location, "") AS location,
-          PARSE_DATE("%Y-%m-%d", NULLIF(date_of_approval, "")) AS date_of_approval,
-          NULLIF(title, "") AS title,
-          CAST(NULLIF(amount, "") AS INT64) AS amount,
-          NULLIF(target, "") AS target,
-          IF(government_departments <> "", government_departments, ERROR('(government_departments <> "") IS NOT TRUE')) AS government_departments,
-          NULLIF(note, "") AS note,
-          SPLIT(NULLIF(joint_signatures, ""), "、") AS joint_signatures,
-          NULLIF(subsidy_resource, "") AS subsidy_resource,
+          IF(`法人番号` <> "", `法人番号`, ERROR('(`法人番号` <> "") IS NOT TRUE')) AS corporate_number,
+          IF(`法人名` <> "", `法人名`, ERROR('(`法人名` <> "") IS NOT TRUE')) AS name,
+          NULLIF(`本社所在地`, "") AS location,
+          PARSE_DATE("%Y-%m-%d", NULLIF(`認定日`, "")) AS date_of_approval,
+          NULLIF(`補助金等`, "") AS title,
+          CAST(NULLIF(`金額`, "") AS INT64) AS amount,
+          NULLIF(`対象`, "") AS target,
+          IF(`府省` <> "", `府省`, ERROR('(`府省` <> "") IS NOT TRUE')) AS government_departments,
+          NULLIF(`備考`, "") AS note,
+          SPLIT(NULLIF(`連名リスト`, ""), "、") AS joint_signatures,
+          NULLIF(`補助金財源`, "") AS subsidy_resource,
         FROM
-          $${staging}
+          staging
         EOF
     }
   }
@@ -402,18 +337,6 @@ locals {
     }
     tweaks = []
     transformation = {
-      fields = [
-        "corporate_number",
-        "name__corporate_number",
-        "location__corporate_number",
-        "name",
-        "location",
-        "date_of_order",
-        "title",
-        "amount",
-        "government_departments",
-        "joint_signatures",
-      ]
       query = <<-EOF
         CREATE OR REPLACE TABLE $${table}(
           corporate_number STRING OPTIONS(description="法人番号"),
@@ -434,16 +357,16 @@ locals {
         )
         AS
         SELECT
-          IF(corporate_number <> "", corporate_number, ERROR('(corporate_number <> "") IS NOT TRUE')) AS corporate_number,
-          IF(name <> "", name, ERROR('(name <> "") IS NOT TRUE')) AS name,
-          NULLIF(location, "") AS location,
-          PARSE_DATE("%Y-%m-%dT00:00:00+09:00", NULLIF(date_of_order, "")) AS date_of_order,
-          NULLIF(title, "") AS title,
-          CAST(NULLIF(amount, "") AS INT64) AS amount,
-          IF(government_departments <> "", government_departments, ERROR('(government_departments <> "") IS NOT TRUE')) AS government_departments,
-          SPLIT(NULLIF(joint_signatures, ""), "、") AS joint_signatures,
+          IF(`法人番号` <> "", `法人番号`, ERROR('(`法人番号` <> "") IS NOT TRUE')) AS corporate_number,
+          IF(`法人名` <> "", `法人名`, ERROR('(`法人名` <> "") IS NOT TRUE')) AS name,
+          NULLIF(`本社所在地`, "") AS location,
+          PARSE_DATE("%Y-%m-%dT00:00:00+09:00", NULLIF(`受注日`, "")) AS date_of_order,
+          NULLIF(`事業名`, "") AS title,
+          CAST(NULLIF(`金額`, "") AS INT64) AS amount,
+          IF(`府省` <> "", `府省`, ERROR('(`府省` <> "") IS NOT TRUE')) AS government_departments,
+          SPLIT(NULLIF(`連名リスト`, ""), "、") AS joint_signatures,
         FROM
-          $${staging}
+          staging
         EOF
     }
   }
@@ -460,24 +383,6 @@ locals {
     }
     tweaks = []
     transformation = {
-      fields = [
-        "corporate_number",
-        "name__corporate_number",
-        "location__corporate_number",
-        "name",
-        "location",
-        "patent_type",
-        "application_number",
-        "application_date",
-        "patent_classification_fi_code",
-        "patent_classification_fi_name",
-        "patent_classification_f_term_theme_code",
-        "design_classification_code",
-        "design_classification_name",
-        "trademark_classification_code",
-        "trademark_classification_name",
-        "title",
-      ]
       query = <<-EOF
         CREATE OR REPLACE TABLE $${table}(
           corporate_number STRING OPTIONS(description="法人番号"),
@@ -504,22 +409,22 @@ locals {
         )
         AS
         SELECT
-          IF(corporate_number <> "", corporate_number, ERROR('(corporate_number <> "") IS NOT TRUE')) AS corporate_number,
-          IF(name <> "", name, ERROR('(name <> "") IS NOT TRUE')) AS name,
-          IF(location <> "", location, ERROR('(location <> "") IS NOT TRUE')) AS location,
-          IF(patent_type <> "", patent_type, ERROR('(patent_type <> "") IS NOT TRUE')) AS patent_type,
-          IF(application_number <> "", application_number, ERROR('(application_number <> "") IS NOT TRUE')) AS application_number,
-          PARSE_DATE("%Y-%m-%d", application_date) AS application_date,
-          NULLIF(patent_classification_fi_code, "") AS patent_classification_fi_code,
-          NULLIF(patent_classification_fi_name, "") AS patent_classification_fi_name,
-          NULLIF(patent_classification_f_term_theme_code, "") AS patent_classification_f_term_theme_code,
-          NULLIF(design_classification_code, "") AS design_classification_code,
-          NULLIF(design_classification_name, "") AS design_classification_name,
-          NULLIF(trademark_classification_code, "") AS trademark_classification_code,
-          NULLIF(trademark_classification_name, "") AS trademark_classification_name,
-          IF(title <> "", title, ERROR('(title <> "") IS NOT TRUE')) AS title,
+          IF(`法人番号` <> "", `法人番号`, ERROR('(`法人番号` <> "") IS NOT TRUE')) AS corporate_number,
+          IF(`法人名` <> "", `法人名`, ERROR('(`法人名` <> "") IS NOT TRUE')) AS name,
+          IF(`本社所在地` <> "", `本社所在地`, ERROR('(`本社所在地` <> "") IS NOT TRUE')) AS location,
+          IF(`特許_意匠_商標` <> "", `特許_意匠_商標`, ERROR('(`特許_意匠_商標` <> "") IS NOT TRUE')) AS patent_type,
+          IF(`出願番号` <> "", `出願番号`, ERROR('(`出願番号` <> "") IS NOT TRUE')) AS application_number,
+          PARSE_DATE("%Y-%m-%d", `出願年月日`) AS application_date,
+          NULLIF(`特許_FI分類_コード値`, "") AS patent_classification_fi_code,
+          NULLIF(`特許_FI分類_コード値_日本語_`, "") AS patent_classification_fi_name,
+          NULLIF(`特許_Fターム-テーマコード`, "") AS patent_classification_f_term_theme_code,
+          NULLIF(`意匠_意匠新分類_コード値`, "") AS design_classification_code,
+          NULLIF(`意匠_意匠新分類_コード値_日本語_`, "") AS design_classification_name,
+          NULLIF(`商標_類_コード値`, "") AS trademark_classification_code,
+          NULLIF(`商標_類_コード値_日本語_`, "") AS trademark_classification_name,
+          IF(`発明の名称_等__意匠に係る物品_表示用商標` <> "", `発明の名称_等__意匠に係る物品_表示用商標`, ERROR('(`発明の名称_等__意匠に係る物品_表示用商標` <> "") IS NOT TRUE')) AS title,
         FROM
-          $${staging}
+          staging
         EOF
     }
   }
@@ -536,50 +441,6 @@ locals {
     }
     tweaks = []
     transformation = {
-      fields = [
-        "corporate_number",
-        "name__corporate_number",
-        "location__corporate_number",
-        "name",
-        "location",
-        "accounting_standards",
-        "fiscal_year_cover_page",
-        "period",
-        "net_sales_summary_of_business_results",
-        "net_sales_summary_of_business_results_unit_ref",
-        "operating_revenue1_summary_of_business_results",
-        "operating_revenue1_summary_of_business_results_unit_ref",
-        "operating_revenue2_summary_of_business_results",
-        "operating_revenue2_summary_of_business_results_unit_ref",
-        "gross_operating_revenue_summary_of_business_results",
-        "gross_operating_revenue_summary_of_business_results_unit_ref",
-        "ordinary_income_summary_of_business_results",
-        "ordinary_income_summary_of_business_results_unit_ref",
-        "net_premiums_written_summary_of_business_results_ins",
-        "net_premiums_written_summary_of_business_results_ins_unit_ref",
-        "ordinary_income_loss_summary_of_business_results",
-        "ordinary_income_loss_summary_of_business_results_unit_ref",
-        "net_income_loss_summary_of_business_results",
-        "net_income_loss_summary_of_business_results_unit_ref",
-        "capital_stock_summary_of_business_results",
-        "capital_stock_summary_of_business_results_unit_ref",
-        "net_assets_summary_of_business_results",
-        "net_assets_summary_of_business_results_unit_ref",
-        "total_assets_summary_of_business_results",
-        "total_assets_summary_of_business_results_unit_ref",
-        "number_of_employees",
-        "number_of_employees_unit_ref",
-        "name_major_shareholders1",
-        "shareholding_ratio1",
-        "name_major_shareholders2",
-        "shareholding_ratio2",
-        "name_major_shareholders3",
-        "shareholding_ratio3",
-        "name_major_shareholders4",
-        "shareholding_ratio4",
-        "name_major_shareholders5",
-        "shareholding_ratio5",
-      ]
       query = <<-EOF
         CREATE TEMP FUNCTION TO_YEAR(year STRING) AS (
           IF(year = "元", 1, CAST(year AS INT64))
@@ -639,88 +500,88 @@ locals {
         )
         AS
         SELECT
-          IF(corporate_number <> "", corporate_number, ERROR('(corporate_number <> "") IS NOT TRUE')) AS corporate_number,
-          IF(name <> "",  name, ERROR('(name <> "") IS NOT TRUE')) AS name,
-          IF(location <> "",  location, ERROR('(location <> "") IS NOT TRUE')) AS location,
-          NULLIF(accounting_standards, "") AS accounting_standards,
+          IF(`法人番号` <> "", `法人番号`, ERROR('(`法人番号` <> "") IS NOT TRUE')) AS corporate_number,
+          IF(`法人名` <> "", `法人名`, ERROR('(`法人名` <> "") IS NOT TRUE')) AS name,
+          IF(`本社所在地` <> "", `本社所在地`, ERROR('(`本社所在地` <> "") IS NOT TRUE')) AS location,
+          NULLIF(`会計基準`, "") AS accounting_standards,
           CASE
-            WHEN REGEXP_CONTAINS(fiscal_year_cover_page, r"^自.+至.+$") THEN STRUCT(
-              TO_DATE(REGEXP_EXTRACT(fiscal_year_cover_page, r"^自(.+)至.+$")) AS start_date,
-              TO_DATE(REGEXP_EXTRACT(fiscal_year_cover_page, r"^自.+至(.+)$")) AS end_date
+            WHEN REGEXP_CONTAINS(`事業年度`, r"^自.+至.+$") THEN STRUCT(
+              TO_DATE(REGEXP_EXTRACT(`事業年度`, r"^自(.+)至.+$")) AS start_date,
+              TO_DATE(REGEXP_EXTRACT(`事業年度`, r"^自.+至(.+)$")) AS end_date
             )
-            WHEN REGEXP_CONTAINS(fiscal_year_cover_page, r"^.+から.+まで$") THEN STRUCT(
-              TO_DATE(REGEXP_EXTRACT(fiscal_year_cover_page, r"^(.+)から.+まで$")) AS start_date,
-              TO_DATE(REGEXP_EXTRACT(fiscal_year_cover_page, r"^.+から(.+)まで$")) AS end_date
+            WHEN REGEXP_CONTAINS(`事業年度`, r"^.+から.+まで$") THEN STRUCT(
+              TO_DATE(REGEXP_EXTRACT(`事業年度`, r"^(.+)から.+まで$")) AS start_date,
+              TO_DATE(REGEXP_EXTRACT(`事業年度`, r"^.+から(.+)まで$")) AS end_date
             )
-            ELSE ERROR("Unsupported fiscal_year_cover_page: " || IFNULL(fiscal_year_cover_page, "null"))
+            ELSE ERROR("Unsupported `事業年度`: " || IFNULL(`事業年度`, "null"))
           END AS fiscal_year_cover_page,
-          CASE period
+          CASE `回次`
             WHEN "0" THEN 0
             WHEN "1" THEN 1
             WHEN "2" THEN 2
             WHEN "3" THEN 3
             WHEN "4" THEN 4
-            ELSE ERROR("Unsupported period: " || period)
+            ELSE ERROR("Unsupported `回次`: " || `回次`)
           END AS period,
           CASE
-            WHEN net_sales_summary_of_business_results = "" THEN NULL
-            WHEN net_sales_summary_of_business_results_unit_ref = "JPY" THEN CAST(net_sales_summary_of_business_results AS INT64)
-            ELSE ERROR("net_sales_summary_of_business_results")
+            WHEN `売上高` = "" THEN NULL
+            WHEN `売上高_単位_` = "JPY" THEN CAST(`売上高` AS INT64)
+            ELSE ERROR("`売上高`")
           END AS net_sales_summary_of_business_results,
           CASE
-            WHEN operating_revenue1_summary_of_business_results = "" THEN NULL
-            WHEN operating_revenue1_summary_of_business_results_unit_ref = "JPY" THEN CAST(operating_revenue1_summary_of_business_results AS INT64)
-            ELSE ERROR("operating_revenue1_summary_of_business_results")
+            WHEN `営業収益` = "" THEN NULL
+            WHEN `営業収益_単位_` = "JPY" THEN CAST(`営業収益` AS INT64)
+            ELSE ERROR("`営業収益`")
           END AS operating_revenue1_summary_of_business_results,
           CASE
-            WHEN operating_revenue2_summary_of_business_results = "" THEN NULL
-            WHEN operating_revenue2_summary_of_business_results_unit_ref = "JPY" THEN CAST(operating_revenue2_summary_of_business_results AS INT64)
-            ELSE ERROR("operating_revenue2_summary_of_business_results")
+            WHEN `営業収入` = "" THEN NULL
+            WHEN `営業収入_単位_` = "JPY" THEN CAST(`営業収入` AS INT64)
+            ELSE ERROR("`営業収入`")
           END AS operating_revenue2_summary_of_business_results,
           CASE
-            WHEN gross_operating_revenue_summary_of_business_results = "" THEN NULL
-            WHEN gross_operating_revenue_summary_of_business_results_unit_ref = "JPY" THEN CAST(gross_operating_revenue_summary_of_business_results AS INT64)
-            ELSE ERROR("gross_operating_revenue_summary_of_business_results")
+            WHEN `営業総収入` = "" THEN NULL
+            WHEN `営業総収入_単位_` = "JPY" THEN CAST(`営業総収入` AS INT64)
+            ELSE ERROR("`営業総収入`")
           END AS gross_operating_revenue_summary_of_business_results,
           CASE
-            WHEN ordinary_income_summary_of_business_results = "" THEN NULL
-            WHEN ordinary_income_summary_of_business_results_unit_ref = "JPY" THEN CAST(ordinary_income_summary_of_business_results AS INT64)
-            ELSE ERROR("ordinary_income_summary_of_business_results")
+            WHEN `経常収益` = "" THEN NULL
+            WHEN `経常収益_単位_` = "JPY" THEN CAST(`経常収益` AS INT64)
+            ELSE ERROR("`経常収益`")
           END AS ordinary_income_summary_of_business_results,
           CASE
-            WHEN net_premiums_written_summary_of_business_results_ins = "" THEN NULL
-            WHEN net_premiums_written_summary_of_business_results_ins_unit_ref = "JPY" THEN CAST(net_premiums_written_summary_of_business_results_ins AS INT64)
-            ELSE ERROR("net_premiums_written_summary_of_business_results_ins")
+            WHEN `正味収入保険料` = "" THEN NULL
+            WHEN `正味収入保険料_単位_` = "JPY" THEN CAST(`正味収入保険料` AS INT64)
+            ELSE ERROR("`正味収入保険料`")
           END AS net_premiums_written_summary_of_business_results_ins,
           CASE
-            WHEN ordinary_income_loss_summary_of_business_results = "" THEN NULL
-            WHEN ordinary_income_loss_summary_of_business_results_unit_ref = "JPY" THEN CAST(ordinary_income_loss_summary_of_business_results AS INT64)
-            ELSE ERROR("ordinary_income_loss_summary_of_business_results")
+            WHEN `経常利益又は経常損失___` = "" THEN NULL
+            WHEN `経常利益又は経常損失____単位_` = "JPY" THEN CAST(`経常利益又は経常損失___` AS INT64)
+            ELSE ERROR("`経常利益又は経常損失___`")
           END AS ordinary_income_loss_summary_of_business_results,
           CASE
-            WHEN net_income_loss_summary_of_business_results = "" THEN NULL
-            WHEN net_income_loss_summary_of_business_results_unit_ref = "JPY" THEN CAST(net_income_loss_summary_of_business_results AS INT64)
-            ELSE ERROR("net_income_loss_summary_of_business_results")
+            WHEN `当期純利益又は当期純損失___` = "" THEN NULL
+            WHEN `当期純利益又は当期純損失____単位_` = "JPY" THEN CAST(`当期純利益又は当期純損失___` AS INT64)
+            ELSE ERROR("`当期純利益又は当期純損失___`")
           END AS net_income_loss_summary_of_business_results,
           CASE
-            WHEN capital_stock_summary_of_business_results = "" THEN NULL
-            WHEN capital_stock_summary_of_business_results_unit_ref = "JPY" THEN CAST(capital_stock_summary_of_business_results AS INT64)
-            ELSE ERROR("capital_stock_summary_of_business_results")
+            WHEN `資本金` = "" THEN NULL
+            WHEN `資本金_単位_` = "JPY" THEN CAST(`資本金` AS INT64)
+            ELSE ERROR("`資本金`")
           END AS capital_stock_summary_of_business_results,
           CASE
-            WHEN net_assets_summary_of_business_results = "" THEN NULL
-            WHEN net_assets_summary_of_business_results_unit_ref = "JPY" THEN CAST(net_assets_summary_of_business_results AS INT64)
-            ELSE ERROR("net_assets_summary_of_business_results")
+            WHEN `純資産額` = "" THEN NULL
+            WHEN `純資産額_単位_` = "JPY" THEN CAST(`純資産額` AS INT64)
+            ELSE ERROR("`純資産額`")
           END AS net_assets_summary_of_business_results,
           CASE
-            WHEN total_assets_summary_of_business_results = "" THEN NULL
-            WHEN total_assets_summary_of_business_results_unit_ref = "JPY" THEN CAST(total_assets_summary_of_business_results AS INT64)
-            ELSE ERROR("total_assets_summary_of_business_results")
+            WHEN `総資産額` = "" THEN NULL
+            WHEN `総資産額_単位_` = "JPY" THEN CAST(`総資産額` AS INT64)
+            ELSE ERROR("`総資産額`")
           END AS total_assets_summary_of_business_results,
           CASE
-            WHEN number_of_employees = "" THEN NULL
-            WHEN number_of_employees_unit_ref = "pure" THEN CAST(number_of_employees AS INT64)
-            ELSE ERROR("number_of_employees")
+            WHEN `従業員数` = "" THEN NULL
+            WHEN `従業員数_単位_` = "pure" THEN CAST(`従業員数` AS INT64)
+            ELSE ERROR("`従業員数`")
           END AS number_of_employees,
           ARRAY(
             SELECT AS STRUCT
@@ -728,11 +589,11 @@ locals {
               CAST(NULLIF(shareholding_ratio, "") AS NUMERIC) AS shareholding_ratio,
             FROM
               UNNEST(ARRAY<STRUCT<id INT64, name_major_shareholders STRING, shareholding_ratio STRING>>[
-                (1, name_major_shareholders1, shareholding_ratio1),
-                (2, name_major_shareholders2, shareholding_ratio2),
-                (3, name_major_shareholders3, shareholding_ratio3),
-                (4, name_major_shareholders4, shareholding_ratio4),
-                (5, name_major_shareholders5, shareholding_ratio5)
+                (1, `大株主1`, `発行済株式総数に対する所有株式数の割合1`),
+                (2, `大株主2`, `発行済株式総数に対する所有株式数の割合2`),
+                (3, `大株主3`, `発行済株式総数に対する所有株式数の割合3`),
+                (4, `大株主4`, `発行済株式総数に対する所有株式数の割合4`),
+                (5, `大株主5`, `発行済株式総数に対する所有株式数の割合5`)
               ])
             WHERE
               name_major_shareholders <> "" OR shareholding_ratio <> ""
@@ -743,12 +604,12 @@ locals {
           SELECT
             *REPLACE(
               REGEXP_EXTRACT(
-                REGEXP_REPLACE(NORMALIZE(fiscal_year_cover_page, NFKC), r"\p{Space}", ""),
+                REGEXP_REPLACE(NORMALIZE(`事業年度`, NFKC), r"\p{Space}", ""),
                 r"^(?:\d{4}年\d{1,2}月期\(第\d+期\)|\d{4}年\d{1,2}月期|\d{4}年度?|第\d+期\(\d{4}年\d{1,2}月期\)|第\d+期|\(第\d+期\))\((.+)\)$"
-              ) AS fiscal_year_cover_page
+              ) AS `事業年度`
             )
           FROM
-            $${staging}
+            staging
         )
         EOF
     }
@@ -766,29 +627,6 @@ locals {
     }
     tweaks = []
     transformation = {
-      fields = [
-        "corporate_number",
-        "name__corporate_number",
-        "location__corporate_number",
-        "name",
-        "location",
-        "average_continuous_service_years_type",
-        "average_continuous_service_years_male",
-        "average_continuous_service_years_female",
-        "average_continuous_service_years",
-        "average_age",
-        "month_average_predetermined_overtime_hours",
-        "female_workers_proportion_type",
-        "female_workers_proportion",
-        "female_share_of_manager",
-        "gender_total_of_manager",
-        "female_share_of_officers",
-        "gender_total_of_officers",
-        "number_of_paternity_leave",
-        "number_of_maternity_leave",
-        "paternity_leave_acquisition_num",
-        "maternity_leave_acquisition_num",
-      ]
       query = <<-EOF
         CREATE OR REPLACE TABLE $${table}(
           corporate_number STRING OPTIONS(description="法人番号"),
@@ -820,27 +658,27 @@ locals {
         )
         AS
         SELECT
-          IF(corporate_number <> "", corporate_number, ERROR('(corporate_number <> "") IS NOT TRUE')) AS corporate_number,
-          IF(name <> "",  name, ERROR('(name <> "") IS NOT TRUE')) AS name,
-          NULLIF(location, "") AS location,
-          NULLIF(average_continuous_service_years_type, "") AS average_continuous_service_years_type,
-          CAST(NULLIF(average_continuous_service_years_male, "") AS NUMERIC) AS average_continuous_service_years_male,
-          CAST(NULLIF(average_continuous_service_years_female, "") AS NUMERIC) AS average_continuous_service_years_female,
-          CAST(NULLIF(average_continuous_service_years, "") AS NUMERIC) AS average_continuous_service_years,
-          CAST(NULLIF(average_age, "") AS NUMERIC) AS average_age,
-          CAST(NULLIF(month_average_predetermined_overtime_hours, "") AS NUMERIC) AS month_average_predetermined_overtime_hours,
-          NULLIF(female_workers_proportion_type, "") AS female_workers_proportion_type,
-          CAST(NULLIF(female_workers_proportion, "") AS NUMERIC) AS female_workers_proportion,
-          CAST(NULLIF(female_share_of_manager, "") AS INT64) AS female_share_of_manager,
-          CAST(NULLIF(gender_total_of_manager, "") AS INT64) AS gender_total_of_manager,
-          CAST(NULLIF(female_share_of_officers, "") AS INT64) AS female_share_of_officers,
-          CAST(NULLIF(gender_total_of_officers, "") AS INT64) AS gender_total_of_officers,
-          CAST(NULLIF(number_of_paternity_leave, "") AS INT64) AS number_of_paternity_leave,
-          CAST(NULLIF(number_of_maternity_leave, "") AS INT64) AS number_of_maternity_leave,
-          CAST(NULLIF(paternity_leave_acquisition_num, "") AS INT64) AS paternity_leave_acquisition_num,
-          CAST(NULLIF(maternity_leave_acquisition_num, "") AS INT64) AS maternity_leave_acquisition_num,
+          IF(`法人番号` <> "", `法人番号`, ERROR('(`法人番号` <> "") IS NOT TRUE')) AS corporate_number,
+          IF(`法人名` <> "",  `法人名`, ERROR('(`法人名` <> "") IS NOT TRUE')) AS name,
+          NULLIF(`本社所在地`, "") AS location,
+          NULLIF(`平均継続勤務年数-範囲`, "") AS average_continuous_service_years_type,
+          CAST(NULLIF(`平均継続勤務年数-男性`, "") AS NUMERIC) AS average_continuous_service_years_male,
+          CAST(NULLIF(`平均継続勤務年数-女性`, "") AS NUMERIC) AS average_continuous_service_years_female,
+          CAST(NULLIF(`正社員の平均継続勤務年数`, "") AS NUMERIC) AS average_continuous_service_years,
+          CAST(NULLIF(`従業員の平均年齢`, "") AS NUMERIC) AS average_age,
+          CAST(NULLIF(`月平均所定外労働時間`, "") AS NUMERIC) AS month_average_predetermined_overtime_hours,
+          NULLIF(`労働者に占める女性労働者の割合-範囲`, "") AS female_workers_proportion_type,
+          CAST(NULLIF(`労働者に占める女性労働者の割合`, "") AS NUMERIC) AS female_workers_proportion,
+          CAST(NULLIF(`女性管理職人数`, "") AS INT64) AS female_share_of_manager,
+          CAST(NULLIF(`管理職全体人数_男女計_`, "") AS INT64) AS gender_total_of_manager,
+          CAST(NULLIF(`女性役員人数`, "") AS INT64) AS female_share_of_officers,
+          CAST(NULLIF(`役員全体人数_男女計_`, "") AS INT64) AS gender_total_of_officers,
+          CAST(NULLIF(`育児休業対象者数_男性_`, "") AS INT64) AS number_of_paternity_leave,
+          CAST(NULLIF(`育児休業対象者数_女性_`, "") AS INT64) AS number_of_maternity_leave,
+          CAST(NULLIF(`育児休業取得者数_男性_`, "") AS INT64) AS paternity_leave_acquisition_num,
+          CAST(NULLIF(`育児休業取得者数_女性_`, "") AS INT64) AS maternity_leave_acquisition_num,
         FROM
-          $${staging}
+          staging
         EOF
     }
   }

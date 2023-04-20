@@ -112,8 +112,6 @@ resource "google_workflows_workflow" "main" {
                     loading:
                       bucket: ${google_storage_bucket.main.name}
                       object: ${c.name}
-                  fields:%{for k in c.transformation.fields}
-                    - ${k}%{endfor}
                   query: |-
                     ${indent(18, c.transformation.query)}
                 %{endfor}
@@ -123,7 +121,6 @@ resource "google_workflows_workflow" "main" {
                     args:
                       body: $${job_args.body}
                       query: $${job_args.query}
-                      fields: $${job_args.fields}
                     result: isSkipped
                 - mergeResponse:
                     assign:
@@ -139,7 +136,7 @@ resource "google_workflows_workflow" "main" {
             body:
               requestedRunTime: $${time.format(sys.now() + 30)}
   extractTweakLoadTransform:
-    params: [body, query, fields]
+    params: [body, query]
     steps:
       - extractTweakLoadStep:
           call: http.post
@@ -155,30 +152,29 @@ resource "google_workflows_workflow" "main" {
               return: true
       - assignStep:
           assign:
-            - queryPrefix: |
-                LOAD DATA INTO $${staging} (
-            - queryInfix: |
-                )
-                  OPTIONS (
-                    expiration_timestamp=CURRENT_TIMESTAMP() + INTERVAL 6 HOUR
-                  )
-                  FROM FILES(
-                    allow_quoted_newlines = TRUE,
-                    format = "CSV",
-                    skip_leading_rows = 1,
-                    uris = ['gs://$${object}']
-                  );
-                ASSERT 1 <= (SELECT COUNT(*) FROM $${staging}) AS "empty table";
-            - queryInfix: '$${ text.replace_all(queryInfix, "$${object}", body.loading.bucket + "/" + body.loading.object) }'
+            - query0: |
+                CREATE TEMP TABLE staging
+                AS
+                SELECT
+            - query1: |
+                FROM
+                  landing;
+                ASSERT 1 <= (SELECT COUNT(*) FROM staging) AS "empty table";
             - query: '$${ text.replace_all(query, "$${table}", "`" + body.loading.object + "`") }'
+            - fields: []
       - loopStep:
           for:
             value: v
-            in: $${fields}
+            range: $${[0, len(resp.body.names) - 1]}
             steps:
               - getStep:
                   assign:
-                    - queryPrefix: $${queryPrefix + "  " + v + " STRING,\n"}
+                    - name: $${"f" + v}
+                    - query0: $${query0 + "  " + name + " AS `" + text.replace_all_regex(resp.body.names[v], "[^\\p{L}\\p{N}\\p{Pc}\\p{Pd}\\p{M}&%=+:'<>#|]", "_") + "`,\n"}
+                    - field:
+                        name: $${name}
+                        type: STRING
+                    - fields: $${list.concat(fields, field)}
       - transformStep:
           call: googleapis.bigquery.v2.jobs.insert
           args:
@@ -189,7 +185,17 @@ resource "google_workflows_workflow" "main" {
                   defaultDataset:
                     datasetId: US__${var.name}
                     projectId: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
-                  query: '$${ text.replace_all(queryPrefix + queryInfix + query, "$${staging}", "staging.`" + text.replace_all(string(sys.now()), ".", "_") + "`") }'
+                  query: '$${ query0 + query1 + query }'
+                  tableDefinitions:
+                    landing:
+                      csvOptions:
+                        allowQuotedNewlines: true
+                        skipLeadingRows: 1
+                      schema:
+                        fields: $${fields}
+                      sourceFormat: CSV
+                      sourceUris:
+                        - $${ "gs://" + body.loading.bucket + "/" + body.loading.object }
                   useLegacySql: false
   EOT
 }
