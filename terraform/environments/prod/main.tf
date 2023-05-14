@@ -145,6 +145,10 @@ module "base_registry_address" {
   source = "../../modules/base_registry_address"
 }
 
+module "tweakle" {
+  source = "../../modules/tweakle"
+}
+
 resource "google_project_iam_member" "health_dashboard" {
   project = var.google.project
   role    = "roles/bigquery.metadataViewer"
