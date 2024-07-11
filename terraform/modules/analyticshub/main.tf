@@ -87,15 +87,6 @@ EOF
   }
 }
 
-resource "google_bigquery_analytics_hub_listing_iam_member" "corporate_number" {
-  project          = google_bigquery_analytics_hub_listing.corporate_number.project
-  location         = google_bigquery_analytics_hub_listing.corporate_number.location
-  data_exchange_id = google_bigquery_analytics_hub_listing.corporate_number.data_exchange_id
-  listing_id       = google_bigquery_analytics_hub_listing.corporate_number.listing_id
-  role             = "roles/analyticshub.subscriber"
-  member           = "allAuthenticatedUsers"
-}
-
 locals {
   gbizinfo = <<-EOF
   # 日本の法人情報 gBizINFO preprocessed by BQ FUN
@@ -132,15 +123,6 @@ resource "google_bigquery_analytics_hub_listing" "gbizinfo" {
   }
 }
 
-resource "google_bigquery_analytics_hub_listing_iam_member" "gbizinfo" {
-  project          = google_bigquery_analytics_hub_listing.gbizinfo.project
-  location         = google_bigquery_analytics_hub_listing.gbizinfo.location
-  data_exchange_id = google_bigquery_analytics_hub_listing.gbizinfo.data_exchange_id
-  listing_id       = google_bigquery_analytics_hub_listing.gbizinfo.listing_id
-  role             = "roles/analyticshub.subscriber"
-  member           = "allAuthenticatedUsers"
-}
-
 resource "google_bigquery_analytics_hub_listing" "gbizinfo_us" {
   project          = google_bigquery_analytics_hub_data_exchange.jpdata_us.project
   location         = google_bigquery_analytics_hub_data_exchange.jpdata_us.location
@@ -157,15 +139,6 @@ resource "google_bigquery_analytics_hub_listing" "gbizinfo_us" {
   lifecycle {
     prevent_destroy = true
   }
-}
-
-resource "google_bigquery_analytics_hub_listing_iam_member" "gbizinfo_us" {
-  project          = google_bigquery_analytics_hub_listing.gbizinfo_us.project
-  location         = google_bigquery_analytics_hub_listing.gbizinfo_us.location
-  data_exchange_id = google_bigquery_analytics_hub_listing.gbizinfo_us.data_exchange_id
-  listing_id       = google_bigquery_analytics_hub_listing.gbizinfo_us.listing_id
-  role             = "roles/analyticshub.subscriber"
-  member           = "allAuthenticatedUsers"
 }
 
 locals {
@@ -204,15 +177,6 @@ resource "google_bigquery_analytics_hub_listing" "jp_holidays" {
   }
 }
 
-resource "google_bigquery_analytics_hub_listing_iam_member" "jp_holidays" {
-  project          = google_bigquery_analytics_hub_listing.jp_holidays.project
-  location         = google_bigquery_analytics_hub_listing.jp_holidays.location
-  data_exchange_id = google_bigquery_analytics_hub_listing.jp_holidays.data_exchange_id
-  listing_id       = google_bigquery_analytics_hub_listing.jp_holidays.listing_id
-  role             = "roles/analyticshub.subscriber"
-  member           = "allAuthenticatedUsers"
-}
-
 resource "google_bigquery_analytics_hub_listing" "jp_holidays_us" {
   project          = google_bigquery_analytics_hub_data_exchange.jpdata_us.project
   location         = google_bigquery_analytics_hub_data_exchange.jpdata_us.location
@@ -229,15 +193,6 @@ resource "google_bigquery_analytics_hub_listing" "jp_holidays_us" {
   lifecycle {
     prevent_destroy = true
   }
-}
-
-resource "google_bigquery_analytics_hub_listing_iam_member" "jp_holidays_us" {
-  project          = google_bigquery_analytics_hub_listing.jp_holidays_us.project
-  location         = google_bigquery_analytics_hub_listing.jp_holidays_us.location
-  data_exchange_id = google_bigquery_analytics_hub_listing.jp_holidays_us.data_exchange_id
-  listing_id       = google_bigquery_analytics_hub_listing.jp_holidays_us.listing_id
-  role             = "roles/analyticshub.subscriber"
-  member           = "allAuthenticatedUsers"
 }
 
 locals {
@@ -276,15 +231,6 @@ resource "google_bigquery_analytics_hub_listing" "base_registry_address" {
   }
 }
 
-resource "google_bigquery_analytics_hub_listing_iam_member" "base_registry_address" {
-  project          = google_bigquery_analytics_hub_listing.base_registry_address.project
-  location         = google_bigquery_analytics_hub_listing.base_registry_address.location
-  data_exchange_id = google_bigquery_analytics_hub_listing.base_registry_address.data_exchange_id
-  listing_id       = google_bigquery_analytics_hub_listing.base_registry_address.listing_id
-  role             = "roles/analyticshub.subscriber"
-  member           = "allAuthenticatedUsers"
-}
-
 resource "google_bigquery_analytics_hub_listing" "base_registry_address_us" {
   project          = google_bigquery_analytics_hub_data_exchange.jpdata_us.project
   location         = google_bigquery_analytics_hub_data_exchange.jpdata_us.location
@@ -301,13 +247,4 @@ resource "google_bigquery_analytics_hub_listing" "base_registry_address_us" {
   lifecycle {
     prevent_destroy = true
   }
-}
-
-resource "google_bigquery_analytics_hub_listing_iam_member" "base_registry_address_us" {
-  project          = google_bigquery_analytics_hub_listing.base_registry_address_us.project
-  location         = google_bigquery_analytics_hub_listing.base_registry_address_us.location
-  data_exchange_id = google_bigquery_analytics_hub_listing.base_registry_address_us.data_exchange_id
-  listing_id       = google_bigquery_analytics_hub_listing.base_registry_address_us.listing_id
-  role             = "roles/analyticshub.subscriber"
-  member           = "allAuthenticatedUsers"
 }
