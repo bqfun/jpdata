@@ -5,6 +5,7 @@ steps:
   - name: 'hashicorp/terraform:1.3.4'
     args: ['plan']
     dir: 'terraform/environments/prod'
+    secretEnv: ['TF_VAR_cloud_storage_service_account']
   - name: 'hashicorp/terraform:1.3.4'
     entrypoint: 'sh'
     args:
