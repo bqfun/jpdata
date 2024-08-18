@@ -21,7 +21,7 @@ resource "google_project_iam_member" "main" {
 }
 
 resource "google_service_account" "podb" {
-  account_id = "podb"
+  account_id = "scheduled-query-podb"
 }
 
 resource "google_storage_bucket_iam_member" "podb" {
