@@ -62,7 +62,7 @@ resource "google_secret_manager_secret" "houjinbangou_webapi_id" {
   secret_id = "houjinbangou-webapi-id"
 
   replication {
-    automatic = true
+    auto {}
   }
   lifecycle {
     prevent_destroy = true
