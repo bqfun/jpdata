@@ -47,6 +47,8 @@ resource "google_bigquery_data_transfer_config" "main" {
   params = {
     query = <<-EOT
     DECLARE paths ARRAY<STRING> DEFAULT [
+      "PODB_JAPANESE_CALENDAR_DATA/J_PODB/J_JAPAN_CALENDAR",
+
       "PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_FD20",
       "PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_HT15",
       "PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_HT20",
