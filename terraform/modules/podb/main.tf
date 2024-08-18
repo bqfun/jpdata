@@ -16,12 +16,12 @@ data "google_project" "main" {
 
 resource "google_project_iam_member" "main" {
   project = data.google_project.main.project_id
-  role   = "roles/iam.serviceAccountTokenCreator"
-  member = "serviceAccount:service-${data.google_project.main.number}@gcp-sa-bigquerydatatransfer.iam.gserviceaccount.com"
+  role    = "roles/iam.serviceAccountTokenCreator"
+  member  = "serviceAccount:service-${data.google_project.main.number}@gcp-sa-bigquerydatatransfer.iam.gserviceaccount.com"
 }
 
 resource "google_service_account" "podb" {
-  account_id   = "podb"
+  account_id = "podb"
 }
 
 resource "google_storage_bucket_iam_member" "podb" {
@@ -32,8 +32,8 @@ resource "google_storage_bucket_iam_member" "podb" {
 
 resource "google_project_iam_member" "main" {
   project = data.google_project.main.project_id
-  role   = "roles/bigquery.admin"
-  member = "serviceAccount:${google_service_account.podb.email}"
+  role    = "roles/bigquery.admin"
+  member  = "serviceAccount:${google_service_account.podb.email}"
 }
 
 resource "google_bigquery_data_transfer_config" "main" {
