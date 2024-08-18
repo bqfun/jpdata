@@ -4,7 +4,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./terraform/environments/prod
+        working-directory: terraform/environments/prod
     permissions:
       id-token: write
     steps:
