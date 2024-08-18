@@ -6,24 +6,26 @@ resource "google_service_account" "terraform_plan" {
   account_id = "github-actions-terraform-plan"
 }
 
-resource "google_service_account" "terraform_apply" {
-  account_id = "github-actions-terraform-apply"
-}
-
 resource "google_project_iam_member" "terraform_plan" {
   project = google_service_account.terraform_plan.project
   role    = "roles/viewer"
   member  = "serviceAccount:${google_service_account.terraform_plan.email}"
 }
 
-resource "google_storage_bucket_iam_member" "tfstate" {
-  for_each = toset([
-    google_service_account.terraform_plan.email,
-    google_service_account.terraform_apply.email,
-  ])
+resource "google_storage_bucket_iam_member" "terraform_plan" {
   bucket = "jpdata-tfstate"
   role   = "roles/storage.admin"
-  member = "serviceAccount:${each.key}"
+  member = "serviceAccount:${google_service_account.terraform_plan.email}"
+}
+
+resource "google_service_account" "terraform_apply" {
+  account_id = "github-actions-terraform-apply"
+}
+
+resource "google_storage_bucket_iam_member" "terraform_apply" {
+  bucket = "jpdata-tfstate"
+  role   = "roles/storage.admin"
+  member = "serviceAccount:${google_service_account.terraform_apply.email}"
 }
 
 resource "google_project_iam_member" "terraform_apply" {
@@ -52,12 +54,14 @@ resource "google_iam_workload_identity_pool_provider" "main" {
   }
 }
 
-resource "google_service_account_iam_member" "main" {
-  for_each = toset([
-    google_service_account.terraform_plan.id,
-    google_service_account.terraform_apply.id
-  ])
-  service_account_id = each.key
+resource "google_service_account_iam_member" "terraform_plan" {
+  service_account_id = google_service_account.terraform_plan.id
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.main.name}/attribute.repository/bqfun/jpdata"
+}
+
+resource "google_service_account_iam_member" "terraform_apply" {
+  service_account_id = google_service_account.terraform_apply.id
   role               = "roles/iam.workloadIdentityUser"
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.main.name}/attribute.repository/bqfun/jpdata"
 }
