@@ -3,6 +3,9 @@ resource "google_storage_bucket" "main" {
   location = "us-central1"
 
   uniform_bucket_level_access = true
+  soft_delete_policy {
+    retention_duration_seconds = 0
+  }
 }
 
 resource "google_storage_bucket_iam_member" "main" {

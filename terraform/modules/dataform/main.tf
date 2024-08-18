@@ -110,7 +110,7 @@ resource "google_secret_manager_secret" "github_personal_access_token" {
   secret_id = "github-personal-access-token"
 
   replication {
-    automatic = true
+    auto {}
   }
   lifecycle {
     prevent_destroy = true
