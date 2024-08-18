@@ -21,9 +21,9 @@ resource "google_storage_bucket_iam_member" "tfstate" {
     google_service_account.terraform_plan.email,
     google_service_account.terraform_apply.email,
   ])
-  bucket   = "jpdata-tfstate"
-  role     = "roles/storage.admin"
-  member   = "serviceAccount:${each.key}"
+  bucket = "jpdata-tfstate"
+  role   = "roles/storage.admin"
+  member = "serviceAccount:${each.key}"
 }
 
 resource "google_project_iam_member" "terraform_apply" {
