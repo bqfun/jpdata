@@ -161,15 +161,36 @@ resource "google_bigquery_data_transfer_config" "main" {
     DECLARE l INT64 DEFAULT ARRAY_LENGTH(paths);
     DECLARE i INT64 DEFAULT 0;
     DECLARE dataset_id STRING;
+    DECLARE description STRING;
 
     WHILE i < l DO
       SET dataset_id = SPLIT(paths[i], "/")[0] || "__US";
       EXECUTE IMMEDIATE
         "CREATE SCHEMA IF NOT EXISTS " || dataset_id;
       EXECUTE IMMEDIATE
+        "LOAD DATA OVERWRITE TEMP TABLE information_schema_copy FROM FILES (format = 'PARQUET', uris = ['gs://podb/INFORMATION_SCHEMA/"
+          || SPLIT(paths[i], "/")[0] || "/J_PODB/*.snappy.parquet'])";
+
+      EXECUTE IMMEDIATE
+        "SELECT COMMENT FROM information_schema_copy"
+          || " WHERE TABLE_CATALOG = '"
+          || SPLIT(paths[i], "/")[0]
+          || "' AND TABLE_SCHEMA = '"
+          || SPLIT(paths[i], "/")[1]
+          || "' AND TABLE_NAME = '"
+          || SPLIT(paths[i], "/")[2]
+          || "'" INTO description;
+
+      EXECUTE IMMEDIATE
+        "ALTER TABLE IF EXISTS " || dataset_id || "." || SPLIT(paths[i], "/")[2]
+        || " SET OPTIONS(description = '''" || description || "''')";
+
+      EXECUTE IMMEDIATE
         "LOAD DATA OVERWRITE "
           || dataset_id || "." || SPLIT(paths[i], "/")[2]
-          || " FROM FILES (format = 'PARQUET', column_name_character_map = 'V2', uris = ['gs://podb/" || paths[i] || "/*.snappy.parquet'])";
+          || " OPTIONS(description='''"
+          || description
+          || "''') FROM FILES (format = 'PARQUET', column_name_character_map = 'V2', uris = ['gs://podb/" || paths[i] || "/*.snappy.parquet'])";
       SET i = i + 1;
     END WHILE;
     EOT
