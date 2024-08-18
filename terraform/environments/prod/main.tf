@@ -156,6 +156,6 @@ resource "google_project_iam_member" "health_dashboard" {
 }
 
 module "podb" {
-  source = "../../modules/podb"
+  source                        = "../../modules/podb"
   cloud_storage_service_account = var.cloud_storage_service_account
 }
