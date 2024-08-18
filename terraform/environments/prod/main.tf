@@ -154,3 +154,8 @@ resource "google_project_iam_member" "health_dashboard" {
   role    = "roles/bigquery.metadataViewer"
   member  = "user:na0@bqfun.jp"
 }
+
+module "podb" {
+  source = "../../modules/podb"
+  cloud_storage_service_account = var.cloud_storage_service_account
+}

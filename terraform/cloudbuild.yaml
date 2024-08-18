@@ -16,5 +16,10 @@ steps:
           echo "SKIPPING APPLYING"
         fi
     dir: 'terraform/environments/prod'
+    secretEnv: ['TF_VAR_cloud_storage_service_account']
 options:
   logging: CLOUD_LOGGING_ONLY
+availableSecrets:
+  secretManager:
+    - versionName: projects/$PROJECT_ID/secrets/snowflake-podb-bqfun-cloud-storage-service-account/versions/latest
+      env: 'TF_VAR_cloud_storage_service_account'
