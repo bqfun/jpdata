@@ -2,6 +2,7 @@ resource "google_storage_bucket" "main" {
   name     = "podb"
   location = "us-central1"
 
+  public_access_prevention    = "enforced"
   uniform_bucket_level_access = true
   soft_delete_policy {
     retention_duration_seconds = 0
