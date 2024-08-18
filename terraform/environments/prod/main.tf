@@ -159,3 +159,7 @@ module "podb" {
   source                        = "../../modules/podb"
   cloud_storage_service_account = var.cloud_storage_service_account
 }
+
+module "workload_identity_pool" {
+  source = "../../modules/workload_identity_pool"
+}
