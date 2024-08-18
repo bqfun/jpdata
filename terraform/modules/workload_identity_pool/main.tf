@@ -10,7 +10,7 @@ resource "google_service_account" "terraform_apply" {
   account_id = "github-actions-terraform-apply"
 }
 
-resource "google_project_iam_member" "main" {
+resource "google_project_iam_member" "terraform_plan" {
   project = google_service_account.terraform_plan.project
   role    = "roles/viewer"
   member  = "serviceAccount:${google_service_account.terraform_plan.email}"
@@ -26,7 +26,7 @@ resource "google_storage_bucket_iam_member" "tfstate" {
   member   = "serviceAccount:${each.key}"
 }
 
-resource "google_project_iam_member" "main" {
+resource "google_project_iam_member" "terraform_apply" {
   project = google_service_account.terraform_apply.project
   role    = "roles/owner"
   member  = "serviceAccount:${google_service_account.terraform_apply.email}"
