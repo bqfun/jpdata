@@ -30,7 +30,7 @@ resource "google_storage_bucket_iam_member" "podb" {
   member = "serviceAccount:${google_service_account.podb.email}"
 }
 
-resource "google_project_iam_member" "main" {
+resource "google_project_iam_member" "podb" {
   project = data.google_project.main.project_id
   role    = "roles/bigquery.admin"
   member  = "serviceAccount:${google_service_account.podb.email}"
