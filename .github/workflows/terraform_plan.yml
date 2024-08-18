@@ -1,0 +1,17 @@
+on: [pull_request]
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./terraform/environments/prod
+    permissions:
+      id-token: write
+    steps:
+      - uses: google-github-actions/auth@v0
+        with:
+          workload_identity_provider: 'projects/120299025068/locations/global/workloadIdentityPools/github-actions/providers/main'
+          service_account: 'github-actions-terraform-plan@jpdata.iam.gserviceaccount.com'
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform init
+      - run: terraform plan -no-color
