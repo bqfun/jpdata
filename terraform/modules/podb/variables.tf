@@ -1,3 +1,1 @@
-variable "cloud_storage_service_account" {
-  sensitive   = true
-}
+variable "cloud_storage_service_account" {}
