@@ -15,7 +15,7 @@ jobs:
       - uses: 'google-github-actions/auth@v2'
         with:
           workload_identity_provider: 'projects/120299025068/locations/global/workloadIdentityPools/github-actions-terraform-plan/providers/plan'
-          service_account: 'github-actions-terraform-plan@jpdata.iam.gserviceaccount.com'
+          service_account: 'github-actions-terraform-apply@jpdata.iam.gserviceaccount.com'
 
       - name: Terraform Init
         id: init
