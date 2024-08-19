@@ -1,0 +1,25 @@
+on:
+  push:
+    branches:
+      - main
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform/environments/prod
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+
+      - uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: 'projects/120299025068/locations/global/workloadIdentityPools/github-actions-terraform-apply/providers/apply'
+          service_account: 'github-actions-terraform-apply@jpdata.iam.gserviceaccount.com'
+
+      - run: terraform init
+      - run: terraform apply -no-color --auto-approve
+        env:
+          TF_VAR_cloud_storage_service_account: ${{ secrets.TF_VAR_CLOUD_STORAGE_SERVICE_ACCOUNT }}
