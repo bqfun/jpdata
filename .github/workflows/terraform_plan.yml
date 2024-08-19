@@ -17,3 +17,6 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
       - run: terraform init
       - run: TF_LOG=DEBUG terraform plan
+        env:
+          TF_VAR_cloud_storage_service_account: ${{ secrets.TF_VAR_CLOUD_STORAGE_SERVICE_ACCOUNT }}
+
