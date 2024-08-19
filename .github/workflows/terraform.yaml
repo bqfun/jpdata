@@ -12,23 +12,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
 
-      - name: Terraform fmt
-        id: fmt
-        run: terraform fmt -check
-        continue-on-error: true
-      
       - uses: 'google-github-actions/auth@v2'
         with:
-          workload_identity_provider: 'projects/120299025068/locations/global/workloadIdentityPools/github-actions/providers/main'
+          workload_identity_provider: 'projects/120299025068/locations/global/workloadIdentityPools/github-actions-terraform-plan/providers/plan'
           service_account: 'github-actions-terraform-plan@jpdata.iam.gserviceaccount.com'
 
       - name: Terraform Init
         id: init
         run: terraform init
-
-      - name: Terraform Validate
-        id: validate
-        run: terraform validate -no-color
 
       - name: Terraform Plan
         id: plan
@@ -51,22 +42,11 @@ jobs:
               issue_number: context.issue.number,
             })
             const botComment = comments.find(comment => {
-              return comment.user.type === 'Bot' && comment.body.includes('Terraform Format and Style')
+              return comment.user.type === 'Bot' && comment.body.includes('Terraform Plan 📖')
             })
       
             // 2. Prepare format of the comment
-            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-            <details><summary>Validation Output</summary>
-      
-            \`\`\`\n
-            ${{ steps.validate.outputs.stdout }}
-            \`\`\`
-      
-            </details>
-      
-            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+            const output = `#### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
       
             <details><summary>Show Plan</summary>
       
