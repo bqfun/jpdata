@@ -40,17 +40,8 @@ resource "google_project_iam_member" "podb" {
   member  = "serviceAccount:${google_service_account.podb.email}"
 }
 
-resource "google_bigquery_data_transfer_config" "main" {
-  depends_on = [google_project_iam_member.main]
-
-  display_name         = "podb"
-  location             = "US"
-  data_source_id       = "scheduled_query"
-  schedule             = "every day 15:00"
-  service_account_name = google_service_account.podb.email
-  params = {
-    query = <<-EOT
-    DECLARE paths ARRAY<STRING> DEFAULT [
+locals {
+  paths = [
       "PODB_JAPANESE_CALENDAR_DATA/J_PODB/J_JAPAN_CALENDAR",
 
       "PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_FD20",
@@ -157,6 +148,22 @@ resource "google_bigquery_data_transfer_config" "main" {
       "PODB_JAPANESE_WEATHER_DATA/J_PODB/J_WT_MD",
       "PODB_JAPANESE_WEATHER_DATA/J_PODB/J_WT_MM",
       "PODB_JAPANESE_WEATHER_DATA/J_PODB/J_WT_N1W"
+  ]
+  datasets = distinct([for s in local.paths : regex("^([^/]+)", s)])
+}
+
+resource "google_bigquery_data_transfer_config" "main" {
+  depends_on = [google_project_iam_member.main]
+
+  display_name         = "podb"
+  location             = "US"
+  data_source_id       = "scheduled_query"
+  schedule             = "every day 15:00"
+  service_account_name = google_service_account.podb.email
+  params = {
+    query = <<-EOT
+    DECLARE paths ARRAY<STRING> DEFAULT [
+      ${join("\n", formatlist("\"%s\"", local.paths))}
     ];
     DECLARE l INT64 DEFAULT ARRAY_LENGTH(paths);
     DECLARE i INT64 DEFAULT 0;
