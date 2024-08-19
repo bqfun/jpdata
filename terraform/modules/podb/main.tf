@@ -163,7 +163,7 @@ resource "google_bigquery_data_transfer_config" "main" {
   params = {
     query = <<-EOT
     DECLARE paths ARRAY<STRING> DEFAULT [
-    ${join("\n,", formatlist("  \"%s\"", local.paths))}
+    ${join(",\n", formatlist("  \"%s\"", local.paths))}
     ];
     DECLARE l INT64 DEFAULT ARRAY_LENGTH(paths);
     DECLARE i INT64 DEFAULT 0;
