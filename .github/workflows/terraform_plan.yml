@@ -16,4 +16,4 @@ jobs:
           service_account: 'github-actions-terraform-plan@jpdata.iam.gserviceaccount.com'
       - uses: hashicorp/setup-terraform@v3
       - run: terraform init
-      - run: terraform plan -no-color
+      - run: TF_LOG=DEBUG terraform plan
