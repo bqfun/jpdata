@@ -17,10 +17,6 @@ jobs:
         run: terraform fmt -check
         continue-on-error: true
       
-      - name: Terraform Validate
-        id: validate
-        run: terraform validate -no-color
-      
       - uses: 'google-github-actions/auth@v2'
         with:
           workload_identity_provider: 'projects/120299025068/locations/global/workloadIdentityPools/github-actions/providers/main'
@@ -29,7 +25,11 @@ jobs:
       - name: Terraform Init
         id: init
         run: terraform init
-      
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
       - name: Terraform Plan
         id: plan
         run: terraform plan -no-color
