@@ -42,118 +42,6 @@ resource "google_project_iam_member" "podb" {
   member  = "serviceAccount:${google_service_account.podb.email}"
 }
 
-locals {
-  paths = [
-      "PODB_JAPANESE_CALENDAR_DATA/J_PODB/J_JAPAN_CALENDAR",
-
-      "PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_FD20",
-      "PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_HT15",
-      "PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_HT20",
-      "PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_PA15",
-      "PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_PA20",
-      "PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_PI15",
-      "PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_PI20_2",
-      "PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_PI20",
-      "PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_PO15",
-      "PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_PO20_2",
-      "PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_PO20",
-
-      "PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_BASIC",
-      "PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_CERTIFICATION",
-      "PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_COMMENDATION",
-      "PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_EMPLOYEE",
-      "PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_FINANCE",
-      "PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_PATENT",
-      "PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_PROCUREMENT",
-      "PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_STOCKCODE",
-      "PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_SUBSIDY",
-      "PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_WORKPLACE",
-
-      "PODB_JAPANESE_LAND_PRICE_DATA/J_PODB/J_LP_PP",
-      "PODB_JAPANESE_LAND_PRICE_DATA/J_PODB/J_LP_PP22",
-      "PODB_JAPANESE_LAND_PRICE_DATA/J_PODB/J_LP_PP23",
-      "PODB_JAPANESE_LAND_PRICE_DATA/J_PODB/J_LP_TS",
-      "PODB_JAPANESE_LAND_PRICE_DATA/J_PODB/J_LP_TS22",
-      "PODB_JAPANESE_LAND_PRICE_DATA/J_PODB/J_LP_TS23",
-
-      "PODB_JAPANESE_MEDICAL_DATA/J_PODB/J_MD_A1ST20",
-      "PODB_JAPANESE_MEDICAL_DATA/J_PODB/J_MD_A2ND20",
-      "PODB_JAPANESE_MEDICAL_DATA/J_PODB/J_MD_A3RD20",
-      "PODB_JAPANESE_MEDICAL_DATA/J_PODB/J_MD_IP20",
-
-      "PODB_JAPANESE_MESH_DATA/J_PODB/J_MS_PF18_1KM",
-      "PODB_JAPANESE_MESH_DATA/J_PODB/J_MS_PP18_1KM",
-      "PODB_JAPANESE_MESH_DATA/J_PODB/J_MS_PP18_500M",
-
-      "PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_FD20",
-      "PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_HT15",
-      "PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_HT20",
-      "PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PA15",
-      "PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PA20",
-      "PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PI15",
-      "PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PI20_2",
-      "PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PI20",
-      "PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PO15",
-      "PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PO20_2",
-      "PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PO20",
-      "PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PTS",
-      "PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_TB",
-
-      "PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PR_1",
-      "PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PR_2",
-      "PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PR20_1",
-      "PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PR20_2",
-      "PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PS_1",
-      "PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PS_2",
-      "PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PS20_1",
-      "PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PS20_2",
-
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_GEO",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_MST",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T02",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T03",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T04",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T05_1",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T05_2",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T06_1",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T06_2",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T06_3",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T07_1",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T07_2",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T07_3",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T08_1",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T08_2",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T08_3",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T09",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T10",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T11",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T12",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T13",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T14",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T15",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T18",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T19",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_FD15",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_FD20",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_HT15",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_HT20",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_PA15",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_PA20",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_PI15",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_PI20",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_PO15",
-      "PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_PO20",
-
-      "PODB_JAPANESE_WEATHER_DATA/J_PODB/J_WT_2DT",
-      "PODB_JAPANESE_WEATHER_DATA/J_PODB/J_WT_F1W",
-      "PODB_JAPANESE_WEATHER_DATA/J_PODB/J_WT_F3D",
-      "PODB_JAPANESE_WEATHER_DATA/J_PODB/J_WT_MD",
-      "PODB_JAPANESE_WEATHER_DATA/J_PODB/J_WT_MM",
-      "PODB_JAPANESE_WEATHER_DATA/J_PODB/J_WT_N1W"
-  ]
-  datasets = distinct([for s in local.paths : regex("^([^/]+)", s)])
-}
-
 resource "google_bigquery_data_transfer_config" "main" {
   depends_on = [google_project_iam_member.main]
 
@@ -164,44 +52,154 @@ resource "google_bigquery_data_transfer_config" "main" {
   service_account_name = google_service_account.podb.email
   params = {
     query = <<-EOT
-    DECLARE paths ARRAY<STRING> DEFAULT [
-    ${join(",\n", formatlist("  \"%s\"", local.paths))}
+    DECLARE paths ARRAY<STRUCT<path STRING, url STRING>> DEFAULT [
+      ("PODB_JAPANESE_CALENDAR_DATA/J_PODB/J_JAPAN_CALENDAR", "https://podb.truestar.co.jp/archives/cal-data/calendar"),
+      ("PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_FD20", "https://podb.truestar.co.jp/archives/city-data/ci_fd20"),
+      ("PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_HT15", "https://podb.truestar.co.jp/archives/city-data/ci_ht"),
+      ("PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_HT20", "https://podb.truestar.co.jp/archives/city-data/ci_ht"),
+      ("PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_PA15", "https://podb.truestar.co.jp/archives/city-data/ci_pa"),
+      ("PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_PA20", "https://podb.truestar.co.jp/archives/city-data/ci_pa"),
+      ("PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_PI15", "https://podb.truestar.co.jp/archives/city-data/ci_pi"),
+      ("PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_PI20_2", "https://podb.truestar.co.jp/archives/city-data/ci_pi"),
+      ("PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_PI20", "https://podb.truestar.co.jp/archives/city-data/ci_pi"),
+      ("PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_PO15", "https://podb.truestar.co.jp/archives/city-data/ci_po"),
+      ("PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_PO20_2", "https://podb.truestar.co.jp/archives/city-data/ci_po"),
+      ("PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_PO20", "https://podb.truestar.co.jp/archives/city-data/ci_po"),
+      ("PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_BASIC", "https://podb.truestar.co.jp/archives/corp-data/basic"),
+      ("PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_CERTIFICATION", "https://podb.truestar.co.jp/archives/corp-data/certification"),
+      ("PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_COMMENDATION", "https://podb.truestar.co.jp/archives/corp-data/commendation"),
+      ("PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_EMPLOYEE", "https://podb.truestar.co.jp/archives/corp-data/employees"),
+      ("PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_FINANCE", "https://podb.truestar.co.jp/archives/corp-data/finance"),
+      ("PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_PATENT", "https://podb.truestar.co.jp/archives/corp-data/patent"),
+      ("PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_PROCUREMENT", "https://podb.truestar.co.jp/archives/corp-data/procurement"),
+      ("PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_STOCKCODE", "https://podb.truestar.co.jp/archives/corp-data/stockcode"),
+      ("PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_SUBSIDY", "https://podb.truestar.co.jp/archives/corp-data/subsidy"),
+      ("PODB_JAPANESE_CORPORATE_DATA/J_PODB/J_CORP_WORKPLACE", "https://podb.truestar.co.jp/archives/corp-data/workspace"),
+      ("PODB_JAPANESE_LAND_PRICE_DATA/J_PODB/J_LP_PP", "https://podb.truestar.co.jp/archives/land-price-data/lp_pp"),
+      ("PODB_JAPANESE_LAND_PRICE_DATA/J_PODB/J_LP_PP22", "https://podb.truestar.co.jp/archives/land-price-data/lp_pp"),
+      ("PODB_JAPANESE_LAND_PRICE_DATA/J_PODB/J_LP_PP23", "https://podb.truestar.co.jp/archives/land-price-data/lp_pp"),
+      ("PODB_JAPANESE_LAND_PRICE_DATA/J_PODB/J_LP_TS", "https://podb.truestar.co.jp/archives/land-price-data/lp_ts"),
+      ("PODB_JAPANESE_LAND_PRICE_DATA/J_PODB/J_LP_TS22", "https://podb.truestar.co.jp/archives/land-price-data/lp_ts"),
+      ("PODB_JAPANESE_LAND_PRICE_DATA/J_PODB/J_LP_TS23", "https://podb.truestar.co.jp/archives/land-price-data/lp_ts"),
+      ("PODB_JAPANESE_MEDICAL_DATA/J_PODB/J_MD_A1ST20", "https://podb.truestar.co.jp/archives/medical-data/md_a1st20"),
+      ("PODB_JAPANESE_MEDICAL_DATA/J_PODB/J_MD_A2ND20", "https://podb.truestar.co.jp/archives/medical-data/md_a2nd20"),
+      ("PODB_JAPANESE_MEDICAL_DATA/J_PODB/J_MD_A3RD20", "https://podb.truestar.co.jp/archives/medical-data/md_a3rd20"),
+      ("PODB_JAPANESE_MEDICAL_DATA/J_PODB/J_MD_IP20", "https://podb.truestar.co.jp/archives/medical-data/md_ip20"),
+      ("PODB_JAPANESE_MESH_DATA/J_PODB/J_MS_PF18_1KM", "https://podb.truestar.co.jp/archives/mesh-data/ms_pf18_1km"),
+      ("PODB_JAPANESE_MESH_DATA/J_PODB/J_MS_PP18_1KM", "https://podb.truestar.co.jp/archives/mesh-data/ms_pp18_1km"),
+      ("PODB_JAPANESE_MESH_DATA/J_PODB/J_MS_PP18_500M", "https://podb.truestar.co.jp/archives/mesh-data/ms_pp18_500m"),
+      ("PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_FD20", "https://podb.truestar.co.jp/archives/pref-data/pr_fd20"),
+      ("PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_HT15", "https://podb.truestar.co.jp/archives/pref-data/pr_ht"),
+      ("PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_HT20", "https://podb.truestar.co.jp/archives/pref-data/pr_ht"),
+      ("PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PA15", "https://podb.truestar.co.jp/archives/pref-data/pr_pa"),
+      ("PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PA20", "https://podb.truestar.co.jp/archives/pref-data/pr_pa"),
+      ("PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PI15", "https://podb.truestar.co.jp/archives/pref-data/pr_pi"),
+      ("PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PI20_2", "https://podb.truestar.co.jp/archives/pref-data/pr_pi"),
+      ("PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PI20", "https://podb.truestar.co.jp/archives/pref-data/pr_pi"),
+      ("PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PO15", "https://podb.truestar.co.jp/archives/pref-data/pr_po"),
+      ("PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PO20_2", "https://podb.truestar.co.jp/archives/pref-data/pr_po"),
+      ("PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PO20", "https://podb.truestar.co.jp/archives/pref-data/pr_po"),
+      ("PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_PTS", "https://podb.truestar.co.jp/archives/pref-data/pr_pts"),
+      ("PODB_JAPANESE_PREFECTURE_DATA/J_PODB/J_PR_TB", "https://podb.truestar.co.jp/archives/pref-data/pr_tb"),
+      ("PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PR_1", "https://podb.truestar.co.jp/archives/sr-data/sr_pr_1"),
+      ("PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PR_2", "https://podb.truestar.co.jp/archives/sr-data/sr_pr_2"),
+      ("PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PR20_1", "https://podb.truestar.co.jp/archives/sr-data/sr_pr_1"),
+      ("PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PR20_2", "https://podb.truestar.co.jp/archives/sr-data/sr_pr_2"),
+      ("PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PR22_1", "https://podb.truestar.co.jp/archives/sr-data/sr_pr_1"),
+      ("PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PR22_2", "https://podb.truestar.co.jp/archives/sr-data/sr_pr_2"),
+      ("PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PS_1", "https://podb.truestar.co.jp/archives/sr-data/sr_ps_1"),
+      ("PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PS_2", "https://podb.truestar.co.jp/archives/sr-data/sr_ps_2"),
+      ("PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PS20_1", "https://podb.truestar.co.jp/archives/sr-data/sr_ps_1"),
+      ("PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PS20_2", "https://podb.truestar.co.jp/archives/sr-data/sr_ps_2"),
+      ("PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PS22_1", "https://podb.truestar.co.jp/archives/sr-data/sr_ps_1"),
+      ("PODB_JAPANESE_STATION_AND_RAILWAY_DATA/J_PODB/J_SR_PS22_2", "https://podb.truestar.co.jp/archives/sr-data/sr_ps_2"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_GEO", "https://podb.truestar.co.jp/archives/str-data/st_cs20_geo"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_MST", "https://podb.truestar.co.jp/archives/str-data/st_cs20_mst"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T02", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t02"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T03", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t03"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T04", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t04"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T05_1", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t05_1"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T05_2", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t05_2"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T06_1", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t06_1"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T06_2", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t06_2"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T06_3", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t06_3"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T07_1", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t07_1"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T07_2", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t07_2"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T07_3", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t07_3"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T08_1", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t08_1"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T08_2", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t08_2"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T08_3", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t08_3"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T09", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t09"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T10", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t10"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T11", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t11"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T12", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t12"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T13", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t13"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T14", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t14"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T15", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t15"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T18", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t18"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_CS20_T19", "https://podb.truestar.co.jp/archives/str-data/st_cs20_t19"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_FD15", "https://podb.truestar.co.jp/archives/str-data/st_fd2"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_FD20", "https://podb.truestar.co.jp/archives/str-data/st_fd2"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_HT15", "https://podb.truestar.co.jp/archives/str-data/st_ht"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_HT20", "https://podb.truestar.co.jp/archives/str-data/st_ht"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_PA15", "https://podb.truestar.co.jp/archives/str-data/st_pa"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_PA20", "https://podb.truestar.co.jp/archives/str-data/st_pa"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_PI15", "https://podb.truestar.co.jp/archives/str-data/st_pi"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_PI20", "https://podb.truestar.co.jp/archives/str-data/st_pi"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_PO15", "https://podb.truestar.co.jp/archives/str-data/st_po1"),
+      ("PODB_JAPANESE_STREET_DATA/J_PODB/J_ST_PO20", "https://podb.truestar.co.jp/archives/str-data/st_po1"),
+      ("PODB_JAPANESE_WEATHER_DATA/J_PODB/J_WT_2DT", "https://podb.truestar.co.jp/archives/weather-data/wt_2dt"),
+      ("PODB_JAPANESE_WEATHER_DATA/J_PODB/J_WT_F1W", "https://podb.truestar.co.jp/archives/weather-data/wt_f1w"),
+      ("PODB_JAPANESE_WEATHER_DATA/J_PODB/J_WT_F3D", "https://podb.truestar.co.jp/archives/weather-data/wt_f3d"),
+      ("PODB_JAPANESE_WEATHER_DATA/J_PODB/J_WT_MD", "https://podb.truestar.co.jp/archives/weather-data/wt_day"),
+      ("PODB_JAPANESE_WEATHER_DATA/J_PODB/J_WT_MM", "https://podb.truestar.co.jp/archives/weather-data/wt_month"),
+      ("PODB_JAPANESE_WEATHER_DATA/J_PODB/J_WT_N1W", "https://podb.truestar.co.jp/archives/weather-data/wt_n1w")
     ];
     DECLARE l INT64 DEFAULT ARRAY_LENGTH(paths);
     DECLARE i INT64 DEFAULT 0;
+    DECLARE path STRING;
     DECLARE dataset_id STRING;
     DECLARE description STRING;
+    DECLARE friendly_name STRING;
+    DECLARE table_id STRING;
 
     WHILE i < l DO
-      SET dataset_id = SPLIT(paths[i], "/")[0] || "__US";
+      SET path = paths[i].path;
+      SET description = paths[i].url;
+      SET dataset_id = SPLIT(path, "/")[0] || "__US";
       EXECUTE IMMEDIATE
         "CREATE SCHEMA IF NOT EXISTS " || dataset_id;
       EXECUTE IMMEDIATE
-        "LOAD DATA OVERWRITE TEMP TABLE information_schema_copy FROM FILES (format = 'PARQUET', uris = ['gs://podb/INFORMATION_SCHEMA/TABLES/"
-          || SPLIT(paths[i], "/")[0] || "/J_PODB/*.snappy.parquet'])";
+        "LOAD DATA OVERWRITE TEMP TABLE information_schema_tables_copy FROM FILES (format = 'PARQUET', uris = ['gs://podb/INFORMATION_SCHEMA/TABLES/"
+          || SPLIT(path, "/")[0] || "/J_PODB/*.snappy.parquet'])";
 
       EXECUTE IMMEDIATE
-        "SELECT COMMENT FROM information_schema_copy"
+        "SELECT COMMENT FROM information_schema_tables_copy"
           || " WHERE TABLE_CATALOG = '"
-          || SPLIT(paths[i], "/")[0]
+          || SPLIT(path, "/")[0]
           || "' AND TABLE_SCHEMA = '"
-          || SPLIT(paths[i], "/")[1]
+          || SPLIT(path, "/")[1]
           || "' AND TABLE_NAME = '"
-          || SPLIT(paths[i], "/")[2]
-          || "'" INTO description;
+          || SPLIT(path, "/")[2]
+          || "'" INTO friendly_name;
+
+      SET table_id = REGEXP_EXTRACT(SPLIT(path, "/")[2], "J_(.+)");
 
       EXECUTE IMMEDIATE
-        "ALTER TABLE IF EXISTS " || dataset_id || "." || SPLIT(paths[i], "/")[2]
-        || " SET OPTIONS(description = '''" || description || "''')";
+        "ALTER TABLE IF EXISTS " || dataset_id || "." || table_id
+        || " SET OPTIONS(friendly_name = '''" || friendly_name || "''', description = '''" || description || "''')";
 
       EXECUTE IMMEDIATE
         "LOAD DATA OVERWRITE "
-          || dataset_id || "." || SPLIT(paths[i], "/")[2]
-          || " OPTIONS(description='''"
+          || dataset_id || "." || table_id
+          || " OPTIONS(friendly_name='''"
+          || friendly_name
+          || "''', description='''"
           || description
-          || "''') FROM FILES (format = 'PARQUET', column_name_character_map = 'V2', uris = ['gs://podb/" || paths[i] || "/*.snappy.parquet'])";
+          || "''') FROM FILES (format = 'PARQUET', column_name_character_map = 'V2', uris = ['gs://podb/" || path || "/*.snappy.parquet'])";
       SET i = i + 1;
     END WHILE;
+
     EOT
   }
 }
