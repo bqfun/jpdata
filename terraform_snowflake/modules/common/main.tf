@@ -10,8 +10,15 @@ resource "snowflake_task" "main" {
 
   BEGIN
     EXECUTE IMMEDIATE '
-      COPY INTO @"${var.stage_database}"."${var.stage_schema}"."${var.stage_name}"/INFORMATION_SCHEMA/${var.podb_database}/${var.podb_schema}/
+      COPY INTO @"${var.stage_database}"."${var.stage_schema}"."${var.stage_name}"/INFORMATION_SCHEMA/TABLES/${var.podb_database}/${var.podb_schema}/
       FROM (SELECT table_catalog, table_schema, table_name, comment FROM ${var.podb_database}.information_schema.tables WHERE table_schema = \'${var.podb_schema}\')
+      FILE_FORMAT = (TYPE = PARQUET)
+      HEADER = TRUE
+      OVERWRITE = TRUE;
+    ';
+    EXECUTE IMMEDIATE '
+      COPY INTO @"${var.stage_database}"."${var.stage_schema}"."${var.stage_name}"/INFORMATION_SCHEMA/COLUMNS/${var.podb_database}/${var.podb_schema}/
+      FROM (SELECT table_catalog, table_schema, table_name, column_name, ordinal_position, data_type, comment FROM ${var.podb_database}.information_schema.columns WHERE table_schema = \'${var.podb_schema}\')
       FILE_FORMAT = (TYPE = PARQUET)
       HEADER = TRUE
       OVERWRITE = TRUE;
