@@ -54,6 +54,7 @@ resource "google_bigquery_data_transfer_config" "main" {
     query = <<-EOT
     DECLARE paths ARRAY<STRUCT<path STRING, url STRING>> DEFAULT [
       ("PODB_JAPANESE_CALENDAR_DATA/J_PODB/J_JAPAN_CALENDAR", "https://podb.truestar.co.jp/archives/cal-data/calendar"),
+      ("PODB_JAPANESE_CALENDAR_DATA/J_PODB/J_JAPAN_CALENDAR_TXTFLG", "https://podb.truestar.co.jp/archives/cal-data/calendar"),
       ("PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_FD20", "https://podb.truestar.co.jp/archives/city-data/ci_fd20"),
       ("PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_HT15", "https://podb.truestar.co.jp/archives/city-data/ci_ht"),
       ("PODB_JAPANESE_CITY_DATA/J_PODB/J_CI_HT20", "https://podb.truestar.co.jp/archives/city-data/ci_ht"),
