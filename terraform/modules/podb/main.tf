@@ -177,7 +177,7 @@ resource "google_bigquery_data_transfer_config" "main" {
       EXECUTE IMMEDIATE
         "CREATE SCHEMA IF NOT EXISTS " || dataset_id;
       EXECUTE IMMEDIATE
-        "LOAD DATA OVERWRITE TEMP TABLE information_schema_copy FROM FILES (format = 'PARQUET', uris = ['gs://podb/INFORMATION_SCHEMA/"
+        "LOAD DATA OVERWRITE TEMP TABLE information_schema_copy FROM FILES (format = 'PARQUET', uris = ['gs://podb/INFORMATION_SCHEMA/TABLES/"
           || SPLIT(paths[i], "/")[0] || "/J_PODB/*.snappy.parquet'])";
 
       EXECUTE IMMEDIATE
