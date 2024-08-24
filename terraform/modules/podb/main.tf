@@ -65,16 +65,16 @@ resource "google_bigquery_data_transfer_config" "main" {
       ("PODB_JAPANESE_CITY_DATA/E_PODB/E_CI_PO15", "https://podb.truestar.co.jp/archives/city-data/ci_po"),
       ("PODB_JAPANESE_CITY_DATA/E_PODB/E_CI_PO20_2", "https://podb.truestar.co.jp/archives/city-data/ci_po"),
       ("PODB_JAPANESE_CITY_DATA/E_PODB/E_CI_PO20", "https://podb.truestar.co.jp/archives/city-data/ci_po"),
-      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/E_CORP_BASIC", "https://podb.truestar.co.jp/archives/corp-data/basic"),
-      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/E_CORP_CERTIFICATION", "https://podb.truestar.co.jp/archives/corp-data/certification"),
-      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/E_CORP_COMMENDATION", "https://podb.truestar.co.jp/archives/corp-data/commendation"),
-      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/E_CORP_EMPLOYEE", "https://podb.truestar.co.jp/archives/corp-data/employees"),
-      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/E_CORP_FINANCE", "https://podb.truestar.co.jp/archives/corp-data/finance"),
-      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/E_CORP_PATENT", "https://podb.truestar.co.jp/archives/corp-data/patent"),
-      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/E_CORP_PROCUREMENT", "https://podb.truestar.co.jp/archives/corp-data/procurement"),
-      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/E_CORP_STOCKCODE", "https://podb.truestar.co.jp/archives/corp-data/stockcode"),
-      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/E_CORP_SUBSIDY", "https://podb.truestar.co.jp/archives/corp-data/subsidy"),
-      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/E_CORP_WORKPLACE", "https://podb.truestar.co.jp/archives/corp-data/workspace"),
+      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/CORP_BASIC", "https://podb.truestar.co.jp/archives/corp-data/basic"),
+      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/CORP_CERTIFICATION", "https://podb.truestar.co.jp/archives/corp-data/certification"),
+      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/CORP_COMMENDATION", "https://podb.truestar.co.jp/archives/corp-data/commendation"),
+      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/CORP_EMPLOYEE", "https://podb.truestar.co.jp/archives/corp-data/employees"),
+      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/CORP_FINANCE", "https://podb.truestar.co.jp/archives/corp-data/finance"),
+      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/CORP_PATENT", "https://podb.truestar.co.jp/archives/corp-data/patent"),
+      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/CORP_PROCUREMENT", "https://podb.truestar.co.jp/archives/corp-data/procurement"),
+      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/CORP_STOCKCODE", "https://podb.truestar.co.jp/archives/corp-data/stockcode"),
+      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/CORP_SUBSIDY", "https://podb.truestar.co.jp/archives/corp-data/subsidy"),
+      ("PODB_JAPANESE_CORPORATE_DATA/E_PODB/CORP_WORKPLACE", "https://podb.truestar.co.jp/archives/corp-data/workspace"),
       ("PODB_JAPANESE_LAND_PRICE_DATA/E_PODB/E_LP_PP", "https://podb.truestar.co.jp/archives/land-price-data/lp_pp"),
       ("PODB_JAPANESE_LAND_PRICE_DATA/E_PODB/E_LP_PP22", "https://podb.truestar.co.jp/archives/land-price-data/lp_pp"),
       ("PODB_JAPANESE_LAND_PRICE_DATA/E_PODB/E_LP_PP23", "https://podb.truestar.co.jp/archives/land-price-data/lp_pp"),
@@ -183,7 +183,7 @@ resource "google_bigquery_data_transfer_config" "main" {
           || SPLIT(path, "/")[2]
           || "'" INTO friendly_name;
 
-      SET table_id = REGEXP_EXTRACT(SPLIT(path, "/")[2], "E_(.+)");
+      SET table_id = IFNULL(REGEXP_EXTRACT(SPLIT(path, "/")[2], "E_(.+)"), SPLIT(path, "/")[2]);
 
       EXECUTE IMMEDIATE
         "ALTER TABLE IF EXISTS " || dataset_id || "." || table_id
