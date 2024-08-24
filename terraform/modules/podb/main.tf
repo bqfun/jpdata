@@ -198,13 +198,13 @@ resource "google_bigquery_data_transfer_config" "main" {
           SELECT
             STRING_AGG(
               '`' || REPLACE(REPLACE(REPLACE(COLUMN_NAME, ",", ""), "(", ""), ")", "") || '` '
-              || CASE DATA_TYPE
+              || CASE
                     WHEN TABLE_NAME = "E_LP_PP23" AND COLUMN_NAME = "EXTRA_FLOOR_AREA_RATIO" THEN "STRING"
-                    WHEN "TEXT" THEN "STRING"
-                    WHEN "FLOAT" THEN "FLOAT64"
-                    WHEN "NUMBER" THEN "NUMERIC"
-                    WHEN "GEOGRAPHY" THEN "STRING"
-                    WHEN "BOOLEAN" THEN "BOOL"
+                    WHEN DATA_TYPE = "TEXT" THEN "STRING"
+                    WHEN DATA_TYPE = "FLOAT" THEN "FLOAT64"
+                    WHEN DATA_TYPE = "NUMBER" THEN "NUMERIC"
+                    WHEN DATA_TYPE = "GEOGRAPHY" THEN "STRING"
+                    WHEN DATA_TYPE = "BOOLEAN" THEN "BOOL"
                     WHEN DATA_TYPE = "TIMESTAMP_NTZ" THEN "DATETIME"
                     ELSE DATA_TYPE
               END
