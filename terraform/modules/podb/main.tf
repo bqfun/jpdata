@@ -54,7 +54,6 @@ resource "google_bigquery_data_transfer_config" "main" {
     query = <<-EOT
     DECLARE paths ARRAY<STRUCT<path STRING, url STRING>> DEFAULT [
       ("PODB_JAPANESE_CALENDAR_DATA/E_PODB/E_JAPAN_CALENDAR", "https://podb.truestar.co.jp/archives/cal-data/calendar"),
-      ("PODB_JAPANESE_CALENDAR_DATA/E_PODB/E_JAPAN_CALENDAR_TXTFLG", "https://podb.truestar.co.jp/archives/cal-data/calendar"),
       ("PODB_JAPANESE_CITY_DATA/E_PODB/E_CI_FD20", "https://podb.truestar.co.jp/archives/city-data/ci_fd20"),
       ("PODB_JAPANESE_CITY_DATA/E_PODB/E_CI_HT15", "https://podb.truestar.co.jp/archives/city-data/ci_ht"),
       ("PODB_JAPANESE_CITY_DATA/E_PODB/E_CI_HT20", "https://podb.truestar.co.jp/archives/city-data/ci_ht"),
@@ -197,7 +196,7 @@ resource "google_bigquery_data_transfer_config" "main" {
           || friendly_name
           || "''', description='''"
           || description
-          || "''') FROM FILES (format = 'PARQUET', column_name_character_map = 'V2', uris = ['gs://podb/" || path || "/*.snappy.parquet'])";
+          || "''') FROM FILES (format = 'PARQUET', uris = ['gs://podb/" || path || "/*.snappy.parquet'])";
       SET i = i + 1;
     END WHILE;
 
