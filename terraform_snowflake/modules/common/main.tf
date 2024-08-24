@@ -9,20 +9,31 @@ resource "snowflake_task" "main" {
     SELECT table_catalog, table_schema, table_name FROM ${var.podb_database}.information_schema.tables WHERE table_schema = '${var.podb_schema}';
 
   BEGIN
-    EXECUTE IMMEDIATE '
-      COPY INTO @"${var.stage_database}"."${var.stage_schema}"."${var.stage_name}"/INFORMATION_SCHEMA/TABLES/${var.podb_database}/${var.podb_schema}/
-      FROM (SELECT table_catalog, table_schema, table_name, comment FROM ${var.podb_database}.information_schema.tables WHERE table_schema = \'${var.podb_schema}\')
-      FILE_FORMAT = (TYPE = PARQUET)
-      HEADER = TRUE
-      OVERWRITE = TRUE;
-    ';
-    EXECUTE IMMEDIATE '
-      COPY INTO @"${var.stage_database}"."${var.stage_schema}"."${var.stage_name}"/INFORMATION_SCHEMA/COLUMNS/${var.podb_database}/${var.podb_schema}/
-      FROM (SELECT table_catalog, table_schema, table_name, column_name, ordinal_position, data_type, comment FROM ${var.podb_database}.information_schema.columns WHERE table_schema = \'${var.podb_schema}\')
-      FILE_FORMAT = (TYPE = PARQUET)
-      HEADER = TRUE
-      OVERWRITE = TRUE;
-    ';
+    COPY INTO @"${var.stage_database}"."${var.stage_schema}"."${var.stage_name}"/INFORMATION_SCHEMA/TABLES/${var.podb_database}/${var.podb_schema}/
+    FROM (SELECT table_catalog, table_schema, table_name, comment FROM ${var.podb_database}.information_schema.tables WHERE table_schema = '${var.podb_schema}')
+    FILE_FORMAT = (TYPE = PARQUET)
+    HEADER = TRUE
+    OVERWRITE = TRUE;
+
+    COPY INTO @"${var.stage_database}"."${var.stage_schema}"."${var.stage_name}"/INFORMATION_SCHEMA/COLUMNS/${var.podb_database}/${var.podb_schema}/
+    FROM (
+      SELECT
+        table_catalog,
+        table_schema,
+        table_name,
+        column_name,
+        ordinal_position,
+        data_type,
+        character_maximum_length,
+        numeric_scale,
+        comment
+      FROM ${var.podb_database}.information_schema.columns
+      WHERE
+        table_schema = '${var.podb_schema}')
+    FILE_FORMAT = (TYPE = PARQUET)
+    HEADER = TRUE
+    OVERWRITE = TRUE;
+
     FOR record IN cursor DO
       EXECUTE IMMEDIATE '
         COPY INTO @"${var.stage_database}"."${var.stage_schema}"."${var.stage_name}"/' || record.table_catalog || '/' || record.table_schema || '/' || record.table_name || '/'

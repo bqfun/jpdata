@@ -32,52 +32,52 @@ locals {
   schemas = [
     {
       database = "PODB_JAPANESE_CALENDAR_DATA"
-      schema   = "J_PODB"
+      schema   = "E_PODB"
       schedule = "USING CRON 0 5 * * * Asia/Tokyo"
     },
     {
       database = "PODB_JAPANESE_CITY_DATA"
-      schema   = "J_PODB"
+      schema   = "E_PODB"
       schedule = "USING CRON 0 5 * * * Asia/Tokyo"
     },
     {
       database = "PODB_JAPANESE_CORPORATE_DATA"
-      schema   = "J_PODB"
+      schema   = "E_PODB"
       schedule = "USING CRON 0 5 * * * Asia/Tokyo"
     },
     {
       database = "PODB_JAPANESE_LAND_PRICE_DATA"
-      schema   = "J_PODB"
+      schema   = "E_PODB"
       schedule = "USING CRON 0 5 * * * Asia/Tokyo"
     },
     {
       database = "PODB_JAPANESE_MEDICAL_DATA"
-      schema   = "J_PODB"
+      schema   = "E_PODB"
       schedule = "USING CRON 0 5 * * * Asia/Tokyo"
     },
     {
       database = "PODB_JAPANESE_MESH_DATA"
-      schema   = "J_PODB"
+      schema   = "E_PODB"
       schedule = "USING CRON 0 5 * * * Asia/Tokyo"
     },
     {
       database = "PODB_JAPANESE_PREFECTURE_DATA"
-      schema   = "J_PODB"
+      schema   = "E_PODB"
       schedule = "USING CRON 0 5 * * * Asia/Tokyo"
     },
     {
       database = "PODB_JAPANESE_STATION_AND_RAILWAY_DATA"
-      schema   = "J_PODB"
+      schema   = "E_PODB"
       schedule = "USING CRON 0 5 * * * Asia/Tokyo"
     },
     {
       database = "PODB_JAPANESE_STREET_DATA"
-      schema   = "J_PODB"
+      schema   = "E_PODB"
       schedule = "USING CRON 0 5 * * * Asia/Tokyo"
     },
     {
       database = "PODB_JAPANESE_WEATHER_DATA"
-      schema   = "J_PODB"
+      schema   = "E_PODB"
       schedule = "USING CRON 0 5 * * * Asia/Tokyo"
     }
   ]
