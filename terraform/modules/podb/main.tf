@@ -162,6 +162,7 @@ resource "google_bigquery_data_transfer_config" "main" {
     DECLARE description STRING;
     DECLARE friendly_name STRING;
     DECLARE table_id STRING;
+    DECLARE column_list STRING;
 
     WHILE i < l DO
       SET path = paths[i].path;
@@ -171,6 +172,9 @@ resource "google_bigquery_data_transfer_config" "main" {
         "CREATE SCHEMA IF NOT EXISTS " || dataset_id;
       EXECUTE IMMEDIATE
         "LOAD DATA OVERWRITE TEMP TABLE information_schema_tables_copy FROM FILES (format = 'PARQUET', uris = ['gs://podb/INFORMATION_SCHEMA/TABLES/"
+          || SPLIT(path, "/")[0] || "/E_PODB/*.snappy.parquet'])";
+      EXECUTE IMMEDIATE
+        "LOAD DATA OVERWRITE TEMP TABLE information_schema_columns_copy FROM FILES (format = 'PARQUET', uris = ['gs://podb/INFORMATION_SCHEMA/COLUMNS/"
           || SPLIT(path, "/")[0] || "/E_PODB/*.snappy.parquet'])";
 
       EXECUTE IMMEDIATE
@@ -190,8 +194,31 @@ resource "google_bigquery_data_transfer_config" "main" {
         || " SET OPTIONS(friendly_name = '''" || friendly_name || "''', description = '''" || description || "''')";
 
       EXECUTE IMMEDIATE
+        """
+          SELECT
+            STRING_AGG(
+              '`' || COLUMN_NAME || '` '
+              || CASE DATA_TYPE
+                    WHEN "TEXT" THEN "STRING"
+                    WHEN "FLOAT" THEN "FLOAT64"
+                    WHEN "NUMBER" THEN "NUMERIC"
+                    WHEN "GEOGRAPHY" THEN "STRING"
+                    ELSE DATA_TYPE
+              END
+              || " OPTIONS(description='''" || COMMENT || "''')", "," ORDER BY ORDINAL_POSITION
+            )
+          FROM
+            information_schema_columns_copy
+          WHERE
+        """
+          || "TABLE_CATALOG = '" || SPLIT(path, "/")[0]
+          || "' AND TABLE_SCHEMA = '" || SPLIT(path, "/")[1]
+          || "' AND TABLE_NAME = '" || SPLIT(path, "/")[2]
+          || "'" INTO column_list;
+      EXECUTE IMMEDIATE
         "LOAD DATA OVERWRITE "
           || dataset_id || "." || table_id
+          || IFNULL(" (" || column_list || ")", "")
           || " OPTIONS(friendly_name='''"
           || friendly_name
           || "''', description='''"
