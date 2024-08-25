@@ -208,7 +208,7 @@ resource "google_bigquery_data_transfer_config" "main" {
                     WHEN DATA_TYPE = "TIMESTAMP_NTZ" THEN "DATETIME"
                     ELSE DATA_TYPE
               END
-              || " OPTIONS(description='''" || COMMENT || "''')", "," ORDER BY ORDINAL_POSITION
+              || " OPTIONS(description='''" || IFNULL(COMMENT, "") || "''')", "," ORDER BY ORDINAL_POSITION
             )
           FROM
             information_schema_columns_copy
