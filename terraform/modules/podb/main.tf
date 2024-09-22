@@ -253,7 +253,7 @@ locals {
     {
       url = "https://podb.truestar.co.jp/archives/pref-data"
       display_name = "JAPANESE PREFECTURE DATA"
-      dataset_id = "PODB_JAPANESE_PREFECTURE_DATA__US"
+      dataset_id = "PODB_JAPANESE_PREFECTURE_DATA"
       documentation = <<-EOT
       Prepper Open Data Bankは、様々な日本のオープンデータをデータプレップなしですぐ加工できるようにして提供しています。
 
@@ -277,7 +277,7 @@ locals {
     {
       url = "https://podb.truestar.co.jp/archives/city-data"
       display_name = "JAPANESE CITY DATA"
-      dataset_id = "PODB_JAPANESE_CITY_DATA__US"
+      dataset_id = "PODB_JAPANESE_CITY_DATA"
       documentation = <<-EOT
       Prepper Open Data Bankは、様々な日本のオープンデータをデータプレップなしですぐ加工できるようにして提供しています。
 
@@ -299,7 +299,7 @@ locals {
     {
       url = "https://podb.truestar.co.jp/archives/str-data"
       display_name = "JAPANESE STREET DATA"
-      dataset_id = "PODB_JAPANESE_STREET_DATA__US"
+      dataset_id = "PODB_JAPANESE_STREET_DATA"
       documentation = <<-EOT
       Prepper Open Data Bankは、様々な日本のオープンデータをデータプレップなしですぐ加工できるようにして提供しています。
 
@@ -319,7 +319,7 @@ locals {
     {
       url = "https://podb.truestar.co.jp/archives/mesh-data"
       display_name = "JAPANESE MESH DATA"
-      dataset_id = "PODB_JAPANESE_MESH_DATA__US"
+      dataset_id = "PODB_JAPANESE_MESH_DATA"
       documentation = <<-EOT
       Prepper Open Data Bankは、様々な日本のオープンデータをデータプレップなしですぐ加工できるようにして提供しています。
 
@@ -331,7 +331,7 @@ locals {
     {
       url = "https://podb.truestar.co.jp/archives/sr-data"
       display_name = "JAPANESE STATION AND RAILWAY DATA"
-      dataset_id = "PODB_JAPANESE_STATION_AND_RAILWAY_DATA__US"
+      dataset_id = "PODB_JAPANESE_STATION_AND_RAILWAY_DATA"
       documentation = <<-EOT
       Prepper Open Data Bankは、様々な日本のオープンデータをデータプレップなしですぐ加工できるようにして提供しています。
 
@@ -342,7 +342,7 @@ locals {
     {
       url = "https://podb.truestar.co.jp/archives/weather-data"
       display_name = "JAPANESE WEATHER DATA"
-      dataset_id = "PODB_JAPANESE_WEATHER_DATA__US"
+      dataset_id = "PODB_JAPANESE_WEATHER_DATA"
       documentation = <<-EOT
       Prepper Open Data Bankは、様々な日本のオープンデータをデータプレップなしですぐ加工できるようにして提供しています。
 
@@ -355,7 +355,7 @@ locals {
     {
       url = "https://podb.truestar.co.jp/archives/land-price-data"
       display_name = "JAPANESE LAND PRICE DATA"
-      dataset_id = "PODB_JAPANESE_LAND_PRICE_DATA__US"
+      dataset_id = "PODB_JAPANESE_LAND_PRICE_DATA"
       documentation = <<-EOT
       Prepper Open Data Bankは、様々な日本のオープンデータをデータプレップなしですぐ加工できるようにして提供しています。
 
@@ -365,7 +365,7 @@ locals {
     {
       url = "https://podb.truestar.co.jp/archives/medical-data"
       display_name = "JAPANESE MEDICAL DATA"
-      dataset_id = "PODB_JAPANESE_MEDICAL_DATA__US"
+      dataset_id = "PODB_JAPANESE_MEDICAL_DATA"
       documentation = <<-EOT
       Prepper Open Data Bankは、様々な日本のオープンデータをデータプレップなしですぐ加工できるようにして提供しています。
 
@@ -376,7 +376,7 @@ locals {
     {
       url = "https://podb.truestar.co.jp/archives/corp-data"
       display_name = "JAPANESE CORPORATE DATA"
-      dataset_id = "PODB_JAPANESE_CORPORATE_DATA__US"
+      dataset_id = "PODB_JAPANESE_CORPORATE_DATA"
       documentation = <<-EOT
       Prepper Open Data Bankは、様々な日本のオープンデータをデータプレップなしですぐ加工できるようにして提供しています。
 
@@ -398,7 +398,7 @@ locals {
     {
       url = "https://podb.truestar.co.jp/archives/cal-data"
       display_name = "JAPANESE CALENDAR DATA"
-      dataset_id = "PODB_JAPANESE_CALENDAR_DATA__US"
+      dataset_id = "PODB_JAPANESE_CALENDAR_DATA"
       documentation = <<-EOT
       Japanese Calendar Data には、日付や曜日情報に加え、内閣府から毎年2月に発表される祝日と振替休日や、土日祝、平日、GW、年末年始、休前日など、様々な事業のマーケティング活動に影響のある軸で予めフラグ化するなど、日次データを用いた機械学習などのデータ分析ですぐに活用できる形に加工しています。
 
@@ -428,10 +428,82 @@ resource "google_bigquery_analytics_hub_data_exchange_iam_member" "member_us" {
 }
 
 resource "google_bigquery_analytics_hub_listing" "podb_us" {
-  for_each = { for index, s in local.listings : s.dataset_id => s }
+  for_each = { for index, s in local.listings : "${s.dataset_id}__US" => s }
   project          = google_bigquery_analytics_hub_data_exchange.podb_us.project
   location         = google_bigquery_analytics_hub_data_exchange.podb_us.location
   data_exchange_id = google_bigquery_analytics_hub_data_exchange.podb_us.data_exchange_id
+  listing_id       = replace(lower(each.value.display_name), " ", "_")
+  display_name     = each.value.display_name
+  primary_contact  = "https://bqfun.jp/docs/podb/"
+  documentation    = "${each.value.documentation}\n\n詳細な定義: ${each.value.url}\n\n${local.common_documentation}"
+
+  bigquery_dataset {
+    dataset = "projects/${data.google_project.project.number}/datasets/${each.value.dataset_id}__US"
+  }
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+# asia-northeast1
+
+resource "google_service_account" "cross_region" {
+  account_id = "podb-cross-region-copy"
+}
+
+resource "google_bigquery_dataset" "cross_region" {
+  for_each = { for index, s in local.listings : s.dataset_id => s }
+  dataset_id = each.value.dataset_id
+  location   = "asia-northeast1"
+}
+
+resource "google_bigquery_data_transfer_config" "cross_region" {
+  for_each = { for index, s in local.listings : s.dataset_id => s }
+  display_name           = each.value.dataset_id
+  location               = "asia-northeast1"
+  data_source_id         = "cross_region_copy"
+  destination_dataset_id = each.value.dataset_id
+  params = {
+    source_dataset_id           = each.value.dataset_id
+    overwrite_destination_table = true
+  }
+  schedule_options {
+    disable_auto_scheduling = true
+  }
+  service_account_name = google_service_account.cross_region.email
+  depends_on = [
+    google_bigquery_dataset.cross_region,
+  ]
+}
+
+resource "google_project_iam_member" "cross_region" {
+  project = data.google_project.project.project_id
+  role    = "roles/bigquery.admin"
+  member  = "serviceAccount:${google_service_account.cross_region.email}"
+  # To create the copy transfer, you need the following on the project:
+  #   - bigquery.transfers.update
+  #   - bigquery.jobs.create
+  # https://cloud.google.com/bigquery/docs/copying-datasets#required_permissions
+}
+
+resource "google_bigquery_analytics_hub_data_exchange" "podb" {
+  project          = "jpdata"
+  location         = "asia-northeast1"
+  data_exchange_id = "podb"
+  display_name     = "podb"
+  description      = "BigQuery ユーザコミュニティ BQ Fun にて、株式会社 truestar のデータ提供サービス Prepper Open Data Bank の BigQuery クローンを提供する。"
+  primary_contact  = "https://bqfun.jp/docs/podb/"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "google_bigquery_analytics_hub_listing" "podb" {
+  for_each = { for index, s in local.listings : s.dataset_id => s }
+  project          = google_bigquery_analytics_hub_data_exchange.podb.project
+  location         = google_bigquery_analytics_hub_data_exchange.podb.location
+  data_exchange_id = google_bigquery_analytics_hub_data_exchange.podb.data_exchange_id
   listing_id       = replace(lower(each.value.display_name), " ", "_")
   display_name     = each.value.display_name
   primary_contact  = "https://bqfun.jp/docs/podb/"
@@ -443,4 +515,7 @@ resource "google_bigquery_analytics_hub_listing" "podb_us" {
   lifecycle {
     prevent_destroy = true
   }
+  depends_on = [
+    google_bigquery_dataset.cross_region,
+  ]
 }
