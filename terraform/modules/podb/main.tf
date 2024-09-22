@@ -462,6 +462,7 @@ resource "google_bigquery_data_transfer_config" "cross_region" {
   display_name           = each.value.dataset_id
   location               = "asia-northeast1"
   data_source_id         = "cross_region_copy"
+  schedule               = "every day 16:00"
   destination_dataset_id = each.value.dataset_id
   params = {
     source_dataset_id           = each.value.dataset_id
