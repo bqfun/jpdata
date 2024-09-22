@@ -465,7 +465,7 @@ resource "google_bigquery_data_transfer_config" "cross_region" {
   schedule               = "every day 16:00"
   destination_dataset_id = each.value.dataset_id
   params = {
-    source_dataset_id           = each.value.dataset_id
+    source_dataset_id           = "${each.value.dataset_id}__US"
     overwrite_destination_table = true
   }
   schedule_options {
