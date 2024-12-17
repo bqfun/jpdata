@@ -468,9 +468,6 @@ resource "google_bigquery_data_transfer_config" "cross_region" {
     source_dataset_id           = "${each.value.dataset_id}__US"
     overwrite_destination_table = true
   }
-  schedule_options {
-    disable_auto_scheduling = true
-  }
   service_account_name = google_service_account.cross_region.email
   depends_on = [
     google_bigquery_dataset.cross_region,
